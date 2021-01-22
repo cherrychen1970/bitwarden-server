@@ -14,6 +14,10 @@ namespace Bit.Setup
 
         public static void Main(string[] args)
         {
+            MigrateDatabase();
+        }
+        public static void Main1(string[] args)
+        {
             CultureInfo.DefaultThreadCurrentCulture = new CultureInfo("en-US");
 
             _context = new Context
@@ -161,6 +165,21 @@ namespace Bit.Setup
             Console.WriteLine("\n");
         }
 
+        private static void MigrateDatabase()
+        {
+            Console.WriteLine( "Migrating database.");
+            var vaultConnectionString = "server=docker;user=sa;password=T0ps3cret123.;database=vault";
+            var migrator = new DbMigrator(vaultConnectionString, null);
+            var success = migrator.MigrateMsSqlDatabase(false);
+            if (success)
+            {
+                Console.WriteLine( "Migration successful.");
+            }
+            else
+            {
+                Console.WriteLine( "Migration failed.");
+            }
+        }
         private static void MigrateDatabase(int attempt = 1)
         {
             try

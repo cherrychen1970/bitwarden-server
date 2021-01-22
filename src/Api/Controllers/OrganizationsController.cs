@@ -146,7 +146,7 @@ namespace Bit.Api.Controllers
         }
 
         [HttpPost("")]
-        [SelfHosted(NotSelfHostedOnly = true)]
+        //[SelfHosted(NotSelfHostedOnly = true)]
         public async Task<OrganizationResponseModel> Post([FromBody]OrganizationCreateRequestModel model)
         {
             var user = await _userService.GetUserByPrincipalAsync(User);

@@ -108,6 +108,7 @@ namespace Bit.Api
             // Services
             services.AddBaseServices();
             services.AddDefaultServices(globalSettings);
+            //services.AddNoopServices();
             services.AddCoreLocalizationServices();
 
             // MVC
@@ -124,14 +125,14 @@ namespace Bit.Api
             });
 
             services.AddSwagger(globalSettings);
-            Jobs.JobsHostedService.AddJobsServices(services);
-            services.AddHostedService<Jobs.JobsHostedService>();
+            //Jobs.JobsHostedService.AddJobsServices(services);
+            //services.AddHostedService<Jobs.JobsHostedService>();
 
             if (globalSettings.SelfHosted)
             {
                 // Jobs service
-                Jobs.JobsHostedService.AddJobsServices(services);
-                services.AddHostedService<Jobs.JobsHostedService>();
+                //Jobs.JobsHostedService.AddJobsServices(services);
+                //services.AddHostedService<Jobs.JobsHostedService>();
             }
             if (CoreHelpers.SettingHasValue(globalSettings.ServiceBus.ConnectionString) &&
                 CoreHelpers.SettingHasValue(globalSettings.ServiceBus.ApplicationCacheTopicName))
@@ -208,6 +209,8 @@ namespace Bit.Api
                     config.OAuthClientSecret("secretKey");
                 });
             }
+            app.Map("/connect",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
+            app.RunProxy(new ProxyOptions(){Host="localhost",Port="8080", Scheme="http"});
 
             // Log startup
             logger.LogInformation(Constants.BypassFiltersEventId, globalSettings.ProjectName + " started.");

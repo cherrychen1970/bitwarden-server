@@ -60,7 +60,7 @@ namespace Bit.Core.Utilities
                 });
                 services.AddSingleton<IUserRepository, EntityFrameworkRepos.UserRepository>();
                 //services.AddSingleton<ICipherRepository, EntityFrameworkRepos.CipherRepository>();
-                //services.AddSingleton<IOrganizationRepository, EntityFrameworkRepos.OrganizationRepository>();
+                services.AddSingleton<IOrganizationRepository, EntityFrameworkRepos.OrganizationRepository>();
             }
             else
             {
@@ -120,14 +120,14 @@ namespace Bit.Core.Utilities
             services.AddSingleton<IDeviceService, DeviceService>();
             services.AddSingleton<IAppleIapService, AppleIapService>();
             services.AddSingleton<ISsoConfigService, SsoConfigService>();
-            services.AddScoped<ISendService, SendService>();
+            //services.AddScoped<ISendService, SendService>();
         }
 
         public static void AddDefaultServices(this IServiceCollection services, GlobalSettings globalSettings)
         {
             services.AddSingleton<IPaymentService, StripePaymentService>();
             services.AddSingleton<IMailService, HandlebarsMailService>();
-            services.AddSingleton<ILicensingService, LicensingService>();
+            services.AddSingleton<ILicensingService, NoopLicensingService>();
 
             if (CoreHelpers.SettingHasValue(globalSettings.ServiceBus.ConnectionString) &&
                 CoreHelpers.SettingHasValue(globalSettings.ServiceBus.ApplicationCacheTopicName))

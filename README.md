@@ -1,24 +1,3 @@
-<p align="center">
-  <img src="https://github.com/bitwarden/brand/blob/master/screenshots/apps-combo-logo.png" alt="Bitwarden" />
-</p>
-<p align="center">
-  <a href="https://ci.appveyor.com/project/bitwarden/server/branch/master" target="_blank">
-    <img src="https://ci.appveyor.com/api/projects/status/n4ntjp7ag1uwxckd/branch/master?svg=true" alt="appveyor build" />
-  </a>
-  <a href="https://hub.docker.com/u/bitwarden/" target="_blank">
-    <img src="https://img.shields.io/docker/pulls/bitwarden/api.svg" alt="DockerHub" />
-  </a>
-  <a href="https://gitter.im/bitwarden/Lobby" target="_blank">
-    <img src="https://badges.gitter.im/bitwarden/Lobby.svg" alt="gitter chat" />
-  </a>
-</p>
-
--------------------
-
-The Bitwarden Server project contains the APIs, database, and other core infrastructure items needed for the "backend" of all bitwarden client applications.
-
-The server project is written in C# using .NET Core with ASP.NET Core. The database is written in T-SQL/SQL Server. The codebase can be developed, built, run, and deployed cross-platform on Windows, macOS, and Linux distributions.
-
 ## Build/Run
 
 ### Requirements
@@ -95,8 +74,14 @@ Invoke-RestMethod -OutFile bitwarden.ps1 `
 .\bitwarden.ps1 -start
 ```
 
-## Contribute
+## My Note
 
-Code contributions are welcome! Visual Studio or VS Code is highly recommended if you are working on this project. Please commit any pull requests against the `master` branch. Please see [`CONTRIBUTING.md`](CONTRIBUTING.md) for more info (and feel free to contribute to that guide as well).
-
-Security audits and feedback are welcome. Please open an issue or email us privately if the report is sensitive in nature. You can read our security policy in the [`SECURITY.md`](SECURITY.md) file. We also run a program on [HackerOne](https://hackerone.com/bitwarden).
+- From Api : proxy web, identity
+- Replace Licensing Service With Noop Service
+- Install docker bitwarden/mssql
+```
+docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=T0ps3cret123.' -p 1433:1433 -d bitwarden/mssql
+```
+- Migrate database using srv/utils/setup project
+- Remove Self Hosted Restriction in OrganizationController
+- Set Seats Null, Set MaxCollections Null
