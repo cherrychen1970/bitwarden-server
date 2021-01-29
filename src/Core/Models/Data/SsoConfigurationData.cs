@@ -14,10 +14,10 @@ namespace Bit.Core.Models.Data
         public SsoType ConfigType { get; set; }
 
         // OIDC
-        public string Authority { get; set; }
-        public string ClientId { get; set; }
-        public string ClientSecret { get; set; }
-        public string MetadataAddress { get; set; }
+        public string Authority { get; set; } = "https://localhost:5000";
+        public string ClientId { get; set; } ="bitwarden";
+        public string ClientSecret { get; set; } = "secret";
+        public string MetadataAddress  => $"{Authority}/.well-known/openid-configuration";
         public OpenIdConnectRedirectBehavior RedirectBehavior { get; set; } = OpenIdConnectRedirectBehavior.FormPost;
         public bool GetClaimsFromUserInfoEndpoint { get; set; }
 

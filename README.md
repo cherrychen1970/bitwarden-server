@@ -85,3 +85,6 @@ docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=T0ps3cret123.' -p 1433:1433 -d bit
 - Migrate database using srv/utils/setup project
 - Remove Self Hosted Restriction in OrganizationController
 - Set Seats Null, Set MaxCollections Null
+
+## SSO
+update SsoConfig set data='{"configType":1,"authority":"http://localhost:5000","clientId":"bitwarden","clientSecret":"random value!"}' where id=1

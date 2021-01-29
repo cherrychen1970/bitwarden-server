@@ -142,6 +142,7 @@ namespace Bit.Sso.Controllers
             }
             catch (Exception ex)
             {
+                Serilog.Log.Warning(ex.ToString());
                 return invalidJson("PreValidationError", ex);
             }
 

@@ -210,6 +210,7 @@ namespace Bit.Api
                 });
             }
             app.Map("/connect",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
+            app.Map("/account",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="51822", Scheme="http"}));
             app.RunProxy(new ProxyOptions(){Host="localhost",Port="8080", Scheme="http"});
 
             // Log startup
