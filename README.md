@@ -80,7 +80,7 @@ Invoke-RestMethod -OutFile bitwarden.ps1 `
 - Replace Licensing Service With Noop Service
 - Install docker bitwarden/mssql
 ```
-docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=T0ps3cret123.' -p 1433:1433 -d bitwarden/mssql
+docker run --name=mssql --network="postgres_default" -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=T0ps3cret123.' -p 1433:1433 -v /docker/mssql/data:/var/opt/mssql/data -d bitwarden/mssql
 ```
 - Migrate database using srv/utils/setup project
 - Remove Self Hosted Restriction in OrganizationController
