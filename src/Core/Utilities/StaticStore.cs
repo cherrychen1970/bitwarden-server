@@ -98,8 +98,24 @@ namespace Bit.Core.Utilities
             #endregion
 
             #region Plans
-
             Plans = new List<Plan>
+            {
+                new Plan
+                {
+                    Type = PlanType.Free,
+                    Product = ProductType.Free,
+                    Name = "Free",
+                    NameLocalizationKey = "planNameFree",
+                    DescriptionLocalizationKey = "planDescFree",
+                    BaseSeats = 20,
+                    MaxCollections = 200,
+                    MaxUsers = 20,
+
+                    UpgradeSortOrder = -1, // Always the lowest plan, cannot be upgraded to
+                    DisplaySortOrder = -1
+                }
+            };
+            Plans1 = new List<Plan>
             {
                 new Plan
                 {
@@ -447,5 +463,6 @@ namespace Bit.Core.Utilities
 
         public static IDictionary<GlobalEquivalentDomainsType, IEnumerable<string>> GlobalDomains { get; set; }
         public static IEnumerable<Plan> Plans { get; set; }
+        public static IEnumerable<Plan> Plans1 { get; set; }
     }
 }
