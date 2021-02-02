@@ -21,6 +21,7 @@ namespace Bit.Core
         public virtual bool DisableUserRegistration { get; set; }
         public virtual bool DisableEmailNewDevice { get; set; }
         public virtual int OrganizationInviteExpirationHours { get; set; } = 120; // 5 days
+        public int SingingKeyRefreshDays {get;set;}=365;
         public virtual InstallationSettings Installation { get; set; } = new InstallationSettings();
         public virtual BaseServiceUriSettings BaseServiceUri { get; set; } = new BaseServiceUriSettings();
         public virtual SqlSettings SqlServer { get; set; } = new SqlSettings();
@@ -281,6 +282,7 @@ namespace Bit.Core
         public class SsoSettings
         {
             public int CacheLifetimeInSeconds { get; set; } = 60;
+            public string OrganizationIdentifierClaimType {get;set;}="orgid";
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Bit.Core.Models.Api;
+﻿using Bit.Core;
+using Bit.Core.Models.Api;
 using Bit.Core.Models.Table;
 using Bit.Core.Repositories;
 using Bit.Core.Services;
@@ -20,39 +21,49 @@ using System.Net.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
+// NOTE: directly support oidc matching email 
 namespace Bit.Identity.Controllers
 {
+
     public class AccountController : Controller
     {
         private readonly IClientStore _clientStore;
         private readonly IIdentityServerInteractionService _interaction;
         private readonly ILogger<AccountController> _logger;
-        private readonly ISsoConfigRepository _ssoConfigRepository;
+        //private readonly ISsoConfigRepository _ssoConfigRepository;
         private readonly IUserRepository _userRepository;
         private readonly IOrganizationRepository _organizationRepository;
         private readonly IHttpClientFactory _clientFactory;
+        readonly GlobalSettings _globalSettings;
 
         public AccountController(
             IClientStore clientStore,
             IIdentityServerInteractionService interaction,
             ILogger<AccountController> logger,
-            ISsoConfigRepository ssoConfigRepository,
+            //ISsoConfigRepository ssoConfigRepository,
             IUserRepository userRepository,
             IOrganizationRepository organizationRepository,
-            IHttpClientFactory clientFactory)
+            IHttpClientFactory clientFactory,
+            GlobalSettings globalSettings
+            )
         {
             _clientStore = clientStore;
             _interaction = interaction;
             _logger = logger;
-            _ssoConfigRepository = ssoConfigRepository;
+            //_ssoConfigRepository = ssoConfigRepository;
             _userRepository = userRepository;
             _organizationRepository = organizationRepository;
             _clientFactory = clientFactory;
+            _globalSettings = globalSettings;
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> PreValidate(string domainHint)
         {
+
+            // Everything is good!
+            return new EmptyResult();
+
             if (string.IsNullOrWhiteSpace(domainHint))
             {
                 Response.StatusCode = 400;
@@ -93,7 +104,7 @@ namespace Bit.Identity.Controllers
         {
             var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
 
-            var domainHint = context.Parameters.AllKeys.Contains("domain_hint") ? 
+            var domainHint = context.Parameters.AllKeys.Contains("domain_hint") ?
                 context.Parameters["domain_hint"] : null;
 
             if (string.IsNullOrWhiteSpace(domainHint))
@@ -101,7 +112,7 @@ namespace Bit.Identity.Controllers
                 throw new Exception("No domain_hint provided");
             }
 
-            var userIdentifier = context.Parameters.AllKeys.Contains("user_identifier") ? 
+            var userIdentifier = context.Parameters.AllKeys.Contains("user_identifier") ?
                 context.Parameters["user_identifier"] : null;
 
             return RedirectToAction(nameof(ExternalChallenge), new
@@ -120,13 +131,17 @@ namespace Bit.Identity.Controllers
             {
                 throw new Exception("Invalid organization reference id.");
             }
-
+            // cherry always allow sso
+/*
             var ssoConfig = await _ssoConfigRepository.GetByIdentifierAsync(organizationIdentifier);
             if (ssoConfig == null || !ssoConfig.Enabled)
             {
                 throw new Exception("Organization not found or SSO configuration not enabled");
             }
             var domainHint = ssoConfig.OrganizationId.ToString();
+*/
+            // well this is dummy to prevent any side effect if this is not exist..
+            var domainHint = organizationIdentifier;
 
             var scheme = "sso";
             var props = new AuthenticationProperties
@@ -227,8 +242,8 @@ namespace Bit.Identity.Controllers
             }
         }
 
-        private async Task<(User user, string provider, string providerUserId, IEnumerable<Claim> claims)>
-            FindUserFromExternalProviderAsync(AuthenticateResult result)
+        // matching sso
+        private async Task<(User user, string provider, string providerUserId, IEnumerable<Claim> claims)> FindUserFromExternalProviderAsync(AuthenticateResult result)
         {
             var externalUser = result.Principal;
 
@@ -239,19 +254,24 @@ namespace Bit.Identity.Controllers
                               externalUser.FindFirst(ClaimTypes.NameIdentifier) ??
                               throw new Exception("Unknown userid");
 
+            var emailClaim = externalUser.FindFirst(JwtClaimTypes.Email) ??                              
+                              throw new Exception("email claim not found");
+
             // remove the user id claim so we don't include it as an extra claim if/when we provision the user
             var claims = externalUser.Claims.ToList();
             claims.Remove(userIdClaim);
 
             var provider = result.Properties.Items["scheme"];
-            var providerUserId = userIdClaim.Value;
-            var user = await _userRepository.GetByIdAsync(new Guid(providerUserId));
+            var providerUserId = userIdClaim.Value;            
+            // TODO fix this.. merged sso into here. use email as identifier
+           //var user = await _userRepository.GetBySsoUserAsync(providerUserId, config.OrganizationId);
+            var user = await _userRepository.GetByEmailAsync(emailClaim.Value);
+            //var user = await _userRepository.GetByIdAsync(new Guid(providerUserId));            
 
             return (user, provider, providerUserId, claims);
         }
 
-        private void ProcessLoginCallback(AuthenticateResult externalResult, List<Claim> localClaims,
-            AuthenticationProperties localSignInProps)
+        private void ProcessLoginCallback(AuthenticateResult externalResult, List<Claim> localClaims, AuthenticationProperties localSignInProps)
         {
             // If the external system sent a session id claim, copy it over
             // so we can use it for single sign-out

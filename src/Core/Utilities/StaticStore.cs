@@ -110,7 +110,15 @@ namespace Bit.Core.Utilities
                     BaseSeats = 20,
                     MaxCollections = 200,
                     MaxUsers = 20,
-
+                    //HasPolicies = true,
+                    HasGroups = true,
+                    HasDirectory = true,
+                    //HasEvents = true,
+                    //HasTotp = true,
+                    //Has2fa = true,
+                    HasApi = true,
+                    HasSelfHost = true,
+                    HasSso = true,
                     UpgradeSortOrder = -1, // Always the lowest plan, cannot be upgraded to
                     DisplaySortOrder = -1
                 }

@@ -1,0 +1,22 @@
+ @url=http://localhost:33656
+ @ssoUrl=http://localhost:5000
+@client_id=user.ae556949-53a9-4723-9cd3-acbf00342f4e
+@client_secret=Bjc5ftwfTL15xdWFAinPBLFouAehRd
+@scope=api
+@grant_type=client_credentials 
+
+POST {{url}}/connect/token HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&client_id={{client_id}}
+&client_secret={{client_secret}}
+###
+
+POST {{url}}/connect/token HTTP/1.1
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&client_id=oidc-identity
+&client_secret=r@ndoms3cret!
+###

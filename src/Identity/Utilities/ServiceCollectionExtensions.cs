@@ -1,13 +1,16 @@
 ﻿using System;
 using Bit.Core;
+using Bit.Core.Services;
 using Bit.Core.IdentityServer;
 using Bit.Core.Utilities;
 using IdentityServer4.ResponseHandling;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 
 namespace Bit.Identity.Utilities
 {
@@ -16,6 +19,10 @@ namespace Bit.Identity.Utilities
         public static IIdentityServerBuilder AddCustomIdentityServerServices(this IServiceCollection services,
             IWebHostEnvironment env, GlobalSettings globalSettings)
         {
+                        var rsa = new RsaKeyService(env, TimeSpan.FromDays(globalSettings.SingingKeyRefreshDays));
+            services.AddTransient<RsaKeyService>(provider => rsa);
+
+            SigningCredentials signingCredentials = new SigningCredentials(rsa.GetKey(), SecurityAlgorithms.RsaSha256);
             services.AddTransient<IDiscoveryResponseGenerator, DiscoveryResponseGenerator>();
 
             services.AddSingleton<StaticClientStore>();
@@ -37,6 +44,7 @@ namespace Bit.Identity.Utilities
                         options.Authentication.CookieSameSiteMode = Microsoft.AspNetCore.Http.SameSiteMode.Unspecified;
                     }
                 })
+                .AddSigningCredential(signingCredentials)
                 .AddInMemoryCaching()
                 .AddInMemoryApiResources(ApiResources.GetApiResources())
                 .AddInMemoryApiScopes(ApiScopes.GetApiScopes())

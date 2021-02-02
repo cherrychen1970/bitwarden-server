@@ -3,6 +3,9 @@ using Bit.Core.Utilities;
 using Serilog.Events;
 using AspNetCoreRateLimit;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace Bit.Identity
 {
@@ -10,32 +13,28 @@ namespace Bit.Identity
     {
         public static void Main(string[] args)
         {
+            SerilogFix(false);
             Host
                 .CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
-                    webBuilder.ConfigureLogging((hostingContext, logging) =>
-                        logging.AddSerilog(hostingContext, e =>
-                        {
-                            var context = e.Properties["SourceContext"].ToString();
-                            if (context.Contains(typeof(IpRateLimitMiddleware).FullName) &&
-                                e.Level == LogEventLevel.Information)
-                            {
-                                return true;
-                            }
-
-                            if (context.Contains("IdentityServer4.Validation.TokenValidator") ||
-                                context.Contains("IdentityServer4.Validation.TokenRequestValidator"))
-                            {
-                                return e.Level > LogEventLevel.Error;
-                            }
-
-                            return e.Level >= LogEventLevel.Error;
-                        }));
-                })
+                    webBuilder.UseStartup<Startup>().UseSerilog();
+                  })
                 .Build()
                 .Run();
         }
+
+        public static void SerilogFix(bool production=true)
+        {
+            var jconfig = production? "appsettings.Production.json":"appsettings.json";
+            var config = new ConfigurationBuilder()
+                .AddJsonFile(jconfig, optional: false)
+                .Build();
+
+            var logcfg = new LoggerConfiguration()
+                .ReadFrom.Configuration(config)
+                ;
+            Log.Logger = logcfg.CreateLogger();
+        }        
     }
 }

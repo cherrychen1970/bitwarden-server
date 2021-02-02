@@ -209,8 +209,15 @@ namespace Bit.Api
                     config.OAuthClientSecret("secretKey");
                 });
             }
+            // TODO : merge with identity
+            // 33656 : identity, 51822 : sso
+            /*
+            app.Map("/signin-oidc",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
+            app.Map("/authorize",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
             app.Map("/connect",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
-            app.Map("/account",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="51822", Scheme="http"}));
+            app.Map("/account",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
+            app.Map("/.well-known",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
+            */
             app.RunProxy(new ProxyOptions(){Host="localhost",Port="8080", Scheme="http"});
 
             // Log startup

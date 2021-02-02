@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Bit.Core;
@@ -14,6 +15,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Threading.Tasks;
 using Bit.Identity.Utilities;
 using IdentityServer4.Extensions;
+using IdentityModel;
 
 namespace Bit.Identity
 {
@@ -84,6 +86,8 @@ namespace Bit.Identity
                 .AddDistributedIdentityServices(globalSettings)
                 .AddAuthentication()
                 .AddCookie(AuthenticationSchemes.BitwardenExternalCookieAuthenticationScheme)
+                // TODO : it is not using internalSSo and direclty can go any oidc 
+                // email is the identifier to match bitwarden user
                 .AddOpenIdConnect("sso", "Single Sign On", options =>
                 {
                     options.Authority = globalSettings.BaseServiceUri.InternalSso;
@@ -97,11 +101,16 @@ namespace Bit.Identity
                     options.ResponseType = "code";
                     options.SaveTokens = false;
                     options.GetClaimsFromUserInfoEndpoint = true;
+                    // well this is not automatic...                    
+                    options.ClaimActions.MapUniqueJsonKey(JwtClaimTypes.Email,JwtClaimTypes.Email);                    
+                    options.Scope.Add("email");
 
                     options.Events = new Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectEvents
                     {
                         OnRedirectToIdentityProvider = context =>
                         {
+                            //cherry. behind proxy
+                            //context.ProtocolMessage.RedirectUri = $"{globalSettings.BaseServiceUri.Identity}/signin-oidc";
                             // Pass domain_hint onto the sso idp
                             context.ProtocolMessage.DomainHint = context.Properties.Items["domain_hint"];
                             if (context.Properties.Items.ContainsKey("user_identifier"))
@@ -109,8 +118,10 @@ namespace Bit.Identity
                                 context.ProtocolMessage.SessionState = context.Properties.Items["user_identifier"];
                             }
                             return Task.FromResult(0);
-                        }
+                        }                        
                     };
+
+                    
                 });
 
             // IdentityServer
@@ -146,7 +157,7 @@ namespace Bit.Identity
         {
             IdentityModelEventSource.ShowPII = true;
 
-            app.UseSerilog(env, appLifetime, globalSettings);
+            //app.UseSerilog(env, appLifetime, globalSettings);
 
             if (!env.IsDevelopment())
             {
