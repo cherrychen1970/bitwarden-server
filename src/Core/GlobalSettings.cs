@@ -15,8 +15,7 @@ namespace Bit.Core
         public virtual string LicenseDirectory { get; set; }
         public string LicenseCertificatePassword { get; set; }
         public virtual string PushRelayBaseUri { get; set; }
-        public virtual string InternalIdentityKey { get; set; }
-        public virtual string OidcIdentityClientKey { get; set; }
+        public virtual string InternalIdentityKey { get; set; }        
         public virtual string HibpApiKey { get; set; }
         public virtual bool DisableUserRegistration { get; set; }
         public virtual bool DisableEmailNewDevice { get; set; }
@@ -46,6 +45,7 @@ namespace Bit.Core
         public virtual ServiceBusSettings ServiceBus { get; set; } = new ServiceBusSettings();
         public virtual AppleIapSettings AppleIap { get; set; } = new AppleIapSettings();
         public virtual SsoSettings Sso { get; set; } = new SsoSettings();
+        public virtual OidcSettings Oidc {get;set;} =new OidcSettings();
 
         public class BaseServiceUriSettings
         {
@@ -61,7 +61,16 @@ namespace Bit.Core
             public string InternalIdentity { get; set; }
             public string InternalApi { get; set; }
             public string InternalVault { get; set; }
-            public string InternalSso { get; set; }
+            //public string InternalSso { get; set; }            
+        }
+
+        public class OidcSettings
+        {
+            public string Authority { get; set; } = "http://localhost:5000";
+            public string Client { get; set; } ="bitwarden";
+            public string ClientSecret { get; set; } ="secretMustBeProvided";
+            public string[] Scopes { get; set; } = new string[] {"email","roles"};
+            public virtual string OrganizationIdentifier {get;set;}="orgid";
         }
 
         public class SqlSettings
@@ -281,8 +290,7 @@ namespace Bit.Core
 
         public class SsoSettings
         {
-            public int CacheLifetimeInSeconds { get; set; } = 60;
-            public string OrganizationIdentifierClaimType {get;set;}="orgid";
+            public int CacheLifetimeInSeconds { get; set; } = 60;            
         }
     }
 }

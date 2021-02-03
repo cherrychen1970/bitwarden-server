@@ -90,11 +90,11 @@ namespace Bit.Identity
                 // email is the identifier to match bitwarden user
                 .AddOpenIdConnect("sso", "Single Sign On", options =>
                 {
-                    options.Authority = globalSettings.BaseServiceUri.InternalSso;
+                    options.Authority = globalSettings.Oidc.Authority;
                     options.RequireHttpsMetadata = !Environment.IsDevelopment() &&
                         globalSettings.BaseServiceUri.InternalIdentity.StartsWith("https");
-                    options.ClientId = "oidc-identity";
-                    options.ClientSecret = globalSettings.OidcIdentityClientKey;
+                    options.ClientId = globalSettings.Oidc.Client;
+                    options.ClientSecret = globalSettings.Oidc.ClientSecret;
                     options.ResponseMode = "form_post";
 
                     options.SignInScheme = AuthenticationSchemes.BitwardenExternalCookieAuthenticationScheme;
@@ -103,9 +103,9 @@ namespace Bit.Identity
                     options.GetClaimsFromUserInfoEndpoint = true;
                     // well this is not automatic...                    
                     options.ClaimActions.MapUniqueJsonKey(JwtClaimTypes.Email,JwtClaimTypes.Email);                    
-                    options.ClaimActions.MapUniqueJsonKey(globalSettings.Sso.OrganizationIdentifierClaimType,globalSettings.Sso.OrganizationIdentifierClaimType);                    
-                    options.Scope.Add("email");
-                    options.Scope.Add("roles");
+                    options.ClaimActions.MapUniqueJsonKey(globalSettings.Oidc.OrganizationIdentifier,globalSettings.Oidc.OrganizationIdentifier);                    
+                    foreach (var item in globalSettings.Oidc.Scopes)                    
+                        options.Scope.Add(item);
 
                     options.Events = new Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectEvents
                     {
@@ -142,12 +142,13 @@ namespace Bit.Identity
             {
                 services.AddHostedService<Core.HostedServices.ApplicationCacheHostedService>();
             }
-
+/*
             // HttpClients
             services.AddHttpClient("InternalSso", client =>
             {
                 client.BaseAddress = new Uri(globalSettings.BaseServiceUri.InternalSso);
             });
+*/            
         }
 
         public void Configure(

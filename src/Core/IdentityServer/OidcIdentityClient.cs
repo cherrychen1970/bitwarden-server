@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace Bit.Core.IdentityServer
 {
+#if notused    
     public class OidcIdentityClient : Client
     {
         public OidcIdentityClient(GlobalSettings globalSettings)
@@ -23,4 +24,5 @@ namespace Bit.Core.IdentityServer
             RequireConsent = false;
         }
     }
+#endif    
 }

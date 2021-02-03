@@ -297,7 +297,7 @@ namespace Bit.Identity.Controllers
         {
             var name = claims.GetName();
             var email = claims.GetEmailAddress();
-            var orgIdentifier = claims.GetClaim(_globalSettings.Sso.OrganizationIdentifierClaimType);
+            var orgIdentifier = claims.GetClaim(_globalSettings.Oidc.OrganizationIdentifier);
 
             OrganizationUser orgUser = null;
             var organization = await _organizationRepository.GetByIdentifierAsync(orgIdentifier);
