@@ -1,4 +1,7 @@
 ﻿using Bit.Core;
+using Bit.Core.Utilities;
+using Bit.Core.Enums;
+using Bit.Core.Identity;
 using Bit.Core.Models.Api;
 using Bit.Core.Models.Table;
 using Bit.Core.Repositories;
@@ -33,7 +36,9 @@ namespace Bit.Identity.Controllers
         //private readonly ISsoConfigRepository _ssoConfigRepository;
         private readonly IUserRepository _userRepository;
         private readonly IOrganizationRepository _organizationRepository;
+        private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IHttpClientFactory _clientFactory;
+        private readonly IUserService _userService;
         readonly GlobalSettings _globalSettings;
 
         public AccountController(
@@ -43,7 +48,9 @@ namespace Bit.Identity.Controllers
             //ISsoConfigRepository ssoConfigRepository,
             IUserRepository userRepository,
             IOrganizationRepository organizationRepository,
+            IOrganizationUserRepository organizationUserRepository,
             IHttpClientFactory clientFactory,
+            IUserService userService,
             GlobalSettings globalSettings
             )
         {
@@ -53,7 +60,9 @@ namespace Bit.Identity.Controllers
             //_ssoConfigRepository = ssoConfigRepository;
             _userRepository = userRepository;
             _organizationRepository = organizationRepository;
+            _organizationUserRepository = organizationUserRepository;
             _clientFactory = clientFactory;
+            _userService = userService;
             _globalSettings = globalSettings;
         }
 
@@ -132,14 +141,14 @@ namespace Bit.Identity.Controllers
                 throw new Exception("Invalid organization reference id.");
             }
             // cherry always allow sso
-/*
-            var ssoConfig = await _ssoConfigRepository.GetByIdentifierAsync(organizationIdentifier);
-            if (ssoConfig == null || !ssoConfig.Enabled)
-            {
-                throw new Exception("Organization not found or SSO configuration not enabled");
-            }
-            var domainHint = ssoConfig.OrganizationId.ToString();
-*/
+            /*
+                        var ssoConfig = await _ssoConfigRepository.GetByIdentifierAsync(organizationIdentifier);
+                        if (ssoConfig == null || !ssoConfig.Enabled)
+                        {
+                            throw new Exception("Organization not found or SSO configuration not enabled");
+                        }
+                        var domainHint = ssoConfig.OrganizationId.ToString();
+            */
             // well this is dummy to prevent any side effect if this is not exist..
             var domainHint = organizationIdentifier;
 
@@ -173,16 +182,15 @@ namespace Bit.Identity.Controllers
             {
                 throw new Exception("External authentication error");
             }
-
-            // Debugging
+            
             var externalClaims = result.Principal.Claims.Select(c => $"{c.Type}: {c.Value}");
             _logger.LogDebug("External claims: {@claims}", externalClaims);
 
-            var (user, provider, providerUserId, claims) = await FindUserFromExternalProviderAsync(result);
+            var user = await FindUserFromExternalProviderAsync(result.Principal);
             if (user == null)
             {
-                // Should never happen
-                throw new Exception("Cannot find user.");
+                // cherry   2021/02/03
+                user = await AutoProvisionUserAsync(result.Principal);
             }
 
             // This allows us to collect any additional claims or properties
@@ -195,7 +203,7 @@ namespace Bit.Identity.Controllers
                 ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(1)
             };
             ProcessLoginCallback(result, additionalLocalClaims, localSignInProps);
-
+            var provider = result.Properties.Items["scheme"];
             // Issue authentication cookie for user
             await HttpContext.SignInAsync(new IdentityServerUser(user.Id.ToString())
             {
@@ -242,33 +250,22 @@ namespace Bit.Identity.Controllers
             }
         }
 
-        // matching sso
-        private async Task<(User user, string provider, string providerUserId, IEnumerable<Claim> claims)> FindUserFromExternalProviderAsync(AuthenticateResult result)
+        // not using any sso tables just use email as the external id        
+        private async Task<User> FindUserFromExternalProviderAsync(ClaimsPrincipal externalUser)
         {
-            var externalUser = result.Principal;
-
-            // Try to determine the unique id of the external user (issued by the provider)
-            // the most common claim type for that are the sub claim and the NameIdentifier
-            // depending on the external provider, some other claim type might be used
+/*
             var userIdClaim = externalUser.FindFirst(JwtClaimTypes.Subject) ??
                               externalUser.FindFirst(ClaimTypes.NameIdentifier) ??
                               throw new Exception("Unknown userid");
-
-            var emailClaim = externalUser.FindFirst(JwtClaimTypes.Email) ??                              
+*/
+            var emailClaim = externalUser.FindFirst(JwtClaimTypes.Email) ??
                               throw new Exception("email claim not found");
-
-            // remove the user id claim so we don't include it as an extra claim if/when we provision the user
-            var claims = externalUser.Claims.ToList();
-            claims.Remove(userIdClaim);
-
-            var provider = result.Properties.Items["scheme"];
-            var providerUserId = userIdClaim.Value;            
             // TODO fix this.. merged sso into here. use email as identifier
-           //var user = await _userRepository.GetBySsoUserAsync(providerUserId, config.OrganizationId);
+            //var user = await _userRepository.GetBySsoUserAsync(providerUserId, config.OrganizationId);
             var user = await _userRepository.GetByEmailAsync(emailClaim.Value);
             //var user = await _userRepository.GetByIdAsync(new Guid(providerUserId));            
 
-            return (user, provider, providerUserId, claims);
+            return user;
         }
 
         private void ProcessLoginCallback(AuthenticateResult externalResult, List<Claim> localClaims, AuthenticationProperties localSignInProps)
@@ -294,6 +291,40 @@ namespace Bit.Identity.Controllers
         {
             return !context.RedirectUri.StartsWith("https", StringComparison.Ordinal)
                && !context.RedirectUri.StartsWith("http", StringComparison.Ordinal);
+        }
+
+        private async Task<User> AutoProvisionUserAsync(ClaimsPrincipal claims)
+        {
+            var name = claims.GetName();
+            var email = claims.GetEmailAddress();
+            var orgIdentifier = claims.GetClaim(_globalSettings.Sso.OrganizationIdentifierClaimType);
+
+            OrganizationUser orgUser = null;
+            var organization = await _organizationRepository.GetByIdentifierAsync(orgIdentifier);
+            if (organization == null)
+                throw new Exception($"Organization: {orgIdentifier} not found" );
+
+            // Create user record - all existing user flows are handled above
+            var user = new User
+            {
+                Name = name,
+                Email = email,
+                EmailVerified = true,
+                ApiKey = CoreHelpers.SecureRandomString(30)
+            };
+            await _userService.RegisterUserAsync(user);
+
+
+            orgUser = new OrganizationUser
+            {
+                OrganizationId = organization.Id,
+                UserId = user.Id,
+                Type = OrganizationUserType.User,
+                Status = OrganizationUserStatusType.Invited
+            };
+            await _organizationUserRepository.CreateAsync(orgUser);
+
+            return user;
         }
     }
 }

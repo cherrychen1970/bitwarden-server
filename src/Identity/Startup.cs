@@ -103,7 +103,9 @@ namespace Bit.Identity
                     options.GetClaimsFromUserInfoEndpoint = true;
                     // well this is not automatic...                    
                     options.ClaimActions.MapUniqueJsonKey(JwtClaimTypes.Email,JwtClaimTypes.Email);                    
+                    options.ClaimActions.MapUniqueJsonKey(globalSettings.Sso.OrganizationIdentifierClaimType,globalSettings.Sso.OrganizationIdentifierClaimType);                    
                     options.Scope.Add("email");
+                    options.Scope.Add("roles");
 
                     options.Events = new Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectEvents
                     {
