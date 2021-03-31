@@ -1,0 +1,24 @@
+@url=http://localhost:4000
+@token=eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE2MTcxNzI5NzAsImV4cCI6MTYxNzE3NjU3MCwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdCIsImNsaWVudF9pZCI6IndlYiIsImRldmljZSI6IjI4ZmMzZTMwLTJkMGItNDFjYi1iNGMzLTViMTMzMTk2MzQ0MyIsInN1YiI6ImFlZTUxNzVhLTQ0ZDctNDE5ZC1mOGUyLTA4ZDhmNDEwMmU4ZSIsImF1dGhfdGltZSI6MTYxNzE3Mjk2MSwiaWRwIjoic3NvIiwicHJlbWl1bSI6ZmFsc2UsImVtYWlsIjoiY2h1bjFtaWpAcG9saWNlLm5zdy5nb3YuYXUiLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwic3N0YW1wIjoiVklBNkJKUTJXRjdYM1ZEN0RMRko2SlQ0SjZIUFNDSjUiLCJuYW1lIjoiQ2h1bixNaWp1bmciLCJqdGkiOiIzQkI3MTk0NThENDZFQzU1NTQxNDE1RThGMDIxOEYyQiIsImlhdCI6MTYxNzE3Mjk3MCwic2NvcGUiOlsiYXBpIiwib2ZmbGluZV9hY2Nlc3MiXSwiYW1yIjpbImV4dGVybmFsIl19.OBDpFNKnYBvdinHIWvyv5d0nLpTXoDYfUoHl5nrIDrrzPebxiItsxk3HHK80tKbN5-NycRlwS7tBKXhtDTuI3BfZQKRQ-P8qXG9Zdy3O8cTiQ18NgWpO-q_h_TIjSbuVyLjs7ZTvNScVFPJBi1sW2ch3DBDLCvrjKO8NI7nGn_2oy_X0BS9-KeUfwMy8KBmGOXKxbXMu4pg9MHGi3CWxQx6T1tV54aLQBDgrbjQYp_8tPg-2FeuEpHK0sDzLJ0C4uRn8X7AUyMtKiEVHy2LKQISMTo-oC8_ranaC-wXPmcYap0RdHV4Q0CxjpYnODoMZcThiHxTzhNxYeeQxFpIHUg
+
+
+http://localhost:4000/sync?excludeDomains=true
+authorization: Bearer {{token}}
+###
+{{url}}/ciphers
+authorization: Bearer {{token}}
+
+###
+{{url}}/ciphers/organization-details?organizationId=3c862b74-e723-484a-ac49-acc30042f1c4
+authorization: Bearer {{token}}
+
+###
+POST http://localhost:33656/connect/token
+
+
+###
+http://localhost:4000/organizations/e11a6d5a-eca4-4dd2-bd28-acfc00708de8/collections
+authorization: Bearer {{token}}
+###
+http://localhost:4000/organizations/e11a6d5a-eca4-4dd2-bd28-acfc00708de8/users
+authorization: Bearer {{token}}

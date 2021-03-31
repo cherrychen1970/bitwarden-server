@@ -51,7 +51,8 @@ namespace Bit.Api
             StripeConfiguration.ApiKey = globalSettings.StripeApiKey;
 
             // Repositories
-            services.AddSqlServerRepositories(globalSettings);
+            //services.AddSqlServerRepositories(globalSettings);
+            services.AddEFSqlServerRepositories(globalSettings);
 
             // Context
             services.AddScoped<CurrentContext>();
@@ -107,8 +108,10 @@ namespace Bit.Api
 
             // Services
             services.AddBaseServices();
-            services.AddDefaultServices(globalSettings);
-            //services.AddNoopServices();
+
+            //services.AddDefaultServices(globalSettings);
+            services.AddNoopServices();
+
             services.AddCoreLocalizationServices();
 
             // MVC

@@ -12,6 +12,9 @@ using IdentityServer4;
 using IdentityServer4.Services;
 using IdentityServer4.Stores;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Server.IISIntegration;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Localization;
@@ -108,7 +111,7 @@ namespace Bit.Identity.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet()]
         public async Task<IActionResult> Login(string returnUrl)
         {
             var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
@@ -130,6 +133,24 @@ namespace Bit.Identity.Controllers
                 returnUrl,
                 userIdentifier
             });
+        }
+
+        protected async Task Sign(string userId)
+        {
+            var localSignInProps = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(1)
+            };
+            var additionalLocalClaims = new List<Claim>();
+            additionalLocalClaims.Add(new Claim(JwtClaimTypes.Email, userId));
+            // Issue authentication cookie for user
+            await HttpContext.SignInAsync(new IdentityServerUser(userId)
+            {
+                DisplayName = userId,
+                IdentityProvider = "Windows",
+                AdditionalClaims = additionalLocalClaims.ToArray()
+            }, localSignInProps);
         }
 
         [HttpGet]
@@ -182,7 +203,7 @@ namespace Bit.Identity.Controllers
             {
                 throw new Exception("External authentication error");
             }
-            
+
             var externalClaims = result.Principal.Claims.Select(c => $"{c.Type}: {c.Value}");
             _logger.LogDebug("External claims: {@claims}", externalClaims);
 
@@ -253,11 +274,11 @@ namespace Bit.Identity.Controllers
         // not using any sso tables just use email as the external id        
         private async Task<User> FindUserFromExternalProviderAsync(ClaimsPrincipal externalUser)
         {
-/*
-            var userIdClaim = externalUser.FindFirst(JwtClaimTypes.Subject) ??
-                              externalUser.FindFirst(ClaimTypes.NameIdentifier) ??
-                              throw new Exception("Unknown userid");
-*/
+            /*
+                        var userIdClaim = externalUser.FindFirst(JwtClaimTypes.Subject) ??
+                                          externalUser.FindFirst(ClaimTypes.NameIdentifier) ??
+                                          throw new Exception("Unknown userid");
+            */
             var emailClaim = externalUser.FindFirst(JwtClaimTypes.Email) ??
                               throw new Exception("email claim not found");
             // TODO fix this.. merged sso into here. use email as identifier
@@ -298,12 +319,6 @@ namespace Bit.Identity.Controllers
             var name = claims.GetName();
             var email = claims.GetEmailAddress();
             var orgIdentifier = claims.GetClaim(_globalSettings.Oidc.OrganizationIdentifier);
-
-            OrganizationUser orgUser = null;
-            var organization = await _organizationRepository.GetByIdentifierAsync(orgIdentifier);
-            if (organization == null)
-                throw new Exception($"Organization: {orgIdentifier} not found" );
-
             // Create user record - all existing user flows are handled above
             var user = new User
             {
@@ -313,16 +328,22 @@ namespace Bit.Identity.Controllers
                 ApiKey = CoreHelpers.SecureRandomString(30)
             };
             await _userService.RegisterUserAsync(user);
+            user = await _userService.GetUserByIdAsync(user.Id);
 
-
-            orgUser = new OrganizationUser
+            OrganizationUser orgUser = null;
+            var organization = await _organizationRepository.GetByIdentifierAsync(orgIdentifier);
+            if (organization != null)
             {
-                OrganizationId = organization.Id,
-                UserId = user.Id,
-                Type = OrganizationUserType.User,
-                Status = OrganizationUserStatusType.Invited
-            };
-            await _organizationUserRepository.CreateAsync(orgUser);
+                //throw new Exception($"Organization: {orgIdentifier} not found" );
+                orgUser = new OrganizationUser
+                {
+                    OrganizationId = organization.Id,
+                    UserId = user.Id,
+                    Type = OrganizationUserType.User,
+                    Status = OrganizationUserStatusType.Invited
+                };
+                await _organizationUserRepository.CreateAsync(orgUser);
+            }
 
             return user;
         }

@@ -26,7 +26,7 @@ namespace Bit.Api.Controllers
         private readonly ICollectionCipherRepository _collectionCipherRepository;
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IPolicyRepository _policyRepository;
-        private readonly ISendRepository _sendRepository;
+        //private readonly ISendRepository _sendRepository;
         private readonly GlobalSettings _globalSettings;
 
         public SyncController(
@@ -37,7 +37,7 @@ namespace Bit.Api.Controllers
             ICollectionCipherRepository collectionCipherRepository,
             IOrganizationUserRepository organizationUserRepository,
             IPolicyRepository policyRepository,
-            ISendRepository sendRepository,
+            //ISendRepository sendRepository,
             GlobalSettings globalSettings)
         {
             _userService = userService;
@@ -47,7 +47,7 @@ namespace Bit.Api.Controllers
             _collectionCipherRepository = collectionCipherRepository;
             _organizationUserRepository = organizationUserRepository;
             _policyRepository = policyRepository;
-            _sendRepository = sendRepository;
+            //_sendRepository = sendRepository;
             _globalSettings = globalSettings;
         }
 
@@ -65,7 +65,8 @@ namespace Bit.Api.Controllers
             var hasEnabledOrgs = organizationUserDetails.Any(o => o.Enabled);
             var folders = await _folderRepository.GetManyByUserIdAsync(user.Id);
             var ciphers = await _cipherRepository.GetManyByUserIdAsync(user.Id, hasEnabledOrgs);
-            var sends = await _sendRepository.GetManyByUserIdAsync(user.Id);
+            //var sends = await _sendRepository.GetManyByUserIdAsync(user.Id);
+            var sends = new Send[] {};
 
             IEnumerable<CollectionDetails> collections = null;
             IDictionary<Guid, IGrouping<Guid, CollectionCipher>> collectionCiphersGroupDict = null;

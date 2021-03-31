@@ -112,7 +112,7 @@ namespace Bit.Core.Services
                 throw new BadRequestException("You do not have permissions to edit this.");
             }
 
-            cipher.UserId = savingUserId;
+            cipher.UserId = savingUserId;            
             if (cipher.Id == default(Guid))
             {
                 if (cipher.OrganizationId.HasValue && collectionIds != null)

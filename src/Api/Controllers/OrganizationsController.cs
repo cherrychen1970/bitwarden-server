@@ -52,10 +52,12 @@ namespace Bit.Api.Controllers
         public async Task<OrganizationResponseModel> Get(string id)
         {
             var orgIdGuid = new Guid(id);
+            
             if (!_currentContext.OrganizationOwner(orgIdGuid))
             {
                 throw new NotFoundException();
             }
+            
 
             var organization = await _organizationRepository.GetByIdAsync(orgIdGuid);
             if (organization == null)

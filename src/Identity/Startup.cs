@@ -48,7 +48,8 @@ namespace Bit.Identity
             services.AddCustomDataProtectionServices(Environment, globalSettings);
 
             // Repositories
-            services.AddSqlServerRepositories(globalSettings);
+            //services.AddSqlServerRepositories(globalSettings);
+            services.AddEFSqlServerRepositories(globalSettings);
 
             // Context
             services.AddScoped<CurrentContext>();
@@ -86,6 +87,9 @@ namespace Bit.Identity
                 .AddDistributedIdentityServices(globalSettings)
                 .AddAuthentication()
                 .AddCookie(AuthenticationSchemes.BitwardenExternalCookieAuthenticationScheme)
+#if DEBUG                
+                .AddNegotiate()
+#endif                
                 // TODO : it is not using internalSSo and direclty can go any oidc 
                 // email is the identifier to match bitwarden user
                 .AddOpenIdConnect("sso", "Single Sign On", options =>
@@ -134,7 +138,8 @@ namespace Bit.Identity
 
             // Services
             services.AddBaseServices();
-            services.AddDefaultServices(globalSettings);
+            //services.AddDefaultServices(globalSettings);
+            services.AddNoopServices();
             services.AddCoreLocalizationServices();
 
             if (CoreHelpers.SettingHasValue(globalSettings.ServiceBus.ConnectionString) &&

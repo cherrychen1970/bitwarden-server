@@ -2,7 +2,7 @@
 
 namespace Bit.Core.Enums
 {
-    public enum DeviceType : byte
+    public enum DeviceType : short
     {
         [Display(Name = "Android")]
         Android = 0,

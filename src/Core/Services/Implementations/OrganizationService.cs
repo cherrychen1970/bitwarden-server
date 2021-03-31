@@ -39,7 +39,7 @@ namespace Bit.Core.Services
         private readonly ISsoUserRepository _ssoUserRepository;
         private readonly IReferenceEventService _referenceEventService;
         private readonly GlobalSettings _globalSettings;
-        private readonly ITaxRateRepository _taxRateRepository;
+        //private readonly ITaxRateRepository _taxRateRepository;
 
         public OrganizationService(
             IOrganizationRepository organizationRepository,
@@ -61,8 +61,9 @@ namespace Bit.Core.Services
             ISsoConfigRepository ssoConfigRepository,
             ISsoUserRepository ssoUserRepository,
             IReferenceEventService referenceEventService,
-            GlobalSettings globalSettings,
-            ITaxRateRepository taxRateRepository)
+            GlobalSettings globalSettings
+            //ITaxRateRepository taxRateRepository
+            )
         {
             _organizationRepository = organizationRepository;
             _organizationUserRepository = organizationUserRepository;
@@ -84,7 +85,7 @@ namespace Bit.Core.Services
             _ssoUserRepository = ssoUserRepository;
             _referenceEventService = referenceEventService;
             _globalSettings = globalSettings;
-            _taxRateRepository = taxRateRepository;
+            //_taxRateRepository = taxRateRepository;
         }
 
         public async Task ReplacePaymentMethodAsync(Guid organizationId, string paymentToken,
@@ -418,6 +419,7 @@ namespace Bit.Core.Services
             if (!string.IsNullOrWhiteSpace(customer?.Address?.Country)
                     && !string.IsNullOrWhiteSpace(customer?.Address?.PostalCode))
             {
+/*                
                 var taxRates = await _taxRateRepository.GetByLocationAsync(
                     new Bit.Core.Models.Table.TaxRate()
                     {
@@ -433,6 +435,7 @@ namespace Bit.Core.Services
                         taxRate.Id 
                     };
                 }
+*/                
             }
 
             var subResponse = await subscriptionService.UpdateAsync(sub.Id, subUpdateOptions);

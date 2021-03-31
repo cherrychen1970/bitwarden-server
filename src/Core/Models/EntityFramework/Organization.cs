@@ -9,7 +9,7 @@ namespace Bit.Core.Models.EntityFramework
         private JsonDocument _twoFactorProvidersJson;
 
         public ICollection<Cipher> Ciphers { get; set; }
-        
+/*        
         [IgnoreMap]
         public JsonDocument TwoFactorProvidersJson
         {
@@ -20,6 +20,7 @@ namespace Bit.Core.Models.EntityFramework
                 _twoFactorProvidersJson = value;
             }
         }
+*/        
     }
 
     public class OrganizationMapperProfile : Profile
@@ -27,6 +28,9 @@ namespace Bit.Core.Models.EntityFramework
         public OrganizationMapperProfile()
         {
             CreateMap<Table.Organization, Organization>().ReverseMap();
+            CreateMap<Organization, Data.OrganizationUserOrganizationDetails>()
+            .ForMember(d=>d.OrganizationId, opt=>opt.MapFrom(s=>s.Id))
+            ;
         }
     }
 }
