@@ -13,7 +13,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Bit.Api.Controllers
 {
-    [Route("push")]
+    [Route("api/push")]
     [Authorize("Push")]
     [SelfHosted(NotSelfHostedOnly = true)]
     public class PushController : Controller

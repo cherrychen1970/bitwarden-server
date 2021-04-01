@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Bit.Api.Controllers
 {
-    [Route("emergency-access")]
+    [Route("api/emergency-access")]
     [Authorize("Application")]
     public class EmergencyAccessController : Controller
     {

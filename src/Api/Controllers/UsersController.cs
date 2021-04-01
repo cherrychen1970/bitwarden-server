@@ -8,7 +8,7 @@ using Bit.Core.Models.Api;
 
 namespace Bit.Api.Controllers
 {
-    [Route("users")]
+    [Route("api/users")]
     [Authorize("Application")]
     public class UsersController : Controller
     {

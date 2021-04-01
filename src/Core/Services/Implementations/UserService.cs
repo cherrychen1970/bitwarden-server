@@ -172,8 +172,7 @@ namespace Bit.Core.Services
             {
                 throw new ApplicationException("Use register method to create a new user.");
             }
-
-            user.RevisionDate = user.AccountRevisionDate = DateTime.UtcNow;
+            
             await _userRepository.ReplaceAsync(user);
 
             if (push)
@@ -541,7 +540,7 @@ namespace Bit.Core.Services
             user.Key = key;
             user.Email = newEmail;
             user.EmailVerified = true;
-            user.RevisionDate = user.AccountRevisionDate = DateTime.UtcNow;
+            user.AccountRevisionDate = DateTime.UtcNow;
             await _userRepository.ReplaceAsync(user);
             await _pushService.PushLogOutAsync(user.Id);
 
@@ -568,8 +567,7 @@ namespace Bit.Core.Services
                 {
                     return result;
                 }
-
-                user.RevisionDate = user.AccountRevisionDate = DateTime.UtcNow;
+                
                 user.Key = key;
 
                 await _userRepository.ReplaceAsync(user);
@@ -583,8 +581,7 @@ namespace Bit.Core.Services
             return IdentityResult.Failed(_identityErrorDescriber.PasswordMismatch());
         }
 
-        public async Task<IdentityResult> SetPasswordAsync(User user, string masterPassword, string key, 
-            string orgIdentifier = null)
+        public async Task<IdentityResult> SetPasswordAsync(User user, string masterPassword, string key)
         {
             if (user == null)
             {
@@ -602,18 +599,20 @@ namespace Bit.Core.Services
             {
                 return result;
             }
-
-            user.RevisionDate = user.AccountRevisionDate = DateTime.UtcNow;
+            
             user.Key = key;
 
             await _userRepository.ReplaceAsync(user);
             await _eventService.LogUserEventAsync(user.Id, EventType.User_ChangedPassword);
-            
-            if (!string.IsNullOrWhiteSpace(orgIdentifier))
+
+            var orgs = await _organizationUserRepository.GetManyByUserAsync(user.Id);
+            foreach (var orgUser in orgs)
             {
-                await _organizationService.AcceptUserAsync(orgIdentifier, user, this);
-            }
-            
+                if (orgUser.Status == OrganizationUserStatusType.Invited)
+                {
+                    await _organizationService.AcceptUserAsync(orgUser.OrganizationId, user, this);
+                }               
+            }            
             return IdentityResult.Success;
         }
 
@@ -632,8 +631,7 @@ namespace Bit.Core.Services
                 {
                     return result;
                 }
-
-                user.RevisionDate = user.AccountRevisionDate = DateTime.UtcNow;
+                
                 user.Key = key;
                 user.Kdf = kdf;
                 user.KdfIterations = kdfIterations;
@@ -655,8 +653,7 @@ namespace Bit.Core.Services
             }
 
             if (await CheckPasswordAsync(user, masterPassword))
-            {
-                user.RevisionDate = user.AccountRevisionDate = DateTime.UtcNow;
+            {                
                 user.SecurityStamp = Guid.NewGuid().ToString();
                 user.Key = key;
                 user.PrivateKey = privateKey;
@@ -802,8 +799,7 @@ namespace Bit.Core.Services
                     paymentToken, additionalStorageGb, taxInfo);
             }
 
-            user.Premium = true;
-            user.RevisionDate = DateTime.UtcNow;
+            user.Premium = true;            
 
             if (_globalSettings.SelfHosted)
             {
@@ -881,8 +877,7 @@ namespace Bit.Core.Services
             Directory.CreateDirectory(dir);
             File.WriteAllText($"{dir}/{user.Id}.json", JsonConvert.SerializeObject(license, Formatting.Indented));
 
-            user.Premium = license.Premium;
-            user.RevisionDate = DateTime.UtcNow;
+            user.Premium = license.Premium;            
             user.MaxStorageGb = _globalSettings.SelfHosted ? 10240 : license.MaxStorageGb; // 10 TB
             user.LicenseKey = license.LicenseKey;
             user.PremiumExpirationDate = license.Expires;
@@ -961,8 +956,7 @@ namespace Bit.Core.Services
             if (user != null && !user.Premium && user.Gateway.HasValue)
             {
                 user.Premium = true;
-                user.PremiumExpirationDate = expirationDate;
-                user.RevisionDate = DateTime.UtcNow;
+                user.PremiumExpirationDate = expirationDate;                
                 await _userRepository.ReplaceAsync(user);
             }
         }
@@ -978,8 +972,7 @@ namespace Bit.Core.Services
             if (user != null && user.Premium)
             {
                 user.Premium = false;
-                user.PremiumExpirationDate = expirationDate;
-                user.RevisionDate = DateTime.UtcNow;
+                user.PremiumExpirationDate = expirationDate;                
                 await _userRepository.ReplaceAsync(user);
             }
         }
@@ -989,8 +982,7 @@ namespace Bit.Core.Services
             var user = await _userRepository.GetByIdAsync(userId);
             if (user != null)
             {
-                user.PremiumExpirationDate = expirationDate;
-                user.RevisionDate = DateTime.UtcNow;
+                user.PremiumExpirationDate = expirationDate;                
                 await _userRepository.ReplaceAsync(user);
             }
         }
@@ -1022,8 +1014,7 @@ namespace Bit.Core.Services
             var result = await base.VerifyPasswordAsync(Store as IUserPasswordStore<User>, user, password);
             if (result == PasswordVerificationResult.SuccessRehashNeeded)
             {
-                await UpdatePasswordHash(user, password, false, false);
-                user.RevisionDate = DateTime.UtcNow;
+                await UpdatePasswordHash(user, password, false, false);                
                 await _userRepository.ReplaceAsync(user);
             }
 
@@ -1208,8 +1199,7 @@ namespace Bit.Core.Services
 
         public async Task RotateApiKeyAsync(User user)
         {
-            user.ApiKey = CoreHelpers.SecureRandomString(30);
-            user.RevisionDate = DateTime.UtcNow;
+            user.ApiKey = CoreHelpers.SecureRandomString(30);            
             await _userRepository.ReplaceAsync(user);
         }
     }

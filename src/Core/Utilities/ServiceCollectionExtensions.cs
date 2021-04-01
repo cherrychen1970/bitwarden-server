@@ -396,7 +396,7 @@ namespace Bit.Core.Utilities
 
         public static void AddIdentityAuthenticationServices(
             this IServiceCollection services, GlobalSettings globalSettings, IWebHostEnvironment environment,
-            Action<AuthorizationOptions> addAuthorization)
+            Action<AuthorizationOptions> addAuthorization=null)
         {
             services
                 .AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)

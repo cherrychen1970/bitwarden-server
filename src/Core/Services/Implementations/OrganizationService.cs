@@ -14,6 +14,7 @@ using Bit.Core.Models.Data;
 using System.IO;
 using Newtonsoft.Json;
 using System.Text.Json;
+using AutoMapper;
 
 namespace Bit.Core.Services
 {
@@ -39,6 +40,7 @@ namespace Bit.Core.Services
         private readonly ISsoUserRepository _ssoUserRepository;
         private readonly IReferenceEventService _referenceEventService;
         private readonly GlobalSettings _globalSettings;
+        private readonly IMapper _mapper;
         //private readonly ITaxRateRepository _taxRateRepository;
 
         public OrganizationService(
@@ -61,7 +63,8 @@ namespace Bit.Core.Services
             ISsoConfigRepository ssoConfigRepository,
             ISsoUserRepository ssoUserRepository,
             IReferenceEventService referenceEventService,
-            GlobalSettings globalSettings
+            GlobalSettings globalSettings,
+            IMapper mapper
             //ITaxRateRepository taxRateRepository
             )
         {
@@ -85,6 +88,7 @@ namespace Bit.Core.Services
             _ssoUserRepository = ssoUserRepository;
             _referenceEventService = referenceEventService;
             _globalSettings = globalSettings;
+            _mapper = mapper;
             //_taxRateRepository = taxRateRepository;
         }
 
@@ -419,23 +423,23 @@ namespace Bit.Core.Services
             if (!string.IsNullOrWhiteSpace(customer?.Address?.Country)
                     && !string.IsNullOrWhiteSpace(customer?.Address?.PostalCode))
             {
-/*                
-                var taxRates = await _taxRateRepository.GetByLocationAsync(
-                    new Bit.Core.Models.Table.TaxRate()
-                    {
-                        Country = customer.Address.Country,
-                        PostalCode = customer.Address.PostalCode
-                    }
-                );
-                var taxRate = taxRates.FirstOrDefault();
-                if (taxRate != null && !sub.DefaultTaxRates.Any(x => x.Equals(taxRate.Id)))
-                {
-                    subUpdateOptions.DefaultTaxRates = new List<string>(1) 
-                    { 
-                        taxRate.Id 
-                    };
-                }
-*/                
+                /*                
+                                var taxRates = await _taxRateRepository.GetByLocationAsync(
+                                    new Bit.Core.Models.Table.TaxRate()
+                                    {
+                                        Country = customer.Address.Country,
+                                        PostalCode = customer.Address.PostalCode
+                                    }
+                                );
+                                var taxRate = taxRates.FirstOrDefault();
+                                if (taxRate != null && !sub.DefaultTaxRates.Any(x => x.Equals(taxRate.Id)))
+                                {
+                                    subUpdateOptions.DefaultTaxRates = new List<string>(1) 
+                                    { 
+                                        taxRate.Id 
+                                    };
+                                }
+                */
             }
 
             var subResponse = await subscriptionService.UpdateAsync(sub.Id, subUpdateOptions);
@@ -574,8 +578,6 @@ namespace Bit.Core.Services
                 Enabled = true,
                 LicenseKey = CoreHelpers.SecureRandomString(20),
                 ApiKey = CoreHelpers.SecureRandomString(30),
-                CreationDate = DateTime.UtcNow,
-                RevisionDate = DateTime.UtcNow,
             };
 
             if (plan.Type == PlanType.Free)
@@ -632,37 +634,9 @@ namespace Bit.Core.Services
                 throw new BadRequestException("License is already in use by another organization.");
             }
 
-            var organization = new Organization
-            {
-                Name = license.Name,
-                BillingEmail = license.BillingEmail,
-                BusinessName = license.BusinessName,
-                PlanType = license.PlanType,
-                Seats = license.Seats,
-                MaxCollections = license.MaxCollections,
-                MaxStorageGb = _globalSettings.SelfHosted ? 10240 : license.MaxStorageGb, // 10 TB
-                UsePolicies = license.UsePolicies,
-                UseSso = license.UseSso,
-                UseGroups = license.UseGroups,
-                UseDirectory = license.UseDirectory,
-                UseEvents = license.UseEvents,
-                UseTotp = license.UseTotp,
-                Use2fa = license.Use2fa,
-                UseApi = license.UseApi,
-                Plan = license.Plan,
-                SelfHost = license.SelfHost,
-                UsersGetPremium = license.UsersGetPremium,
-                Gateway = null,
-                GatewayCustomerId = null,
-                GatewaySubscriptionId = null,
-                ReferenceData = owner.ReferenceData,
-                Enabled = license.Enabled,
-                ExpirationDate = license.Expires,
-                LicenseKey = license.LicenseKey,
-                ApiKey = CoreHelpers.SecureRandomString(30),
-                CreationDate = DateTime.UtcNow,
-                RevisionDate = DateTime.UtcNow
-            };
+            var organization = _mapper.Map<Organization>(license);
+            organization.MaxStorageGb = _globalSettings.SelfHosted ? 10240 : license.MaxStorageGb; // 10 TB
+            organization.ApiKey = CoreHelpers.SecureRandomString(30);
 
             var result = await SignUpAsync(organization, owner.Id, ownerKey, collectionName, false);
 
@@ -688,9 +662,7 @@ namespace Bit.Core.Services
                     Key = ownerKey,
                     Type = OrganizationUserType.Owner,
                     Status = OrganizationUserStatusType.Confirmed,
-                    AccessAll = true,
-                    CreationDate = organization.CreationDate,
-                    RevisionDate = organization.CreationDate
+                    AccessAll = true
                 };
 
                 await _organizationUserRepository.CreateAsync(orgUser);
@@ -700,9 +672,7 @@ namespace Bit.Core.Services
                     var defaultCollection = new Collection
                     {
                         Name = collectionName,
-                        OrganizationId = organization.Id,
-                        CreationDate = organization.CreationDate,
-                        RevisionDate = organization.CreationDate
+                        OrganizationId = organization.Id
                     };
                     await _collectionRepository.CreateAsync(defaultCollection);
                 }
@@ -820,27 +790,7 @@ namespace Bit.Core.Services
             System.IO.File.WriteAllText($"{dir}/{organization.Id}.json",
                 JsonConvert.SerializeObject(license, Formatting.Indented));
 
-            organization.Name = license.Name;
-            organization.BusinessName = license.BusinessName;
-            organization.BillingEmail = license.BillingEmail;
-            organization.PlanType = license.PlanType;
-            organization.Seats = license.Seats;
-            organization.MaxCollections = license.MaxCollections;
-            organization.UseGroups = license.UseGroups;
-            organization.UseDirectory = license.UseDirectory;
-            organization.UseEvents = license.UseEvents;
-            organization.UseTotp = license.UseTotp;
-            organization.Use2fa = license.Use2fa;
-            organization.UseApi = license.UseApi;
-            organization.UsePolicies = license.UsePolicies;
-            organization.UseSso = license.UseSso;
-            organization.SelfHost = license.SelfHost;
-            organization.UsersGetPremium = license.UsersGetPremium;
-            organization.Plan = license.Plan;
-            organization.Enabled = license.Enabled;
-            organization.ExpirationDate = license.Expires;
-            organization.LicenseKey = license.LicenseKey;
-            organization.RevisionDate = DateTime.UtcNow;
+            _mapper.Map(license, organization);
             await ReplaceAndUpdateCache(organization);
         }
 
@@ -870,7 +820,6 @@ namespace Bit.Core.Services
             {
                 org.Enabled = true;
                 org.ExpirationDate = expirationDate;
-                org.RevisionDate = DateTime.UtcNow;
                 await ReplaceAndUpdateCache(org);
             }
         }
@@ -882,7 +831,6 @@ namespace Bit.Core.Services
             {
                 org.Enabled = false;
                 org.ExpirationDate = expirationDate;
-                org.RevisionDate = DateTime.UtcNow;
                 await ReplaceAndUpdateCache(org);
 
                 // TODO: send email to owners?
@@ -895,7 +843,6 @@ namespace Bit.Core.Services
             if (org != null)
             {
                 org.ExpirationDate = expirationDate;
-                org.RevisionDate = DateTime.UtcNow;
                 await ReplaceAndUpdateCache(org);
             }
         }
@@ -1027,8 +974,6 @@ namespace Bit.Core.Services
                     Status = OrganizationUserStatusType.Invited,
                     AccessAll = invite.AccessAll,
                     ExternalId = externalId,
-                    CreationDate = DateTime.UtcNow,
-                    RevisionDate = DateTime.UtcNow,
                 };
 
                 if (invite.Permissions != null)
@@ -1113,9 +1058,9 @@ namespace Bit.Core.Services
             return await AcceptUserAsync(orgUser, user, userService);
         }
 
-        public async Task<OrganizationUser> AcceptUserAsync(string orgIdentifier, User user, IUserService userService)
+        public async Task<OrganizationUser> AcceptUserAsync(Guid organizationId, User user, IUserService userService)
         {
-            var org = await _organizationRepository.GetByIdentifierAsync(orgIdentifier);
+            var org = await _organizationRepository.GetByIdAsync(organizationId);
             if (org == null)
             {
                 throw new BadRequestException("Organization invalid.");
@@ -1131,7 +1076,7 @@ namespace Bit.Core.Services
             return await AcceptUserAsync(orgUser, user, userService);
         }
 
-        private async Task<OrganizationUser> AcceptUserAsync(OrganizationUser orgUser, User user, 
+        private async Task<OrganizationUser> AcceptUserAsync(OrganizationUser orgUser, User user,
             IUserService userService)
         {
             if (orgUser.Status != OrganizationUserStatusType.Invited)
@@ -1139,33 +1084,19 @@ namespace Bit.Core.Services
                 throw new BadRequestException("Already accepted.");
             }
 
-            if (orgUser.Type == OrganizationUserType.Owner || orgUser.Type == OrganizationUserType.Admin)
-            {
-                var org = await GetOrgById(orgUser.OrganizationId);
-                if (org.PlanType == PlanType.Free)
-                {
-                    var adminCount = await _organizationUserRepository.GetCountByFreeOrganizationAdminUserAsync(
-                        user.Id);
-                    if (adminCount > 0)
-                    {
-                        throw new BadRequestException("You can only be an admin of one free organization.");
-                    }
-                }
-            }
-
             ICollection<Policy> orgPolicies = null;
             ICollection<Policy> userPolicies = null;
             async Task<bool> hasPolicyAsync(PolicyType policyType, bool useUserPolicies = false)
             {
-                var policies = useUserPolicies ? 
-                    userPolicies = userPolicies ?? await _policyRepository.GetManyByUserIdAsync(user.Id) : 
+                var policies = useUserPolicies ?
+                    userPolicies = userPolicies ?? await _policyRepository.GetManyByUserIdAsync(user.Id) :
                     orgPolicies = orgPolicies ?? await _policyRepository.GetManyByOrganizationIdAsync(orgUser.OrganizationId);
-                
+
                 return policies.Any(p => p.Type == policyType && p.Enabled);
             }
             var userOrgs = await _organizationUserRepository.GetManyByUserAsync(user.Id);
             if (userOrgs.Any(ou => ou.OrganizationId != orgUser.OrganizationId && ou.Status != OrganizationUserStatusType.Invited))
-            {   
+            {
                 if (await hasPolicyAsync(PolicyType.SingleOrg))
                 {
                     throw new BadRequestException("You may not join this organization until you leave or remove " +
@@ -1173,7 +1104,7 @@ namespace Bit.Core.Services
                 }
                 if (await hasPolicyAsync(PolicyType.SingleOrg, true))
                 {
-                    throw new BadRequestException("You cannot join this organization because you are a member of " + 
+                    throw new BadRequestException("You cannot join this organization because you are a member of " +
                         "an organization which forbids it");
                 }
             }
@@ -1261,7 +1192,8 @@ namespace Bit.Core.Services
             }
 
             var originalUser = await _organizationUserRepository.GetByIdAsync(user.Id);
-            if (user.Equals(originalUser)) {
+            if (user.Equals(originalUser))
+            {
                 throw new BadRequestException("Please make changes before saving.");
             }
 
@@ -1576,7 +1508,6 @@ namespace Bit.Core.Services
         public async Task RotateApiKeyAsync(Organization organization)
         {
             organization.ApiKey = CoreHelpers.SecureRandomString(30);
-            organization.RevisionDate = DateTime.UtcNow;
             await ReplaceAndUpdateCache(organization);
         }
 
@@ -1675,7 +1606,7 @@ namespace Bit.Core.Services
             }
         }
 
-        private async Task ValidateOrganizationUserUpdatePermissions(Guid loggedInUserId, Guid organizationId, OrganizationUserType newType, OrganizationUserType? oldType) 
+        private async Task ValidateOrganizationUserUpdatePermissions(Guid loggedInUserId, Guid organizationId, OrganizationUserType newType, OrganizationUserType? oldType)
         {
             var loggedInUserOrgs = await _organizationUserRepository.GetManyByUserAsync(loggedInUserId);
             var loggedInAsOrgOwner = loggedInUserOrgs

@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.DataProtection;
 
 namespace Bit.Api.Controllers
 {
-    [Route("organizations/{orgId}/policies")]
+    [Route("api/organizations/{orgId}/policies")]
     [Authorize("Application")]
     public class PoliciesController : Controller
     {

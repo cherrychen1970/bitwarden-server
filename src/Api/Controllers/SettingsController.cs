@@ -7,7 +7,7 @@ using Bit.Core.Services;
 
 namespace Bit.Api.Controllers
 {
-    [Route("settings")]
+    [Route("api/settings")]
     [Authorize("Application")]
     public class SettingsController : Controller
     {

@@ -15,7 +15,7 @@ using Bit.Core.Models.Table;
 
 namespace Bit.Api.Controllers
 {
-    [Route("ciphers")]
+    [Route("api/ciphers")]
     [Authorize("Application")]
     public class CiphersController : Controller
     {

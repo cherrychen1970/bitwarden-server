@@ -70,42 +70,20 @@ namespace Bit.Api
                 services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
             }
 
+            services.AddCustomCookiePolicy();
+            services.AddCustomSingleSignOn(globalSettings);
             // Identity
             services.AddCustomIdentityServices(globalSettings);
-            services.AddIdentityAuthenticationServices(globalSettings, Environment, config =>
-            {
-                config.AddPolicy("Application", policy =>
-                {
-                    policy.RequireAuthenticatedUser();
-                    policy.RequireClaim(JwtClaimTypes.AuthenticationMethod, "Application", "external");
-                    policy.RequireClaim(JwtClaimTypes.Scope, "api");
-                });
-                config.AddPolicy("Web", policy =>
-                {
-                    policy.RequireAuthenticatedUser();
-                    policy.RequireClaim(JwtClaimTypes.AuthenticationMethod, "Application", "external");
-                    policy.RequireClaim(JwtClaimTypes.Scope, "api");
-                    policy.RequireClaim(JwtClaimTypes.ClientId, "web");
-                });
-                config.AddPolicy("Push", policy =>
-                {
-                    policy.RequireAuthenticatedUser();
-                    policy.RequireClaim(JwtClaimTypes.Scope, "api.push");
-                });
-                config.AddPolicy("Licensing", policy =>
-                {
-                    policy.RequireAuthenticatedUser();
-                    policy.RequireClaim(JwtClaimTypes.Scope, "api.licensing");
-                });
-                config.AddPolicy("Organization", policy =>
-                {
-                    policy.RequireAuthenticatedUser();
-                    policy.RequireClaim(JwtClaimTypes.Scope, "api.organization");
-                });
-            });
+            services.AddIdentityAuthenticationServices(globalSettings, Environment);
+            services.AddCustomAuthorizationPolicy();
 
             services.AddScoped<AuthenticatorTokenProvider>();
 
+            // IdentityServer
+            services.AddCustomIdentityServerServices(Environment, globalSettings);
+
+            // Identity
+            services.AddCustomIdentityServices(globalSettings);
             // Services
             services.AddBaseServices();
 
@@ -167,6 +145,12 @@ namespace Bit.Api
                 app.UseForwardedHeaders(globalSettings);
             }
 
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+                app.UseCookiePolicy();
+            }            
+
             // Add localization
             app.UseCoreLocalization();
 
@@ -186,6 +170,9 @@ namespace Bit.Api
 
             // Add current context
             app.UseMiddleware<CurrentContextMiddleware>();
+
+            // Add IdentityServer to the request pipeline.
+            app.UseIdentityServer();
 
             // Add endpoints to the request pipeline.
             app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());

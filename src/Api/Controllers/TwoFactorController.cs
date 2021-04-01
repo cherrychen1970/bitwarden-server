@@ -16,7 +16,7 @@ using Bit.Core.Utilities.Duo;
 
 namespace Bit.Api.Controllers
 {
-    [Route("two-factor")]
+    [Route("api/two-factor")]
     [Authorize("Web")]
     public class TwoFactorController : Controller
     {

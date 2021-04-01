@@ -13,7 +13,7 @@ using Bit.Core.Models.Business;
 
 namespace Bit.Api.Controllers
 {
-    [Route("organizations/{orgId}/users")]
+    [Route("api/organizations/{orgId}/users")]
     [Authorize("Application")]
     public class OrganizationUsersController : Controller
     {
@@ -59,9 +59,11 @@ namespace Bit.Api.Controllers
         public async Task<ListResponseModel<OrganizationUserUserDetailsResponseModel>> Get(string orgId)
         {
             var orgGuidId = new Guid(orgId);
-            if (!_currentContext.ManageAssignedCollections(orgGuidId) && !_currentContext.ManageGroups(orgGuidId))
+            var ou = await _organizationUserRepository.GetByOrganizationAsync(orgGuidId,_currentContext.UserId.Value);
+            //if (!_currentContext.ManageAssignedCollections(orgGuidId) && !_currentContext.ManageGroups(orgGuidId))
+            if (ou.Type!=Core.Enums.OrganizationUserType.Admin && ou.Type!=Core.Enums.OrganizationUserType.Owner)
             {
-                throw new NotFoundException();
+                throw new Exception(ou.Type.ToString());
             }
 
             var organizationUsers = await _organizationUserRepository.GetManyDetailsByOrganizationAsync(orgGuidId);

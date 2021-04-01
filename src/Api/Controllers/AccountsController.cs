@@ -20,8 +20,9 @@ using System.Threading.Tasks;
 
 namespace Bit.Api.Controllers
 {
-    [Route("accounts")]
+    [Route("api/accounts")]
     [Authorize("Application")]
+    //[Authorize(AuthenticationSchemes="Bearer")]
     public class AccountsController : Controller
     {
         private readonly GlobalSettings _globalSettings;

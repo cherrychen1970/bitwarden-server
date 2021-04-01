@@ -124,8 +124,7 @@ namespace Bit.Core.Services
                 "Organization {0} ({1}) has an invalid license and is being disabled. Reason: {2}",
                 org.Id, org.Name, reason);
             org.Enabled = false;
-            org.ExpirationDate = license?.Expires ?? DateTime.UtcNow;
-            org.RevisionDate = DateTime.UtcNow;
+            org.ExpirationDate = license?.Expires ?? DateTime.UtcNow;            
             await _organizationRepository.ReplaceAsync(org);
 
             await _mailService.SendLicenseExpiredAsync(new List<string> { org.BillingEmail }, org.Name);
@@ -215,8 +214,7 @@ namespace Bit.Core.Services
                 user.Id, user.Email, reason);
 
             user.Premium = false;
-            user.PremiumExpirationDate = license?.Expires ?? DateTime.UtcNow;
-            user.RevisionDate = DateTime.UtcNow;
+            user.PremiumExpirationDate = license?.Expires ?? DateTime.UtcNow;            
             await _userRepository.ReplaceAsync(user);
 
             await _mailService.SendLicenseExpiredAsync(new List<string> { user.Email });

@@ -40,8 +40,8 @@ namespace Bit.Core.Models.Table
         public string ApiKey { get; set; }
         public KdfType Kdf { get; set; } = KdfType.PBKDF2_SHA256;
         public int KdfIterations { get; set; } = 5000;
-        public DateTime CreationDate { get; internal set; } = DateTime.UtcNow;
-        public DateTime RevisionDate { get; internal set; } = DateTime.UtcNow;
+        public DateTime CreationDate { get; private set; } = DateTime.UtcNow;
+        public DateTime RevisionDate { get; private set; } = DateTime.UtcNow;
 
         public void SetNewId()
         {

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Bit.Api.Controllers
 {
-    [Route("plans")]
+    [Route("api/plans")]
     [Authorize("Web")]
     public class PlansController : Controller
     {

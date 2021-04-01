@@ -15,7 +15,7 @@ using Bit.Core.Models.Data;
 
 namespace Bit.Api.Controllers
 {
-    [Route("sync")]
+    [Route("api/sync")]
     [Authorize("Application")]
     public class SyncController : Controller
     {

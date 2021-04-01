@@ -37,17 +37,17 @@ namespace Bit.Core.Models.Table
         public bool UsersGetPremium { get; set; }
         public long? Storage { get; set; }
         public short? MaxStorageGb { get; set; }
-        public GatewayType? Gateway { get; set; }
-        public string GatewayCustomerId { get; set; }
-        public string GatewaySubscriptionId { get; set; }
+        public GatewayType? Gateway { get; set; } = null;
+        public string GatewayCustomerId { get; set; } = null;
+        public string GatewaySubscriptionId { get; set; } =null;
         public string ReferenceData { get; set; }
         public bool Enabled { get; set; } = true;
         public string LicenseKey { get; set; }
         public string ApiKey { get; set; }
         public string TwoFactorProviders { get; set; }
         public DateTime? ExpirationDate { get; set; }
-        public DateTime CreationDate { get; internal set; } = DateTime.UtcNow;
-        public DateTime RevisionDate { get; internal set; } = DateTime.UtcNow;
+        public DateTime CreationDate { get; private set; } = DateTime.UtcNow;
+        public DateTime RevisionDate { get; private set; } = DateTime.UtcNow;
 
         public void SetNewId()
         {

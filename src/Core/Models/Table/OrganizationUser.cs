@@ -15,8 +15,8 @@ namespace Bit.Core.Models.Table
         public OrganizationUserType Type { get; set; }
         public bool AccessAll { get; set; }
         public string ExternalId { get; set; }
-        public DateTime CreationDate { get; internal set; } = DateTime.UtcNow;
-        public DateTime RevisionDate { get; internal set; } = DateTime.UtcNow;
+        public DateTime CreationDate { get; private set; } = DateTime.UtcNow;
+        public DateTime RevisionDate { get; private set; } = DateTime.UtcNow;
         public string Permissions { get; set; }
 
         public void SetNewId()

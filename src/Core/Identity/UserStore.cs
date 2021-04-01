@@ -155,8 +155,7 @@ namespace Bit.Core.Identity
         }
 
         public async Task<IdentityResult> UpdateAsync(User user, CancellationToken cancellationToken = default(CancellationToken))
-        {
-            user.RevisionDate = user.AccountRevisionDate = DateTime.UtcNow;
+        {            
             await _userRepository.ReplaceAsync(user);
             return IdentityResult.Success;
         }

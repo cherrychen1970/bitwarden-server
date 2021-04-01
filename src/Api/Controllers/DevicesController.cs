@@ -12,7 +12,7 @@ using Bit.Core.Services;
 
 namespace Bit.Api.Controllers
 {
-    [Route("devices")]
+    [Route("api/devices")]
     [Authorize("Application")]
     public class DevicesController : Controller
     {

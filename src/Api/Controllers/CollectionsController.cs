@@ -13,7 +13,7 @@ using System.Collections.Generic;
 
 namespace Bit.Api.Controllers
 {
-    [Route("organizations/{orgId}/collections")]
+    [Route("api/organizations/{orgId}/collections")]
     [Authorize("Application")]
     public class CollectionsController : Controller
     {

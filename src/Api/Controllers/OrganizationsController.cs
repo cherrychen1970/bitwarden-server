@@ -15,7 +15,7 @@ using Bit.Core.Utilities;
 
 namespace Bit.Api.Controllers
 {
-    [Route("organizations")]
+    [Route("api/organizations")]
     [Authorize("Application")]
     public class OrganizationsController : Controller
     {
