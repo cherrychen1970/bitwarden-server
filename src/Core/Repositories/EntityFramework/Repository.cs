@@ -8,6 +8,7 @@ using AutoMapper;
 using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Bit.Core.Models.EntityFramework;
 
 namespace Bit.Core.Repositories.EntityFramework
 {
@@ -59,6 +60,48 @@ namespace Bit.Core.Repositories.EntityFramework
             dbSet.RemoveRange(entities);
             await dbContext.SaveChangesAsync();
         }                 
+
+        public async Task<int> SaveChangesAsync()
+        {
+            ConcurrencyCheck();
+            FillAudit();
+            return await dbContext.SaveChangesAsync();
+        }
+
+        virtual protected void ConcurrencyCheck()
+        {
+            var ChangeTracker = dbContext.ChangeTracker;
+            //ChangeTracker.DetectChanges();
+
+            var modified = ChangeTracker.Entries<IEntityUpdated>().Where(x => x.State == EntityState.Modified);
+
+            foreach (var entity in modified)
+            {
+                if (entity.State == EntityState.Modified)
+                {
+                    var original=entity.OriginalValues.GetValue<DateTime>(nameof(IEntityUpdated.RevisionDate));
+                    if (entity.Entity.RevisionDate!=original) {                        
+                        throw new DbUpdateConcurrencyException(entity.Entity.RevisionDate.ToString());                        
+                    }                       
+                }
+            }
+        }   
+        virtual protected void FillAudit()
+        {
+            var date  = DateTime.UtcNow;
+            var ChangeTracker = dbContext.ChangeTracker;
+            var addeds = ChangeTracker.Entries<IEntityCreated>().Where(x => x.State == EntityState.Added);
+            foreach (var entity in addeds)
+            {                
+                entity.Property(nameof(IEntityCreated.CreationDate)).CurrentValue = date;
+            }
+            var modifieds = ChangeTracker.Entries<IEntityUpdated>().Where(x => x.State == EntityState.Modified);
+
+            foreach (var entity in modifieds)
+            {                
+                entity.Property(nameof(IEntityUpdated.RevisionDate)).CurrentValue = date;
+            }
+        }
     }
 
     public abstract class Repository<T, TEntity, TId> : BaseRepository<TEntity>,IRepository<T, TId>
@@ -83,7 +126,7 @@ namespace Bit.Core.Repositories.EntityFramework
         {
             var entity = Mapper.Map<TEntity>(obj);
             dbContext.Add(entity);
-            await dbContext.SaveChangesAsync();  
+            await SaveChangesAsync();  
             obj.Id = entity.Id;       
         }
 
@@ -94,7 +137,7 @@ namespace Bit.Core.Repositories.EntityFramework
             {
                 var mappedEntity = Mapper.Map<TEntity>(obj);
                 dbContext.Entry(entity).CurrentValues.SetValues(mappedEntity);
-                await dbContext.SaveChangesAsync();
+                await SaveChangesAsync();
             }
         }
 
@@ -122,8 +165,5 @@ namespace Bit.Core.Repositories.EntityFramework
             dbContext.Entry(entity).State = EntityState.Deleted;
             await dbContext.SaveChangesAsync();
         }                     
-
-
     }
-
 }

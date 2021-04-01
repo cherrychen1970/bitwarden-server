@@ -65,7 +65,7 @@ namespace Bit.Core.Repositories.EntityFramework
             }
 
             dbSet.Add(entity);
-            await dbContext.SaveChangesAsync();
+            await SaveChangesAsync();
             cipher.Id=entity.Id;
         }
 
@@ -74,7 +74,7 @@ namespace Bit.Core.Repositories.EntityFramework
             cipher.SetNewId();                        
             var entity = Mapper.Map<EFModel.Cipher>(cipher);            
             dbContext.Add(entity);
-            await dbContext.SaveChangesAsync();
+            await SaveChangesAsync();
             cipher.Id = entity.Id;            
             //await base.CreateAsync(cipher);                        
             //await dbContext.SaveChangesAsync();
@@ -91,7 +91,7 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task ReplaceAsync(CipherDetails obj)
         {
-            throw new NotImplementedException();
+            await base.ReplaceAsync(obj);
         }
 
         public async Task UpsertAsync(CipherDetails cipher)

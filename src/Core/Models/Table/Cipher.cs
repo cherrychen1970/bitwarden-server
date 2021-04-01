@@ -18,8 +18,8 @@ namespace Bit.Core.Models.Table
         public string Favorites { get; set; }
         public string Folders { get; set; }
         public string Attachments { get; set; }
-        public DateTime CreationDate { get; internal set; } = DateTime.UtcNow;
-        public DateTime RevisionDate { get; internal set; } = DateTime.UtcNow;
+        public DateTime CreationDate { get; private set; } = DateTime.UtcNow;
+        public DateTime RevisionDate { get; private set; } = DateTime.UtcNow;
         public DateTime? DeletedDate { get; internal set; }
 
         public void SetNewId()

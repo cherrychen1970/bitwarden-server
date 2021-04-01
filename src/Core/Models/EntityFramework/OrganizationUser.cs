@@ -4,7 +4,7 @@ using AutoMapper;
 
 namespace Bit.Core.Models.EntityFramework
 {
-    public class OrganizationUser : Table.OrganizationUser
+    public class OrganizationUser : Table.OrganizationUser,IEntityCreated,IEntityUpdated
     {
         virtual public Organization Organization {get;set;}
         virtual public User User {get;set;}

@@ -32,12 +32,19 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task<Tuple<Collection, ICollection<SelectionReadOnly>>> GetByIdWithGroupsAsync(Guid id)
         {
-            throw new NotImplementedException();
+            var item = await GetOne<Collection>(x=>x.Id==id);
+            return new Tuple<Collection, ICollection<SelectionReadOnly>>(item,new SelectionReadOnly[]{});            
         }
 
         public async Task<Tuple<CollectionDetails, ICollection<SelectionReadOnly>>> GetByIdWithGroupsAsync(Guid id, Guid userId)
         {
-            throw new NotImplementedException();
+            var query = dbContext.CollectionUsers.Where(x => x.OrganizationUser.UserId == userId && x.CollectionId==id);
+            if (!query.Any()) return null;
+
+            var detail = await query.SingleAsync();
+            var collection = query.Select(x=>x.Collection).ProjectTo<CollectionDetails>(MapperProvider).Single();
+            collection.SetDetails(detail);
+            return new Tuple<CollectionDetails, ICollection<SelectionReadOnly>>(collection,new SelectionReadOnly[]{});
         }
 
         public async Task<ICollection<Collection>> GetManyByOrganizationIdAsync(Guid organizationId)
@@ -66,27 +73,28 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task CreateAsync(Collection obj, IEnumerable<SelectionReadOnly> groups)
         {
-            throw new NotImplementedException();
-
+            await base.CreateAsync(obj);            
         }
 
         public async Task ReplaceAsync(Collection obj, IEnumerable<SelectionReadOnly> groups)
         {
-            throw new NotImplementedException();
+            var collection = dbSet.Find(obj.Id);
+            Mapper.Map(obj,collection);
+            await SaveChangesAsync();
         }
 
         public async Task CreateUserAsync(Guid collectionId, Guid organizationUserId)
         {
             var cu = new EFModel.CollectionUser() { CollectionId = collectionId, OrganizationUserId = organizationUserId };
             dbContext.CollectionUsers.Add(cu);
-            await dbContext.SaveChangesAsync();
+            await SaveChangesAsync();
         }
 
         public async Task DeleteUserAsync(Guid collectionId, Guid organizationUserId)
         {
             var item = dbContext.CollectionUsers.Single(x => x.CollectionId == collectionId && x.OrganizationUserId == organizationUserId);
             dbContext.CollectionUsers.Remove(item);
-            await dbContext.SaveChangesAsync();
+            await SaveChangesAsync();
         }
 
         public async Task UpdateUsersAsync(Guid id, IEnumerable<SelectionReadOnly> users)

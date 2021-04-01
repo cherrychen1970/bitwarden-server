@@ -5,14 +5,8 @@ using AutoMapper;
 
 namespace Bit.Core.Models.EntityFramework
 {
-    public class CollectionUser 
+    public class CollectionUser : Table.CollectionUser
     {        
-        virtual public int Id {get;set;}
-        public Guid CollectionId {get;set;}
-        public Guid OrganizationUserId {get;set;}
-
-        public virtual bool ReadOnly {get;set;}
-        public virtual bool HidePasswords {get;set;}
         public virtual Collection Collection { get; set; }
         public virtual OrganizationUser OrganizationUser { get; set; }
     }

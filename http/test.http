@@ -17,6 +17,9 @@ POST http://localhost:33656/connect/token
 
 
 ###
+http://localhost:4000/organizations/e11a6d5a-eca4-4dd2-bd28-acfc00708de8
+authorization: Bearer {{token}}
+###
 http://localhost:4000/organizations/e11a6d5a-eca4-4dd2-bd28-acfc00708de8/collections
 authorization: Bearer {{token}}
 ###

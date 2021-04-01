@@ -77,7 +77,7 @@ namespace Bit.Core.Repositories.EntityFramework
             var set = dbSet;
             set.Attach(user);
             dbContext.Entry(user).Property(e => e.RenewalReminderDate).IsModified = true;
-            await dbContext.SaveChangesAsync();
+            await SaveChangesAsync();
         }
 
         public Task<User> GetBySsoUserAsync(string externalId, Guid? organizationId)

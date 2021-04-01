@@ -37,8 +37,17 @@ namespace Bit.Core.Repositories.EntityFramework
 
         public async Task SaveAsync(Grant obj)
         {
-            dbContext.Add(obj);
-            await dbContext.SaveChangesAsync();       
+            var exist = dbSet.Find(obj.Key);
+            if (exist==null)
+            {
+                dbContext.Add(obj);                
+            }
+            else
+            {
+                Mapper.Map(obj,exist);               
+            }                        
+            
+            await SaveChangesAsync();       
         }
 
         public async Task DeleteByKeyAsync(string key)

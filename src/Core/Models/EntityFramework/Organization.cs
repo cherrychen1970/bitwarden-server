@@ -4,7 +4,7 @@ using AutoMapper;
 
 namespace Bit.Core.Models.EntityFramework
 {
-    public class Organization : Table.Organization
+    public class Organization : Table.Organization,IEntityCreated,IEntityUpdated
     {
         private JsonDocument _twoFactorProvidersJson;
 

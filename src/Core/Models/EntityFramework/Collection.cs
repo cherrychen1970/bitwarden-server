@@ -4,7 +4,7 @@ using AutoMapper;
 
 namespace Bit.Core.Models.EntityFramework
 {
-    public class Collection : Table.Collection
+    public class Collection : Table.Collection,IEntityCreated,IEntityUpdated
     {        
         virtual public Organization Organization {get;set;}
         //public ICollection<Cipher> Ciphers { get; set; }

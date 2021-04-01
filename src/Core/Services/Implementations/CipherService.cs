@@ -94,8 +94,7 @@ namespace Bit.Core.Services
                 {
                     throw new ArgumentException("Cannot create cipher with collection ids at the same time.");
                 }
-                ValidateCipherLastKnownRevisionDateAsync(cipher, lastKnownRevisionDate);
-                cipher.RevisionDate = DateTime.UtcNow;
+                ValidateCipherLastKnownRevisionDateAsync(cipher, lastKnownRevisionDate);                
                 await _cipherRepository.ReplaceAsync(cipher);
                 await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Updated);
 
@@ -155,8 +154,7 @@ namespace Bit.Core.Services
                 {
                     throw new ArgumentException("Cannot create cipher with collection ids at the same time.");
                 }
-                ValidateCipherLastKnownRevisionDateAsync(cipher, lastKnownRevisionDate);
-                cipher.RevisionDate = DateTime.UtcNow;
+                ValidateCipherLastKnownRevisionDateAsync(cipher, lastKnownRevisionDate);                
                 await _cipherRepository.ReplaceAsync(cipher);
                 await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Updated);
 
@@ -455,8 +453,7 @@ namespace Bit.Core.Services
 
                 // Sproc will not save this UserId on the cipher. It is used limit scope of the collectionIds.
                 cipher.UserId = sharingUserId;
-                cipher.OrganizationId = organizationId;
-                cipher.RevisionDate = DateTime.UtcNow;
+                cipher.OrganizationId = organizationId;                
                 if (!await _cipherRepository.ReplaceAsync(cipher, collectionIds))
                 {
                     throw new BadRequestException("Unable to save.");
@@ -536,8 +533,7 @@ namespace Bit.Core.Services
                 ValidateCipherLastKnownRevisionDateAsync(cipher, lastKnownRevisionDate);
 
                 cipher.UserId = null;
-                cipher.OrganizationId = organizationId;
-                cipher.RevisionDate = DateTime.UtcNow;
+                cipher.OrganizationId = organizationId;                
                 cipherIds.Add(cipher.Id);
             }
 
@@ -568,8 +564,7 @@ namespace Bit.Core.Services
             {
                 throw new BadRequestException("Cipher must belong to an organization.");
             }
-
-            cipher.RevisionDate = DateTime.UtcNow;
+            
 
             // The sprocs will validate that all collections belong to this org/user and that they have 
             // proper write permissions.
@@ -710,8 +705,7 @@ namespace Bit.Core.Services
                 // Already soft-deleted, we can safely ignore this
                 return;
             }
-
-            cipher.DeletedDate = cipher.RevisionDate = DateTime.UtcNow;
+            
 
             if (cipher is CipherDetails details)
             {
@@ -769,8 +763,7 @@ namespace Bit.Core.Services
                 return;
             }
 
-            cipher.DeletedDate = null;
-            cipher.RevisionDate = DateTime.UtcNow;
+            cipher.DeletedDate = null;            
 
             if (cipher is CipherDetails details)
             {
@@ -791,8 +784,7 @@ namespace Bit.Core.Services
             var revisionDate = await _cipherRepository.RestoreAsync(ciphers.Select(c => c.Id), restoringUserId);
 
             var events = ciphers.Select(c =>
-            {
-                c.RevisionDate = revisionDate;
+            {                
                 c.DeletedDate = null;
                 return new Tuple<Cipher, EventType, DateTime?>(c, EventType.Cipher_Restored, null);
             });
@@ -817,6 +809,8 @@ namespace Bit.Core.Services
 
         private void ValidateCipherLastKnownRevisionDateAsync(Cipher cipher, DateTime? lastKnownRevisionDate)
         {
+            // cherry...
+            return;
             if (cipher.Id == default || !lastKnownRevisionDate.HasValue)
             {
                 return;

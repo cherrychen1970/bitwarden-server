@@ -6,7 +6,7 @@ using Core.Models.Data;
 
 namespace Bit.Core.Models.EntityFramework
 {
-    public class Cipher : Table.Cipher
+    public class Cipher : Table.Cipher, IEntityCreated,IEntityUpdated
     {
         public Cipher() {
             CollectionCiphers = new HashSet<CollectionCipher>();
@@ -75,6 +75,7 @@ namespace Bit.Core.Models.EntityFramework
         {
             CreateMap<Table.Cipher, Cipher>().ReverseMap();
             CreateMap<Cipher, CipherDetails>().ReverseMap();
+            CreateMap<Cipher, CipherOrganizationDetails>().ReverseMap();
             // temp
             CreateMap<Table.Grant, Table.Grant>();
             CreateMap<Table.Device, Table.Device>();
