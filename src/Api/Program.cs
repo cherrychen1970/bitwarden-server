@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using System;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Bit.Core.Utilities;
-using Serilog.Events;
-using Microsoft.IdentityModel.Tokens;
-using AspNetCoreRateLimit;
+using Microsoft.Extensions.DependencyInjection;
+using Serilog;
 
 namespace Bit.Api
 {
@@ -11,39 +12,22 @@ namespace Bit.Api
     {
         public static void Main(string[] args)
         {
-            Host
-                .CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                    webBuilder.ConfigureLogging((hostingContext, logging) =>
-                        logging.AddSerilog(hostingContext, e =>
-                        {
-                            var context = e.Properties["SourceContext"].ToString();
-                            if (e.Exception != null &&
-                                (e.Exception.GetType() == typeof(SecurityTokenValidationException) ||
-                                    e.Exception.Message == "Bad security stamp."))
-                            {
-                                return false;
-                            }
+            var builer = WebHost.CreateDefaultBuilder(args);
+            SerilogFix(false);
+            builer.UseStartup<Startup>().UseSerilog().Build().Run();
+        }
 
-                            if (e.Level == LogEventLevel.Information &&
-                                context.Contains(typeof(IpRateLimitMiddleware).FullName))
-                            {
-                                return true;
-                            }
+        public static void SerilogFix(bool production = true)
+        {
+            var jconfig = production ? "appsettings.Production.json" : "appsettings.json";
+            var config = new ConfigurationBuilder()
+                .AddJsonFile(jconfig, optional: false)
+                .Build();
 
-                            if (context.Contains("IdentityServer4.Validation.TokenValidator") ||
-                                context.Contains("IdentityServer4.Validation.TokenRequestValidator"))
-                            {
-                                return e.Level > LogEventLevel.Error;
-                            }
-
-                            return e.Level >= LogEventLevel.Error;
-                        }));
-                })
-                .Build()
-                .Run();
+            var logcfg = new LoggerConfiguration()
+                .ReadFrom.Configuration(config)
+                ;
+            Log.Logger = logcfg.CreateLogger();
         }
     }
 }

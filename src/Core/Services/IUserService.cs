@@ -12,10 +12,13 @@ namespace Bit.Core.Services
 {
     public interface IUserService
     {
+        /*
         Guid? GetProperUserId(ClaimsPrincipal principal);
         Task<User> GetUserByIdAsync(string userId);
-        Task<User> GetUserByIdAsync(Guid userId);
+        
         Task<User> GetUserByPrincipalAsync(ClaimsPrincipal principal);
+        */
+        Task<User> GetUserByIdAsync(Guid userId);
         Task<DateTime> GetAccountRevisionDateByIdAsync(Guid userId);
         Task SaveUserAsync(User user, bool push = false);
         Task<IdentityResult> RegisterUserAsync(User user, string masterPassword, string token, Guid? orgUserId);

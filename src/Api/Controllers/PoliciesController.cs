@@ -23,7 +23,7 @@ namespace Bit.Api.Controllers
         private readonly IOrganizationService _organizationService;
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IUserService _userService;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
         private readonly GlobalSettings _globalSettings;
         private readonly IDataProtector _organizationServiceDataProtector;
 
@@ -33,7 +33,7 @@ namespace Bit.Api.Controllers
             IOrganizationService organizationService,
             IOrganizationUserRepository organizationUserRepository,
             IUserService userService,
-            CurrentContext currentContext,
+            ISessionContext currentContext,
             GlobalSettings globalSettings,
             IDataProtectionProvider dataProtectionProvider)
         {
@@ -122,8 +122,7 @@ namespace Bit.Api.Controllers
                 policy = model.ToPolicy(policy);
             }
 
-            var userId = _userService.GetProperUserId(User);
-            await _policyService.SaveAsync(policy, _userService, _organizationService, userId);
+            await _policyService.SaveAsync(policy, _userService, _organizationService, _currentContext.UserId);
             return new PolicyResponseModel(policy);
         }
     }

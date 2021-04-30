@@ -12,7 +12,7 @@ using Bit.Core.Models.Data;
 
 namespace Bit.Api.Controllers
 {
-    [Route("events")]
+    [Route("api/events")]
     [Authorize("Application")]
     public class EventsController : Controller
     {
@@ -20,14 +20,15 @@ namespace Bit.Api.Controllers
         private readonly ICipherRepository _cipherRepository;
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IEventRepository _eventRepository;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
+        private Guid userId => _currentContext.UserId;
 
         public EventsController(
             IUserService userService,
             ICipherRepository cipherRepository,
             IOrganizationUserRepository organizationUserRepository,
             IEventRepository eventRepository,
-            CurrentContext currentContext)
+            ISessionContext currentContext)
         {
             _userService = userService;
             _cipherRepository = cipherRepository;
@@ -41,7 +42,7 @@ namespace Bit.Api.Controllers
             [FromQuery]DateTime? start = null, [FromQuery]DateTime? end = null, [FromQuery]string continuationToken = null)
         {
             var dateRange = GetDateRange(start, end);
-            var userId = _userService.GetProperUserId(User).Value;
+            
             var result = await _eventRepository.GetManyByUserAsync(userId, dateRange.Item1, dateRange.Item2,
                 new PageOptions { ContinuationToken = continuationToken });
             var responses = result.Data.Select(e => new EventResponseModel(e));
@@ -64,8 +65,7 @@ namespace Bit.Api.Controllers
                 canView = _currentContext.AccessEventLogs(cipher.OrganizationId.Value);
             }
             else if (cipher.UserId.HasValue)
-            {
-                var userId = _userService.GetProperUserId(User).Value;
+            {             
                 canView = userId == cipher.UserId.Value;
             }
 

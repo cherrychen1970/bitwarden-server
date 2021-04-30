@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Data.SqlClient;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -197,15 +199,25 @@ namespace Bit.Core.Repositories.EntityFramework
             {
                 return;
             }
+            
+            var efCiphers = ciphers.Select(x=>Mapper.Map<EFModel.Cipher>(x));            
+            var efCollections = collections.Select(x=>Mapper.Map<EFModel.Collection>(x));
+            var relations = collectionCiphers.Select(x=>Mapper.Map<EFModel.CollectionCipher>(x));
 
+            dbSet.AddRange(efCiphers);
+            dbContext.Collections.AddRange(efCollections);
+            dbContext.CollectionCiphers.AddRange(relations);
+            await SaveChangesAsync();
 
-
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
         }
 
         public async Task SoftDeleteAsync(IEnumerable<Guid> ids, Guid userId)
         {
             throw new NotImplementedException();
+            var ciphers = await GetMany(x=> ids.Contains(x.Id));
+            ciphers.ToList().ForEach(x=>x.DeletedDate=null);
+            await SaveChangesAsync();            
         }
 
         public async Task<DateTime> RestoreAsync(IEnumerable<Guid> ids, Guid userId)
@@ -224,3 +236,4 @@ namespace Bit.Core.Repositories.EntityFramework
         }
     }
 }
+

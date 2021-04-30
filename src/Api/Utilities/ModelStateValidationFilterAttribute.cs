@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using InternalApi = Bit.Core.Models.Api;
-using PublicApi = Bit.Core.Models.Api.Public;
 using System.Linq;
 
 namespace Bit.Api.Utilities
@@ -25,14 +24,8 @@ namespace Bit.Api.Utilities
 
             if (!context.ModelState.IsValid)
             {
-                if (_publicApi)
-                {
-                    context.Result = new BadRequestObjectResult(new PublicApi.ErrorResponseModel(context.ModelState));
-                }
-                else
-                {
+
                     context.Result = new BadRequestObjectResult(new InternalApi.ErrorResponseModel(context.ModelState));
-                }
             }
         }
     }

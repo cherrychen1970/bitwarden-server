@@ -22,13 +22,17 @@ namespace Bit.Api.Controllers
         private readonly IUserService _userService;
         private readonly ISendService _sendService;
         private readonly GlobalSettings _globalSettings;
+        private readonly ISessionContext _currentContext;
+        private Guid userId => _currentContext.UserId;
 
         public SendsController(
             ISendRepository sendRepository,
             IUserService userService,
             ISendService sendService,
+            ISessionContext currentContext,
             GlobalSettings globalSettings)
         {
+            _currentContext = currentContext;
             _sendRepository = sendRepository;
             _userService = userService;
             _sendService = sendService;
@@ -61,10 +65,9 @@ namespace Bit.Api.Controllers
 
         [HttpGet("{id}")]
         public async Task<SendResponseModel> Get(string id)
-        {
-            var userId = _userService.GetProperUserId(User).Value;
+        {            
             var send = await _sendRepository.GetByIdAsync(new Guid(id));
-            if (send == null || send.UserId != userId)
+            if (send == null || send.UserId != _currentContext.UserId)
             {
                 throw new NotFoundException();
             }
@@ -74,9 +77,8 @@ namespace Bit.Api.Controllers
 
         [HttpGet("")]
         public async Task<ListResponseModel<SendResponseModel>> Get()
-        {
-            var userId = _userService.GetProperUserId(User).Value;
-            var sends = await _sendRepository.GetManyByUserIdAsync(userId);
+        {            
+            var sends = await _sendRepository.GetManyByUserIdAsync(_currentContext.UserId);
             var responses = sends.Select(s => new SendResponseModel(s, _globalSettings));
             return new ListResponseModel<SendResponseModel>(responses);
         }
@@ -86,8 +88,8 @@ namespace Bit.Api.Controllers
         {
             throw new NotFoundException();
             model.ValidateCreation();
-            var userId = _userService.GetProperUserId(User).Value;
-            var send = model.ToSend(userId, _sendService);
+            
+            var send = model.ToSend(_currentContext.UserId, _sendService);
             await _sendService.SaveSendAsync(send);
             return new SendResponseModel(send, _globalSettings);
         }
@@ -111,9 +113,8 @@ namespace Bit.Api.Controllers
             Send send = null;
             await Request.GetSendFileAsync(async (stream, fileName, model) =>
             {
-                model.ValidateCreation();
-                var userId = _userService.GetProperUserId(User).Value;
-                var (madeSend, madeData) = model.ToSend(userId, fileName, _sendService);
+                model.ValidateCreation();                
+                var (madeSend, madeData) = model.ToSend(_currentContext.UserId, fileName, _sendService);
                 send = madeSend;
                 await _sendService.CreateSendAsync(send, madeData, stream, Request.ContentLength.GetValueOrDefault(0));
             });
@@ -123,10 +124,9 @@ namespace Bit.Api.Controllers
 
         [HttpPut("{id}")]
         public async Task<SendResponseModel> Put(string id, [FromBody] SendRequestModel model)
-        {
-            var userId = _userService.GetProperUserId(User).Value;
+        {            
             var send = await _sendRepository.GetByIdAsync(new Guid(id));
-            if (send == null || send.UserId != userId)
+            if (send == null || send.UserId != _currentContext.UserId)
             {
                 throw new NotFoundException();
             }
@@ -137,8 +137,7 @@ namespace Bit.Api.Controllers
 
         [HttpPut("{id}/remove-password")]
         public async Task<SendResponseModel> PutRemovePassword(string id)
-        {
-            var userId = _userService.GetProperUserId(User).Value;
+        {            
             var send = await _sendRepository.GetByIdAsync(new Guid(id));
             if (send == null || send.UserId != userId)
             {
@@ -152,8 +151,7 @@ namespace Bit.Api.Controllers
 
         [HttpDelete("{id}")]
         public async Task Delete(string id)
-        {
-            var userId = _userService.GetProperUserId(User).Value;
+        {            
             var send = await _sendRepository.GetByIdAsync(new Guid(id));
             if (send == null || send.UserId != userId)
             {

@@ -39,7 +39,7 @@ namespace Bit.Core.Test.Services
         private readonly IPaymentService _paymentService;
         private readonly IPolicyRepository _policyRepository;
         private readonly IReferenceEventService _referenceEventService;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
         private readonly GlobalSettings _globalSettings;
         private readonly IOrganizationService _organizationService;
 
@@ -68,7 +68,7 @@ namespace Bit.Core.Test.Services
             _paymentService = Substitute.For<IPaymentService>();
             _policyRepository = Substitute.For<IPolicyRepository>();
             _referenceEventService = Substitute.For<IReferenceEventService>();
-            _currentContext = new CurrentContext();
+            _currentContext = new ISessionContext();
             _globalSettings = new GlobalSettings();
             _organizationService = Substitute.For<IOrganizationService>();
 

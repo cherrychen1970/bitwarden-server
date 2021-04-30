@@ -151,7 +151,7 @@ namespace Bit.Core.Services
             }
 
             var currentContext = _httpContextAccessor?.HttpContext?.
-                RequestServices.GetService(typeof(CurrentContext)) as CurrentContext;
+                RequestServices.GetService(typeof(ISessionContext)) as ISessionContext;
             return currentContext?.DeviceIdentifier;
         }
 

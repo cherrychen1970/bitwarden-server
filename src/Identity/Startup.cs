@@ -49,10 +49,10 @@ namespace Bit.Identity
 
             // Repositories
             //services.AddSqlServerRepositories(globalSettings);
-            services.AddEFSqlServerRepositories(globalSettings);
+            services.AddSqlServerRepositories(globalSettings);
 
             // Context
-            services.AddScoped<CurrentContext>();
+            services.AddScoped<ISessionContext>();
 
             // Caching
             services.AddMemoryCache();
@@ -212,7 +212,7 @@ namespace Bit.Identity
                 .AllowAnyMethod().AllowAnyHeader().AllowCredentials());
 
             // Add current context
-            app.UseMiddleware<CurrentContextMiddleware>();
+            app.UseMiddleware<SessionContextMiddleware>();
 
             // Add IdentityServer to the request pipeline.
             app.UseIdentityServer();

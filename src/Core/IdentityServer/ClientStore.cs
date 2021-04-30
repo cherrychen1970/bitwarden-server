@@ -21,7 +21,7 @@ namespace Bit.Core.IdentityServer
         private readonly GlobalSettings _globalSettings;
         private readonly StaticClientStore _staticClientStore;
         private readonly ILicensingService _licensingService;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
         private readonly IOrganizationUserRepository _organizationUserRepository;
 
         public ClientStore(
@@ -31,7 +31,7 @@ namespace Bit.Core.IdentityServer
             GlobalSettings globalSettings,
             StaticClientStore staticClientStore,
             ILicensingService licensingService,
-            CurrentContext currentContext,
+            ISessionContext currentContext,
             IOrganizationUserRepository organizationUserRepository)
         {
             _installationRepository = installationRepository;
@@ -135,7 +135,9 @@ namespace Bit.Core.IdentityServer
                             new ClientClaim(JwtClaimTypes.Subject, user.Id.ToString()),
                             new ClientClaim(JwtClaimTypes.AuthenticationMethod, "Application", "external")
                         }; 
-                        var orgs = await _currentContext.OrganizationMembershipAsync(_organizationUserRepository, user.Id);
+                        //var orgs = await _currentContext.OrganizationMembershipAsync(_organizationUserRepository, user.Id);
+                        var orgs = await _organizationUserRepository.GetManyByUserAsync<OrganizationMembership>(user.Id,true);
+
                         var isPremium = await _licensingService.ValidateUserPremiumAsync(user);
                         foreach (var claim in CoreHelpers.BuildIdentityClaims(user, orgs, isPremium))
                         {

@@ -7,7 +7,7 @@ namespace Bit.Core.Models.Data
     {
         public EventMessage() { }
 
-        public EventMessage(CurrentContext currentContext)
+        public EventMessage(ISessionContext currentContext)
             : base()
         {
             IpAddress = currentContext.IpAddress;

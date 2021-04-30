@@ -168,7 +168,7 @@ namespace Bit.Core.Services
         private async Task AddCurrentContextAsync(PushSendRequestModel request, bool addIdentifier)
         {
             var currentContext = _httpContextAccessor?.HttpContext?.
-                RequestServices.GetService(typeof(CurrentContext)) as CurrentContext;
+                RequestServices.GetService(typeof(ISessionContext)) as ISessionContext;
             if (!string.IsNullOrWhiteSpace(currentContext?.DeviceIdentifier))
             {
                 var device = await _deviceRepository.GetByIdentifierAsync(currentContext.DeviceIdentifier);

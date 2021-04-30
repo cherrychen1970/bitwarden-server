@@ -111,6 +111,13 @@ namespace Bit.Identity.Controllers
         }
 
         [HttpGet()]
+        public async Task<IActionResult> Debug()
+        {
+            return Ok(HttpContext.User.Claims.Select(x=> new {x.Type, x.Value}));
+        }
+
+
+        [HttpGet()]
         public async Task<IActionResult> Login(string returnUrl)
         {
             var context = await _interaction.GetAuthorizationContextAsync(returnUrl);

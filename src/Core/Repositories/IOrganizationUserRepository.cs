@@ -12,7 +12,8 @@ namespace Bit.Core.Repositories
         Task<int> GetCountByOrganizationIdAsync(Guid organizationId);
         Task<int> GetCountByFreeOrganizationAdminUserAsync(Guid userId);
         Task<int> GetCountByOnlyOwnerAsync(Guid userId);
-        Task<ICollection<OrganizationUser>> GetManyByUserAsync(Guid userId);
+        Task<ICollection<OrganizationUser>> GetManyByUserAsync(Guid userId, bool confirmedOnly=false);
+        Task<ICollection<TResult>> GetManyByUserAsync<TResult>(Guid userId, bool confirmedOnly=false);
         Task<ICollection<OrganizationUser>> GetManyByOrganizationAsync(Guid organizationId, OrganizationUserType? type);
         Task<int> GetCountByOrganizationAsync(Guid organizationId, string email, bool onlyRegisteredUsers);
         Task<OrganizationUser> GetByOrganizationAsync(Guid organizationId, Guid userId);

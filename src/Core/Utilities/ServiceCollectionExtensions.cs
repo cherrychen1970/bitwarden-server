@@ -37,16 +37,16 @@ using Serilog.Context;
 using EntityFrameworkRepos = Bit.Core.Repositories.EntityFramework;
 using Bit.Core.Repositories.EntityFramework.Migration;
 using NoopRepos = Bit.Core.Repositories.Noop;
-using SqlServerRepos = Bit.Core.Repositories.SqlServer;
+//using SqlServerRepos = Bit.Core.Repositories.SqlServer;
 using TableStorageRepos = Bit.Core.Repositories.TableStorage;
 
 namespace Bit.Core.Utilities
 {
     public static class ServiceCollectionExtensions
     {
-        public static void AddEFSqlServerRepositories(this IServiceCollection services, GlobalSettings globalSettings)
+        public static void AddSqlServerRepositories(this IServiceCollection services, GlobalSettings globalSettings)
         {
-            
+
             services.AddAutoMapper(typeof(EntityFrameworkRepos.UserRepository));
             services.MigrateSql(globalSettings.SqlServer.ConnectionString);
             //services.AddDbContext<EntityFrameworkRepos.DatabaseContext>(options => options.UseSqlServer(globalSettings.SqlServer.ConnectionString));
@@ -57,10 +57,10 @@ namespace Bit.Core.Utilities
             services.AddScoped<IOrganizationUserRepository, EntityFrameworkRepos.OrganizationUserRepository>();
             services.AddScoped<ICollectionRepository, EntityFrameworkRepos.CollectionRepository>();
             services.AddScoped<ICollectionCipherRepository, EntityFrameworkRepos.CollectionCipherRepository>();
-            
+
             services.AddScoped<IDeviceRepository, EntityFrameworkRepos.DeviceRepository>();
             services.AddScoped<IGrantRepository, EntityFrameworkRepos.GrantRepository>();
-            
+
             //Noop Repositores
             services.AddSingleton<IPolicyRepository, NoopRepos.PolicyRepository>();
             services.AddSingleton<IInstallationDeviceRepository, NoopRepos.InstallationDeviceRepository>();
@@ -70,7 +70,7 @@ namespace Bit.Core.Utilities
             services.AddSingleton<IGroupRepository, NoopRepos.GroupRepository>();
             services.AddSingleton<IInstallationRepository, NoopRepos.InstallationRepository>();
             services.AddSingleton<ISsoConfigRepository, NoopRepos.SsoConfigRepository>();
-            services.AddSingleton<ISsoUserRepository, NoopRepos.SsoUserRepository>();            
+            services.AddSingleton<ISsoUserRepository, NoopRepos.SsoUserRepository>();
             services.AddSingleton<ITaxRateRepository, NoopRepos.TaxRateRepository>();
 
 #if false                        
@@ -83,70 +83,6 @@ namespace Bit.Core.Utilities
             services.AddSingleton<IEventRepository, SqlServerRepos.EventRepository>();
 #endif            
         }
-        public static void AddSqlServerRepositories(this IServiceCollection services, GlobalSettings globalSettings)
-        {
-            var usePostgreSql = CoreHelpers.SettingHasValue(globalSettings.PostgreSql?.ConnectionString);
-            var useEf = usePostgreSql;
-
-            if (useEf)
-            {
-                services.AddAutoMapper(typeof(EntityFrameworkRepos.UserRepository));
-                services.AddDbContext<EntityFrameworkRepos.DatabaseContext>(options =>
-                {
-                    if (usePostgreSql)
-                    {
-                        options.UseNpgsql(globalSettings.PostgreSql.ConnectionString);
-                    }
-                });
-                services.AddSingleton<IUserRepository, EntityFrameworkRepos.UserRepository>();
-                services.AddSingleton<ICipherRepository, EntityFrameworkRepos.CipherRepository>();
-                services.AddSingleton<IOrganizationRepository, EntityFrameworkRepos.OrganizationRepository>();
-            }
-            else
-            {
-                services.AddSingleton<IUserRepository, SqlServerRepos.UserRepository>();
-                services.AddSingleton<ICipherRepository, SqlServerRepos.CipherRepository>();
-                services.AddSingleton<IDeviceRepository, SqlServerRepos.DeviceRepository>();
-                services.AddSingleton<IGrantRepository, SqlServerRepos.GrantRepository>();
-                services.AddSingleton<IOrganizationRepository, SqlServerRepos.OrganizationRepository>();
-                services.AddSingleton<IOrganizationUserRepository, SqlServerRepos.OrganizationUserRepository>();
-                services.AddSingleton<ICollectionRepository, SqlServerRepos.CollectionRepository>();
-                services.AddSingleton<IFolderRepository, SqlServerRepos.FolderRepository>();
-                services.AddSingleton<ICollectionCipherRepository, SqlServerRepos.CollectionCipherRepository>();
-                services.AddSingleton<IGroupRepository, SqlServerRepos.GroupRepository>();
-                services.AddSingleton<IU2fRepository, SqlServerRepos.U2fRepository>();
-                services.AddSingleton<IInstallationRepository, SqlServerRepos.InstallationRepository>();
-                services.AddSingleton<IMaintenanceRepository, SqlServerRepos.MaintenanceRepository>();
-                services.AddSingleton<ITransactionRepository, SqlServerRepos.TransactionRepository>();
-                services.AddSingleton<IPolicyRepository, SqlServerRepos.PolicyRepository>();
-                services.AddSingleton<ISsoConfigRepository, SqlServerRepos.SsoConfigRepository>();
-                services.AddSingleton<ISsoUserRepository, SqlServerRepos.SsoUserRepository>();
-                services.AddSingleton<ISendRepository, SqlServerRepos.SendRepository>();
-                services.AddSingleton<ITaxRateRepository, SqlServerRepos.TaxRateRepository>();
-                services.AddSingleton<IEmergencyAccessRepository, SqlServerRepos.EmergencyAccessRepository>();
-            }
-
-            if (globalSettings.SelfHosted)
-            {
-                if (useEf)
-                {
-                    // TODO
-                }
-                else
-                {
-                    services.AddSingleton<IEventRepository, SqlServerRepos.EventRepository>();
-                }
-                services.AddSingleton<IInstallationDeviceRepository, NoopRepos.InstallationDeviceRepository>();
-                services.AddSingleton<IMetaDataRepository, NoopRepos.MetaDataRepository>();
-            }
-            else
-            {
-                services.AddSingleton<IEventRepository, TableStorageRepos.EventRepository>();
-                services.AddSingleton<IInstallationDeviceRepository, TableStorageRepos.InstallationDeviceRepository>();
-                services.AddSingleton<IMetaDataRepository, TableStorageRepos.MetaDataRepository>();
-            }
-        }
-
         public static void AddBaseServices(this IServiceCollection services)
         {
             services.AddScoped<ICipherService, CipherService>();
@@ -157,12 +93,12 @@ namespace Bit.Core.Utilities
             //services.AddScoped<IPolicyService, PolicyService>();
             services.AddScoped<IEventService, EventService>();
             //services.AddScoped<IEmergencyAccessService, EmergencyAccessService>();
-            
+
             services.AddScoped<IDeviceService, DeviceService>();
             //services.AddSingleton<IAppleIapService, AppleIapService>();
             //services.AddSingleton<ISsoConfigService, SsoConfigService>();
             //services.AddScoped<ISendService, SendService>();
-            services.AddScoped<IApplicationCacheService, InMemoryApplicationCacheService>();            
+            services.AddScoped<IApplicationCacheService, InMemoryApplicationCacheService>();
         }
 
         public static void AddNoopServices(this IServiceCollection services)
@@ -171,7 +107,7 @@ namespace Bit.Core.Utilities
             services.AddScoped<ISendFileStorageService, NoopSendFileStorageService>();
             services.AddScoped<IPushRegistrationService, NoopPushRegistrationService>();
             services.AddScoped<IEventWriteService, NoopEventWriteService>();
-            services.AddScoped<IPaymentService, NoopPaymentService>();            
+            services.AddScoped<IPaymentService, NoopPaymentService>();
             services.AddScoped<IMailService, NoopMailService>();
             services.AddScoped<IMailDeliveryService, NoopMailDeliveryService>();
             services.AddScoped<IPushNotificationService, NoopPushNotificationService>();
@@ -396,7 +332,7 @@ namespace Bit.Core.Utilities
 
         public static void AddIdentityAuthenticationServices(
             this IServiceCollection services, GlobalSettings globalSettings, IWebHostEnvironment environment,
-            Action<AuthorizationOptions> addAuthorization=null)
+            Action<AuthorizationOptions> addAuthorization = null)
         {
             services
                 .AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)

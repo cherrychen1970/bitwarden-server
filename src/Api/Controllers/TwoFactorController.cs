@@ -25,7 +25,7 @@ namespace Bit.Api.Controllers
         private readonly IOrganizationService _organizationService;
         private readonly GlobalSettings _globalSettings;
         private readonly UserManager<User> _userManager;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
 
         public TwoFactorController(
             IUserService userService,
@@ -33,7 +33,7 @@ namespace Bit.Api.Controllers
             IOrganizationService organizationService,
             GlobalSettings globalSettings,
             UserManager<User> userManager,
-            CurrentContext currentContext)
+            ISessionContext currentContext)
         {
             _userService = userService;
             _organizationRepository = organizationRepository;
@@ -46,7 +46,7 @@ namespace Bit.Api.Controllers
         [HttpGet("")]
         public async Task<ListResponseModel<TwoFactorProviderResponseModel>> Get()
         {
-            var user = await _userService.GetUserByPrincipalAsync(User);
+            var user = await _userService.GetUserByIdAsync(_currentContext.UserId);
             if (user == null)
             {
                 throw new UnauthorizedAccessException();
@@ -61,7 +61,7 @@ namespace Bit.Api.Controllers
         public async Task<ListResponseModel<TwoFactorProviderResponseModel>> GetOrganization(string id)
         {
             var orgIdGuid = new Guid(id);
-            if (!_currentContext.OrganizationAdmin(orgIdGuid))
+            if (!_currentContext.HasOrganizationAdminAccess(orgIdGuid))
             {
                 throw new NotFoundException();
             }
@@ -369,7 +369,7 @@ namespace Bit.Api.Controllers
 
         private async Task<User> CheckAsync(string masterPasswordHash, bool premium)
         {
-            var user = await _userService.GetUserByPrincipalAsync(User);
+            var user = await _userService.GetUserByIdAsync(_currentContext.UserId);
             if (user == null)
             {
                 throw new UnauthorizedAccessException();

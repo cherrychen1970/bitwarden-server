@@ -33,7 +33,7 @@ namespace Bit.Core.IdentityServer
         private readonly IApplicationCacheService _applicationCacheService;
         private readonly IMailService _mailService;
         private readonly ILogger<ResourceOwnerPasswordValidator> _logger;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
         private readonly GlobalSettings _globalSettings;
         private readonly IPolicyRepository _policyRepository;
 
@@ -49,7 +49,7 @@ namespace Bit.Core.IdentityServer
             IApplicationCacheService applicationCacheService,
             IMailService mailService,
             ILogger<ResourceOwnerPasswordValidator> logger,
-            CurrentContext currentContext,
+            ISessionContext currentContext,
             GlobalSettings globalSettings,
             IPolicyRepository policyRepository)
         {
@@ -264,8 +264,8 @@ namespace Bit.Core.IdentityServer
                 (await _userManager.GetValidTwoFactorProvidersAsync(user)).Count > 0;
 
             Organization firstEnabledOrg = null;
-            var orgs = (await _currentContext.OrganizationMembershipAsync(_organizationUserRepository, user.Id))
-                .ToList();
+            var orgs = await _organizationUserRepository.GetManyByUserAsync<OrganizationMembership>(user.Id,true);
+                
             if (orgs.Any())
             {
                 var orgAbilities = await _applicationCacheService.GetOrganizationAbilitiesAsync();
@@ -290,8 +290,7 @@ namespace Bit.Core.IdentityServer
             }
 
             // Is user apart of any orgs? Use cache for initial checks.
-            var orgs = (await _currentContext.OrganizationMembershipAsync(_organizationUserRepository, user.Id))
-                .ToList();
+            var orgs = await _organizationUserRepository.GetManyByUserAsync<OrganizationMembership>(user.Id,true);                
             if (orgs.Any())
             {
                 // Get all org abilities

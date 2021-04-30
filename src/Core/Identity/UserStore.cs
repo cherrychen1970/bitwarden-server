@@ -18,16 +18,16 @@ namespace Bit.Core.Identity
     {
         private readonly IServiceProvider _serviceProvider;
         private readonly IUserRepository _userRepository;
-        private readonly CurrentContext _currentContext;
+        //private readonly AuthorizedContext _currentContext;
 
         public UserStore(
             IServiceProvider serviceProvider,
             IUserRepository userRepository,
-            CurrentContext currentContext)
+            ISessionContext currentContext)
         {
             _serviceProvider = serviceProvider;
             _userRepository = userRepository;
-            _currentContext = currentContext;
+            //_currentContext = currentContext;
         }
 
         public void Dispose() { }
@@ -46,31 +46,16 @@ namespace Bit.Core.Identity
 
         public async Task<User> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (_currentContext?.User != null && _currentContext.User.Email == normalizedEmail)
-            {
-                return _currentContext.User;
-            }
-
-            _currentContext.User = await _userRepository.GetByEmailAsync(normalizedEmail);
-            return _currentContext.User;
+            return await _userRepository.GetByEmailAsync(normalizedEmail);            
         }
 
         public async Task<User> FindByIdAsync(string userId, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (_currentContext?.User != null &&
-                string.Equals(_currentContext.User.Id.ToString(), userId, StringComparison.InvariantCultureIgnoreCase))
-            {
-                return _currentContext.User;
-            }
-
             Guid userIdGuid;
-            if (!Guid.TryParse(userId, out userIdGuid))
-            {
-                return null;
-            }
+            if (!Guid.TryParse(userId, out userIdGuid))            
+                return null;            
 
-            _currentContext.User = await _userRepository.GetByIdAsync(userIdGuid);
-            return _currentContext.User;
+            return await _userRepository.GetByIdAsync(userIdGuid);            
         }
 
         public async Task<User> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken = default(CancellationToken))

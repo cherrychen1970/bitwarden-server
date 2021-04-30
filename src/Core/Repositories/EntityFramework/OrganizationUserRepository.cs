@@ -55,9 +55,12 @@ namespace Bit.Core.Repositories.EntityFramework
             return await GetOne<TableModel.OrganizationUser>(x => x.UserId == userId && x.OrganizationId == organizationId);
         }
 
-        public async Task<ICollection<TableModel.OrganizationUser>> GetManyByUserAsync(Guid userId)
+        public async Task<ICollection<TableModel.OrganizationUser>> GetManyByUserAsync(Guid userId, bool confirmedOnly=false)
+        => await GetManyByUserAsync<TableModel.OrganizationUser>(userId,confirmedOnly);
+
+        public async Task<ICollection<TResult>> GetManyByUserAsync<TResult>(Guid userId, bool confirmedOnly=false)
         {
-            return await GetMany<TableModel.OrganizationUser>(x => x.UserId == userId);
+            return await GetMany<TResult>(x => x.UserId == userId && (confirmedOnly==false || x.Status== OrganizationUserStatusType.Confirmed));
         }
 
         public async Task<ICollection<TableModel.OrganizationUser>> GetManyByOrganizationAsync(Guid organizationId,

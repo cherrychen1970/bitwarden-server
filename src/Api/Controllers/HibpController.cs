@@ -22,7 +22,7 @@ namespace Bit.Api.Controllers
         private static HttpClient _httpClient;
 
         private readonly IUserService _userService;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
         private readonly GlobalSettings _globalSettings;
         private readonly string _userAgent;
 
@@ -33,7 +33,7 @@ namespace Bit.Api.Controllers
 
         public HibpController(
             IUserService userService,
-            CurrentContext currentContext,
+            ISessionContext currentContext,
             GlobalSettings globalSettings)
         {
             _userService = userService;
@@ -89,11 +89,10 @@ namespace Bit.Api.Controllers
         }
 
         private string GetClientId()
-        {
-            var userId = _userService.GetProperUserId(User).Value;
+        {            
             using (var sha256 = SHA256.Create())
             {
-                var hash = sha256.ComputeHash(userId.ToByteArray());
+                var hash = sha256.ComputeHash(_currentContext.UserId.ToByteArray());
                 return Convert.ToBase64String(hash);
             }
         }

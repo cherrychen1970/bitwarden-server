@@ -46,7 +46,7 @@ namespace Bit.Core.Services
         private readonly IPolicyRepository _policyRepository;
         private readonly IDataProtector _organizationServiceDataProtector;
         private readonly IReferenceEventService _referenceEventService;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
         private readonly GlobalSettings _globalSettings;
         private readonly IOrganizationService _organizationService;
 
@@ -74,7 +74,7 @@ namespace Bit.Core.Services
             IPaymentService paymentService,
             IPolicyRepository policyRepository,
             IReferenceEventService referenceEventService,
-            CurrentContext currentContext,
+            ISessionContext currentContext,
             GlobalSettings globalSettings,
             IOrganizationService organizationService)
             : base(
@@ -112,55 +112,12 @@ namespace Bit.Core.Services
             _organizationService = organizationService;
         }
 
-        public Guid? GetProperUserId(ClaimsPrincipal principal)
-        {
-            if (!Guid.TryParse(GetUserId(principal), out var userIdGuid))
-            {
-                return null;
-            }
 
-            return userIdGuid;
-        }
-
-        public async Task<User> GetUserByIdAsync(string userId)
-        {
-            if (_currentContext?.User != null &&
-                string.Equals(_currentContext.User.Id.ToString(), userId, StringComparison.InvariantCultureIgnoreCase))
-            {
-                return _currentContext.User;
-            }
-
-            if (!Guid.TryParse(userId, out var userIdGuid))
-            {
-                return null;
-            }
-
-            _currentContext.User = await _userRepository.GetByIdAsync(userIdGuid);
-            return _currentContext.User;
-        }
 
         public async Task<User> GetUserByIdAsync(Guid userId)
         {
-            if (_currentContext?.User != null && _currentContext.User.Id == userId)
-            {
-                return _currentContext.User;
-            }
-
-            _currentContext.User = await _userRepository.GetByIdAsync(userId);
-            return _currentContext.User;
+            return await _userRepository.GetByIdAsync(userId);            
         }
-
-        public async Task<User> GetUserByPrincipalAsync(ClaimsPrincipal principal)
-        {
-            var userId = GetProperUserId(principal);
-            if (!userId.HasValue)
-            {
-                return null;
-            }
-
-            return await GetUserByIdAsync(userId.Value);
-        }
-
         public async Task<DateTime> GetAccountRevisionDateByIdAsync(Guid userId)
         {
             return await _userRepository.GetAccountRevisionDateAsync(userId);
@@ -1037,7 +994,7 @@ namespace Bit.Core.Services
             {
                 return true;
             }
-            var orgs = await _currentContext.OrganizationMembershipAsync(_organizationUserRepository, userId.Value);
+            var orgs = await _organizationUserRepository.GetManyByUserAsync<OrganizationMembership>(userId.Value,true);            
             if (!orgs.Any())
             {
                 return false;

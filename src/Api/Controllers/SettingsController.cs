@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Bit.Core.Models.Api;
 using Bit.Core.Services;
+using Bit.Core;
 
 namespace Bit.Api.Controllers
 {
@@ -12,17 +13,23 @@ namespace Bit.Api.Controllers
     public class SettingsController : Controller
     {
         private readonly IUserService _userService;
+        private readonly ISessionContext _currentContext;
+        private Guid userId => _currentContext.UserId;
+
 
         public SettingsController(
-            IUserService userService)
+            ISessionContext authorized,
+            IUserService userService            
+            )
         {
             _userService = userService;
+            _currentContext = authorized;
         }
 
         [HttpGet("domains")]
         public async Task<DomainsResponseModel> GetDomains(bool excluded = true)
         {
-            var user = await _userService.GetUserByPrincipalAsync(User);
+            var user = await _userService.GetUserByIdAsync(_currentContext.UserId);
             if (user == null)
             {
                 throw new UnauthorizedAccessException();
@@ -36,7 +43,7 @@ namespace Bit.Api.Controllers
         [HttpPost("domains")]
         public async Task<DomainsResponseModel> PutDomains([FromBody]UpdateDomainsRequestModel model)
         {
-            var user = await _userService.GetUserByPrincipalAsync(User);
+            var user = await _userService.GetUserByIdAsync(_currentContext.UserId);
             if (user == null)
             {
                 throw new UnauthorizedAccessException();

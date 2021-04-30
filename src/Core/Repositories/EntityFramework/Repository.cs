@@ -113,14 +113,13 @@ namespace Bit.Core.Repositories.EntityFramework
         public Repository(DatabaseContext context,IMapper mapper) : base(context,mapper)
         {
         }
-        public virtual async Task<T> GetByIdAsync(TId id)
-        {
-            var entity = await dbSet.FindAsync(id);
-            return entity as T;
-        }        
+        public virtual async Task<T> GetByIdAsync(TId id) => await GetByIdAsync<T>(id);
+            
+
+        
         public virtual async Task<TResult> GetByIdAsync<TResult>(TId id)
         {
-            return await Task.FromResult(dbSet.Where(x => x.Id.Equals(id)).ProjectTo<TResult>(MapperProvider).SingleOrDefault());
+            return await dbSet.Where(x => x.Id.Equals(id)).ProjectTo<TResult>(MapperProvider).SingleOrDefaultAsync();
         }        
         public virtual async Task CreateAsync(T obj)
         {

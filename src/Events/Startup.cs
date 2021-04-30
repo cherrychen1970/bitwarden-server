@@ -35,7 +35,7 @@ namespace Bit.Events
             services.AddSqlServerRepositories(globalSettings);
 
             // Context
-            services.AddScoped<CurrentContext>();
+            services.AddScoped<ISessionContext>();
 
             // Identity
             services.AddIdentityAuthenticationServices(globalSettings, Environment, config =>
@@ -109,7 +109,7 @@ namespace Bit.Events
             app.UseAuthorization();
 
             // Add current context
-            app.UseMiddleware<CurrentContextMiddleware>();
+            app.UseMiddleware<SessionContextMiddleware>();
 
             // Add MVC to the request pipeline.
             app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());

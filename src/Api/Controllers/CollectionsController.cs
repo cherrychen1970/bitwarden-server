@@ -13,25 +13,33 @@ using System.Collections.Generic;
 
 namespace Bit.Api.Controllers
 {
+    [ApiController]
     [Route("api/organizations/{orgId}/collections")]
     [Authorize("Application")]
-    public class CollectionsController : Controller
+    public class CollectionsController : ControllerBase
     {
         private readonly ICollectionRepository _collectionRepository;
         private readonly ICollectionService _collectionService;
         private readonly IUserService _userService;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
+        private Guid userId => _currentContext.UserId;
 
         public CollectionsController(
             ICollectionRepository collectionRepository,
             ICollectionService collectionService,
             IUserService userService,
-            CurrentContext currentContext)
+            ISessionContext currentContext)
         {
             _collectionRepository = collectionRepository;
             _collectionService = collectionService;
             _userService = userService;
             _currentContext = currentContext;
+        }
+
+        [HttpGet("debug")]
+        public IActionResult Debug()
+        {
+            return Ok(_currentContext);
         }
 
         [HttpGet("{id}")]
@@ -63,7 +71,7 @@ namespace Bit.Api.Controllers
             else
             {
                 var collectionDetails = await _collectionRepository.GetByIdWithGroupsAsync(idGuid,
-                    _currentContext.UserId.Value);
+                    _currentContext.UserId);
                 if (collectionDetails?.Item1 == null || collectionDetails.Item1.OrganizationId != orgIdGuid)
                 {
                     throw new NotFoundException();
@@ -89,8 +97,7 @@ namespace Bit.Api.Controllers
         [HttpGet("~/collections")]
         public async Task<ListResponseModel<CollectionDetailsResponseModel>> GetUser()
         {
-            var collections = await _collectionRepository.GetManyByUserIdAsync(
-                _userService.GetProperUserId(User).Value);
+            var collections = await _collectionRepository.GetManyByUserIdAsync(_currentContext.UserId);                
             var responses = collections.Select(c => new CollectionDetailsResponseModel(c));
             return new ListResponseModel<CollectionDetailsResponseModel>(responses);
         }
@@ -114,8 +121,7 @@ namespace Bit.Api.Controllers
             }
 
             var collection = model.ToCollection(orgIdGuid);
-            await _collectionService.SaveAsync(collection, model.Groups?.Select(g => g.ToSelectionReadOnly()),
-                !_currentContext.ManageAllCollections(orgIdGuid) ? _currentContext.UserId : null);
+            await _collectionService.SaveAsync(collection, model.Groups?.Select(g => g.ToSelectionReadOnly()));                
             return new CollectionResponseModel(collection);
         }
 
@@ -159,9 +165,9 @@ namespace Bit.Api.Controllers
                 throw new NotFoundException();
             }
 
-            var collection = _currentContext.OrganizationAdmin(orgId) ?
+            var collection = _currentContext.HasOrganizationAdminAccess(orgId) ?
                 await _collectionRepository.GetByIdAsync(id) :
-                await _collectionRepository.GetByIdAsync(id, _currentContext.UserId.Value);
+                await _collectionRepository.GetByIdAsync(id, _currentContext.UserId);
             if (collection == null || collection.OrganizationId != orgId)
             {
                 throw new NotFoundException();

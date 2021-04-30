@@ -23,7 +23,7 @@ namespace Bit.Api.Controllers
         private readonly ICollectionRepository _collectionRepository;
         private readonly IGroupRepository _groupRepository;
         private readonly IUserService _userService;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
 
         public OrganizationUsersController(
             IOrganizationRepository organizationRepository,
@@ -32,7 +32,7 @@ namespace Bit.Api.Controllers
             ICollectionRepository collectionRepository,
             IGroupRepository groupRepository,
             IUserService userService,
-            CurrentContext currentContext)
+            ISessionContext currentContext)
         {
             _organizationRepository = organizationRepository;
             _organizationUserRepository = organizationUserRepository;
@@ -59,7 +59,7 @@ namespace Bit.Api.Controllers
         public async Task<ListResponseModel<OrganizationUserUserDetailsResponseModel>> Get(string orgId)
         {
             var orgGuidId = new Guid(orgId);
-            var ou = await _organizationUserRepository.GetByOrganizationAsync(orgGuidId,_currentContext.UserId.Value);
+            var ou = await _organizationUserRepository.GetByOrganizationAsync(orgGuidId,_currentContext.UserId);
             //if (!_currentContext.ManageAssignedCollections(orgGuidId) && !_currentContext.ManageGroups(orgGuidId))
             if (ou.Type!=Core.Enums.OrganizationUserType.Admin && ou.Type!=Core.Enums.OrganizationUserType.Owner)
             {
@@ -95,33 +95,25 @@ namespace Bit.Api.Controllers
             {
                 throw new NotFoundException();
             }
-
-            var userId = _userService.GetProperUserId(User);
-            var result = await _organizationService.InviteUserAsync(orgGuidId, userId.Value, null, new OrganizationUserInvite(model));
+            
+            var result = await _organizationService.InviteUserAsync(orgGuidId, _currentContext.UserId, null, new OrganizationUserInvite(model));
         }
 
         [HttpPost("{id}/reinvite")]
-        public async Task Reinvite(string orgId, string id)
-        {
-            var orgGuidId = new Guid(orgId);
-            if (!_currentContext.ManageUsers(orgGuidId))
+        public async Task Reinvite(Guid orgId, Guid id)
+        {            
+            if (!_currentContext.ManageUsers(orgId))
             {
                 throw new NotFoundException();
             }
-
-            var userId = _userService.GetProperUserId(User);
-            await _organizationService.ResendInviteAsync(orgGuidId, userId.Value, new Guid(id));
+            
+            await _organizationService.ResendInviteAsync(orgId, _currentContext.UserId, id);
         }
 
         [HttpPost("{id}/accept")]
         public async Task Accept(string orgId, string id, [FromBody]OrganizationUserAcceptRequestModel model)
         {
-            var user = await _userService.GetUserByPrincipalAsync(User);
-            if (user == null)
-            {
-                throw new UnauthorizedAccessException();
-            }
-
+            var user = await _userService.GetUserByIdAsync(_currentContext.UserId);
             var result = await _organizationService.AcceptUserAsync(new Guid(id), user, model.Token, _userService);
         }
 
@@ -133,9 +125,8 @@ namespace Bit.Api.Controllers
             {
                 throw new NotFoundException();
             }
-
-            var userId = _userService.GetProperUserId(User);
-            var result = await _organizationService.ConfirmUserAsync(orgGuidId, new Guid(id), model.Key, userId.Value,
+            
+            var result = await _organizationService.ConfirmUserAsync(orgGuidId, new Guid(id), model.Key, _currentContext.UserId,
                 _userService);
         }
 
@@ -154,9 +145,8 @@ namespace Bit.Api.Controllers
             {
                 throw new NotFoundException();
             }
-
-            var userId = _userService.GetProperUserId(User);
-            await _organizationService.SaveUserAsync(model.ToOrganizationUser(organizationUser), userId.Value,
+            
+            await _organizationService.SaveUserAsync(model.ToOrganizationUser(organizationUser), _currentContext.UserId,
                 model.Collections?.Select(c => c.ToSelectionReadOnly()));
         }
 
@@ -175,9 +165,8 @@ namespace Bit.Api.Controllers
             {
                 throw new NotFoundException();
             }
-
-            var loggedInUserId = _userService.GetProperUserId(User);
-            await _organizationService.UpdateUserGroupsAsync(organizationUser, model.GroupIds.Select(g => new Guid(g)), loggedInUserId);
+            
+            await _organizationService.UpdateUserGroupsAsync(organizationUser, model.GroupIds.Select(g => new Guid(g)), _currentContext.UserId);
         }
 
         [HttpDelete("{id}")]
@@ -190,8 +179,7 @@ namespace Bit.Api.Controllers
                 throw new NotFoundException();
             }
 
-            var userId = _userService.GetProperUserId(User);
-            await _organizationService.DeleteUserAsync(orgGuidId, new Guid(id), userId.Value);
+            await _organizationService.DeleteUserAsync(orgGuidId, new Guid(id), _currentContext.UserId);
         }
     }
 }

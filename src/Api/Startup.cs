@@ -52,10 +52,10 @@ namespace Bit.Api
 
             // Repositories
             //services.AddSqlServerRepositories(globalSettings);
-            services.AddEFSqlServerRepositories(globalSettings);
+            services.AddSqlServerRepositories(globalSettings);
 
             // Context
-            services.AddScoped<CurrentContext>();
+            services.AddScoped<ISessionContext,SessionContext >();
 
             // Caching
             services.AddMemoryCache();
@@ -93,6 +93,7 @@ namespace Bit.Api
             services.AddCoreLocalizationServices();
 
             // MVC
+            /*
             services.AddMvc(config =>
             {
                 config.Conventions.Add(new ApiExplorerGroupConvention());
@@ -104,8 +105,13 @@ namespace Bit.Api
                     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
                 }
             });
+            */
+            services.AddControllers().AddNewtonsoftJson();
 
-            services.AddSwagger(globalSettings);
+            //services.AddSwagger(globalSettings);
+            services.AddSwaggerGen();
+            //services.AddSwaggerGenNewtonsoftSupport();
+
             //Jobs.JobsHostedService.AddJobsServices(services);
             //services.AddHostedService<Jobs.JobsHostedService>();
 
@@ -157,6 +163,12 @@ namespace Bit.Api
             // Add static files to the request pipeline.
             app.UseStaticFiles();
 
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+            });                 
+
             // Add routing
             app.UseRouting();
 
@@ -169,7 +181,7 @@ namespace Bit.Api
             app.UseAuthorization();
 
             // Add current context
-            app.UseMiddleware<CurrentContextMiddleware>();
+            app.UseMiddleware<SessionContextMiddleware>();
 
             // Add IdentityServer to the request pipeline.
             app.UseIdentityServer();
@@ -178,6 +190,7 @@ namespace Bit.Api
             app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
 
             // Add Swagger
+            /*
             if (Environment.IsDevelopment() || globalSettings.SelfHosted)
             {
                 app.UseSwagger(config =>
@@ -199,6 +212,8 @@ namespace Bit.Api
                     config.OAuthClientSecret("secretKey");
                 });
             }
+            */
+       
             // TODO : merge with identity
             // 33656 : identity, 51822 : sso
             /*

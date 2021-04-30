@@ -7,7 +7,7 @@ namespace Bit.Core.Repositories
     {
         static BaseRepository()
         {
-            SqlMapper.AddTypeHandler(new DateTimeHandler());
+            //SqlMapper.AddTypeHandler(new DateTimeHandler());
         }
 
         public BaseRepository(string connectionString, string readOnlyConnectionString)

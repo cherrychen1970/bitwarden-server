@@ -26,10 +26,12 @@ namespace Bit.Api.Controllers
         private readonly ICollectionCipherRepository _collectionCipherRepository;
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IPolicyRepository _policyRepository;
+        private readonly ISessionContext _currentContext;
         //private readonly ISendRepository _sendRepository;
         private readonly GlobalSettings _globalSettings;
 
         public SyncController(
+            ISessionContext authorized,
             IUserService userService,
             IFolderRepository folderRepository,
             ICipherRepository cipherRepository,
@@ -40,6 +42,7 @@ namespace Bit.Api.Controllers
             //ISendRepository sendRepository,
             GlobalSettings globalSettings)
         {
+            _currentContext = authorized;
             _userService = userService;
             _folderRepository = folderRepository;
             _cipherRepository = cipherRepository;
@@ -54,7 +57,7 @@ namespace Bit.Api.Controllers
         [HttpGet("")]
         public async Task<SyncResponseModel> Get([FromQuery] bool excludeDomains = false)
         {
-            var user = await _userService.GetUserByPrincipalAsync(User);
+            var user = await _userService.GetUserByIdAsync(_currentContext.UserId);
             if (user == null)
             {
                 throw new BadRequestException("User not found.");

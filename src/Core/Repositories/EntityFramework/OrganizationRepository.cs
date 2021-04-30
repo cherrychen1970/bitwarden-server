@@ -6,17 +6,19 @@ using EFModel = Bit.Core.Models.EntityFramework;
 using System.Linq;
 using System.Collections.Generic;
 using AutoMapper;
+using AutoMapper.QueryableExtensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Bit.Core.Models.Table;
 
 namespace Bit.Core.Repositories.EntityFramework
 {
-    public class OrganizationRepository : Repository<TableModel.Organization, EFModel.Organization, Guid>, IOrganizationRepository
+    public class OrganizationRepository : Repository<Organization, EFModel.Organization, Guid>, IOrganizationRepository
     {
         public OrganizationRepository(DatabaseContext context, IMapper mapper)
             : base(context, mapper)
         { }
+
 
         public async Task<Organization> GetByIdentifierAsync(string identifier)
         {

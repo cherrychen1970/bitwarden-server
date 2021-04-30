@@ -12,18 +12,18 @@ using System.Collections.Generic;
 
 namespace Bit.Api.Controllers
 {
-    [Route("organizations/{orgId}/groups")]
+    [Route("api/organizations/{orgId}/groups")]
     [Authorize("Application")]
     public class GroupsController : Controller
     {
         private readonly IGroupRepository _groupRepository;
         private readonly IGroupService _groupService;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
 
         public GroupsController(
             IGroupRepository groupRepository,
             IGroupService groupService,
-            CurrentContext currentContext)
+            ISessionContext currentContext)
         {
             _groupRepository = groupRepository;
             _groupService = groupService;

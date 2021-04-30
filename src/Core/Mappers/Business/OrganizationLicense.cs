@@ -10,6 +10,9 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using AutoMapper;
 
+using Bit.Core.Models.Data;
+using Bit.Core.Utilities;
+
 namespace Bit.Core.Mappers.Business
 {
     public class OrganizationProfile : Profile
@@ -17,8 +20,13 @@ namespace Bit.Core.Mappers.Business
         public OrganizationProfile()
         {
             CreateMap<Models.Business.OrganizationLicense, Models.Table.Organization>()
-                .ForMember(d=>d.ExpirationDate,opt=>opt.MapFrom(s=>s.Expires))
+                .ForMember(d => d.ExpirationDate, opt => opt.MapFrom(s => s.Expires))
                 .ReverseMap();
+
+            CreateMap<Models.Table.OrganizationUser, OrganizationMembership>()
+            .ForMember(x => x.Id, o => o.MapFrom(s => s.OrganizationId))
+            .ForMember(x => x.Permissions, o => o.MapFrom(s => CoreHelpers.LoadClassFromJsonData<Permissions>(s.Permissions)))
+            ;
         }
-    }    
+    }
 }

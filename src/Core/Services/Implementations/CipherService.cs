@@ -29,6 +29,7 @@ namespace Bit.Core.Services
         private readonly IUserService _userService;
         private readonly IPolicyRepository _policyRepository;
         private readonly GlobalSettings _globalSettings;
+        private readonly ISessionContext _currentContext;
 
         public CipherService(
             ICipherRepository cipherRepository,
@@ -43,6 +44,7 @@ namespace Bit.Core.Services
             IEventService eventService,
             IUserService userService,
             IPolicyRepository policyRepository,
+            ISessionContext currentContext,
             GlobalSettings globalSettings)
         {
             _cipherRepository = cipherRepository;
@@ -57,12 +59,14 @@ namespace Bit.Core.Services
             _eventService = eventService;
             _userService = userService;
             _policyRepository = policyRepository;
+            _currentContext = currentContext;
             _globalSettings = globalSettings;
         }
 
-        public async Task SaveAsync(Cipher cipher, Guid savingUserId, DateTime? lastKnownRevisionDate,
+        public async Task SaveAsync(Cipher cipher, DateTime? lastKnownRevisionDate,
              IEnumerable<Guid> collectionIds = null, bool skipPermissionCheck = false, bool limitCollectionScope = true)
         {
+            var savingUserId = _currentContext.UserId;
             if (!skipPermissionCheck && !(await UserCanEditAsync(cipher, savingUserId)))
             {
                 throw new BadRequestException("You do not have permissions to edit this.");
@@ -103,13 +107,13 @@ namespace Bit.Core.Services
             }
         }
 
-        public async Task SaveDetailsAsync(CipherDetails cipher, Guid savingUserId, DateTime? lastKnownRevisionDate,
-            IEnumerable<Guid> collectionIds = null, bool skipPermissionCheck = false)
+        public async Task SaveDetailsAsync(CipherDetails cipher, IEnumerable<Guid> collectionIds = null)
         {
-            if (!skipPermissionCheck && !(await UserCanEditAsync(cipher, savingUserId)))
+            var savingUserId = _currentContext.UserId;
+            if (cipher.OrganizationId.HasValue && !(await UserCanEditAsync(cipher, savingUserId)))
             {
                 throw new BadRequestException("You do not have permissions to edit this.");
-            }
+            }           
 
             cipher.UserId = savingUserId;            
             if (cipher.Id == default(Guid))
@@ -153,8 +157,7 @@ namespace Bit.Core.Services
                 if (collectionIds != null)
                 {
                     throw new ArgumentException("Cannot create cipher with collection ids at the same time.");
-                }
-                ValidateCipherLastKnownRevisionDateAsync(cipher, lastKnownRevisionDate);                
+                }                               
                 await _cipherRepository.ReplaceAsync(cipher);
                 await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Updated);
 
@@ -174,43 +177,6 @@ namespace Bit.Core.Services
             if (requestLength < 1)
             {
                 throw new BadRequestException("No data to attach.");
-            }
-
-            var storageBytesRemaining = 0L;
-            if (cipher.UserId.HasValue)
-            {
-                var user = await _userRepository.GetByIdAsync(cipher.UserId.Value);
-                if (!(await _userService.CanAccessPremium(user)))
-                {
-                    throw new BadRequestException("You must have premium status to use attachments.");
-                }
-
-                if (user.Premium)
-                {
-                    storageBytesRemaining = user.StorageBytesRemaining();
-                }
-                else
-                {
-                    // Users that get access to file storage/premium from their organization get the default
-                    // 1 GB max storage.
-                    storageBytesRemaining = user.StorageBytesRemaining(
-                        _globalSettings.SelfHosted ? (short)10240 : (short)1);
-                }
-            }
-            else if (cipher.OrganizationId.HasValue)
-            {
-                var org = await _organizationRepository.GetByIdAsync(cipher.OrganizationId.Value);
-                if (!org.MaxStorageGb.HasValue)
-                {
-                    throw new BadRequestException("This organization cannot use attachments.");
-                }
-
-                storageBytesRemaining = org.StorageBytesRemaining();
-            }
-
-            if (storageBytesRemaining < requestLength)
-            {
-                throw new BadRequestException("Not enough storage available.");
             }
 
             var attachmentId = Utilities.CoreHelpers.SecureRandomString(32, upper: false, special: false);
@@ -368,8 +334,9 @@ namespace Bit.Core.Services
             await _eventService.LogOrganizationEventAsync(org, Enums.EventType.Organization_PurgedVault);
         }
 
-        public async Task MoveManyAsync(IEnumerable<Guid> cipherIds, Guid? destinationFolderId, Guid movingUserId)
+        public async Task MoveManyAsync(IEnumerable<Guid> cipherIds, Guid? destinationFolderId)
         {
+            var movingUserId = _currentContext.UserId;
             if (destinationFolderId.HasValue)
             {
                 var folder = await _folderRepository.GetByIdAsync(destinationFolderId.Value);

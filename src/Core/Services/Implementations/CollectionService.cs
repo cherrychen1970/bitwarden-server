@@ -33,8 +33,7 @@ namespace Bit.Core.Services
             _mailService = mailService;
         }
 
-        public async Task SaveAsync(Collection collection, IEnumerable<SelectionReadOnly> groups = null,
-            Guid? assignUserId = null)
+        public async Task SaveAsync(Collection collection, IEnumerable<SelectionReadOnly> groups = null)
         {
             var org = await _organizationRepository.GetByIdAsync(collection.OrganizationId);
             if (org == null)
@@ -61,18 +60,6 @@ namespace Bit.Core.Services
                 else
                 {
                     await _collectionRepository.CreateAsync(collection, groups);
-                }
-
-                // Assign a user to the newly created collection.
-                if (assignUserId.HasValue)
-                {
-                    var orgUser = await _organizationUserRepository.GetByOrganizationAsync(org.Id, assignUserId.Value);
-                    if (orgUser != null && orgUser.Status == Enums.OrganizationUserStatusType.Confirmed)
-                    {
-                        await _collectionRepository.UpdateUsersAsync(collection.Id,
-                            new List<SelectionReadOnly> {
-                                new SelectionReadOnly { Id = orgUser.Id, ReadOnly = false } });
-                    }
                 }
 
                 await _eventService.LogCollectionEventAsync(collection, Enums.EventType.Collection_Created);

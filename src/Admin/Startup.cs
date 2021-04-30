@@ -45,7 +45,7 @@ namespace Bit.Admin
             services.AddSqlServerRepositories(globalSettings);
 
             // Context
-            services.AddScoped<CurrentContext>();
+            services.AddScoped<ISessionContext>();
 
             // Identity
             services.AddPasswordlessIdentityServices<ReadOnlyEnvIdentityUserStore>(globalSettings);

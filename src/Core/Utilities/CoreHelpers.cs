@@ -685,7 +685,7 @@ namespace Bit.Core.Utilities
             return configDict;
         }
 
-        public static List<KeyValuePair<string, string>> BuildIdentityClaims(User user, ICollection<CurrentContext.CurrentContentOrganization> orgs, bool isPremium) 
+        public static List<KeyValuePair<string, string>> BuildIdentityClaims(User user, ICollection<OrganizationMembership> orgs, bool isPremium) 
         {
             var claims = new List<KeyValuePair<string, string>>()
             {

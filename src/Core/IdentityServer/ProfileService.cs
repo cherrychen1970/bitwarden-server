@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using IdentityModel;
+using Bit.Core.Models.Table;
+using Bit.Core.Enums;
 using Bit.Core.Utilities;
 
 namespace Bit.Core.IdentityServer
@@ -17,30 +19,33 @@ namespace Bit.Core.IdentityServer
         private readonly IUserService _userService;
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly ILicensingService _licensingService;
-        private readonly CurrentContext _currentContext;
+        //private readonly CurrentContext _currentContext;
+        private Guid _userId;
 
         public ProfileService(
             IUserService userService,
             IOrganizationUserRepository organizationUserRepository,
             ILicensingService licensingService,
-            CurrentContext currentContext)
+            ISessionContext currentContext)
         {
             _userService = userService;
             _organizationUserRepository = organizationUserRepository;
             _licensingService = licensingService;
-            _currentContext = currentContext;
+            
+            //_currentContext = currentContext;
         }
 
         public async Task GetProfileDataAsync(ProfileDataRequestContext context)
         {
             var existingClaims = context.Subject.Claims;
             var newClaims = new List<Claim>();
+            var userId = new Guid(context.Subject.FindFirstValue("sub"));            
 
-            var user = await _userService.GetUserByPrincipalAsync(context.Subject);
+            var user = await _userService.GetUserByIdAsync(userId);
             if (user != null)
             {
-                var isPremium = await _licensingService.ValidateUserPremiumAsync(user);
-                var orgs = await _currentContext.OrganizationMembershipAsync(_organizationUserRepository, user.Id);
+                var isPremium = true;//await _licensingService.ValidateUserPremiumAsync(user);
+                var orgs = await OrganizationMembershipAsync(_organizationUserRepository, user.Id);
                 foreach (var claim in CoreHelpers.BuildIdentityClaims(user, orgs, isPremium))
                 {
                     var upperValue = claim.Value.ToUpperInvariant();
@@ -65,10 +70,18 @@ namespace Bit.Core.IdentityServer
             }
         }
 
+        public async Task<ICollection<OrganizationMembership>> OrganizationMembershipAsync(
+            IOrganizationUserRepository organizationUserRepository, Guid userId)
+        {
+                var memberships= await organizationUserRepository.GetManyByUserAsync(userId);
+                return memberships.Where(ou => ou.Status == OrganizationUserStatusType.Confirmed).Select(x=> new OrganizationMembership(x)).ToArray() ;                             
+        }        
+
         public async Task IsActiveAsync(IsActiveContext context)
         {
             var securityTokenClaim = context.Subject?.Claims.FirstOrDefault(c => c.Type == "sstamp");
-            var user = await _userService.GetUserByPrincipalAsync(context.Subject);
+            var userId = new Guid(context.Subject.FindFirstValue("sub"));            
+            var user = await _userService.GetUserByIdAsync(userId);
 
             if (user != null && securityTokenClaim != null)
             {

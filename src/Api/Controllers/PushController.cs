@@ -21,14 +21,16 @@ namespace Bit.Api.Controllers
         private readonly IPushRegistrationService _pushRegistrationService;
         private readonly IPushNotificationService _pushNotificationService;
         private readonly IWebHostEnvironment _environment;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
+        private System.Guid userId => _currentContext.UserId;
+
         private readonly GlobalSettings _globalSettings;
 
         public PushController(
             IPushRegistrationService pushRegistrationService,
             IPushNotificationService pushNotificationService,
             IWebHostEnvironment environment,
-            CurrentContext currentContext,
+            ISessionContext currentContext,
             GlobalSettings globalSettings)
         {
             _currentContext = currentContext;

@@ -73,9 +73,11 @@ namespace Bit.Core.Models.EntityFramework
     {
         public CipherMapperProfile()
         {
-            CreateMap<Table.Cipher, Cipher>().ReverseMap();
-            CreateMap<Cipher, CipherDetails>().ReverseMap();
-            CreateMap<Cipher, CipherOrganizationDetails>().ReverseMap();
+            CreateMap<Table.Cipher, Cipher>().ForMember(x=>x.Organization, o=>o.Ignore());
+
+            CreateMap<Cipher, Table.Cipher>();
+            CreateMap<Cipher, CipherDetails>();
+            CreateMap<Cipher, CipherOrganizationDetails>();
             // temp
             CreateMap<Table.Grant, Table.Grant>();
             CreateMap<Table.Device, Table.Device>();

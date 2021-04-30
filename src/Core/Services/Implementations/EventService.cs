@@ -14,14 +14,14 @@ namespace Bit.Core.Services
         private readonly IEventWriteService _eventWriteService;
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IApplicationCacheService _applicationCacheService;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
         private readonly GlobalSettings _globalSettings;
 
         public EventService(
             IEventWriteService eventWriteService,
             IOrganizationUserRepository organizationUserRepository,
             IApplicationCacheService applicationCacheService,
-            CurrentContext currentContext,
+            ISessionContext currentContext,
             GlobalSettings globalSettings)
         {
             _eventWriteService = eventWriteService;
@@ -45,7 +45,7 @@ namespace Bit.Core.Services
             };
 
             var orgAbilities = await _applicationCacheService.GetOrganizationAbilitiesAsync();
-            var orgs = await _currentContext.OrganizationMembershipAsync(_organizationUserRepository, userId);
+            var orgs = await _organizationUserRepository.GetManyByUserAsync<OrganizationMembership>(userId,true);            
             var orgEvents = orgs.Where(o => CanUseEvents(orgAbilities, o.Id))
                 .Select(o => new EventMessage(_currentContext)
                 {
@@ -93,7 +93,7 @@ namespace Bit.Core.Services
         private async Task<EventMessage> BuildCipherEventMessageAsync(Cipher cipher, EventType type, DateTime? date = null)
         {
             // Only logging organization cipher events for now.
-            if (!cipher.OrganizationId.HasValue || (!_currentContext?.UserId.HasValue ?? true))
+            if (!cipher.OrganizationId.HasValue)
             {
                 return null;
             }

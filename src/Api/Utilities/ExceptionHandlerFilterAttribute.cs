@@ -1,6 +1,5 @@
 ﻿using System;
 using InternalApi = Bit.Core.Models.Api;
-using PublicApi = Bit.Core.Models.Api.Public;
 using Bit.Core.Exceptions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -32,22 +31,16 @@ namespace Bit.Api.Utilities
                 // Should never happen.
                 return;
             }
-
-            PublicApi.ErrorResponseModel publicErrorModel = null;
+            
             InternalApi.ErrorResponseModel internalErrorModel = null;
             if (exception is BadRequestException badRequestException)
             {
                 context.HttpContext.Response.StatusCode = 400;
                 if (badRequestException.ModelState != null)
                 {
-                    if (_publicApi)
-                    {
-                        publicErrorModel = new PublicApi.ErrorResponseModel(badRequestException.ModelState);
-                    }
-                    else
-                    {
+
                         internalErrorModel = new InternalApi.ErrorResponseModel(badRequestException.ModelState);
-                    }
+                    
                 }
                 else
                 {
@@ -57,16 +50,10 @@ namespace Bit.Api.Utilities
             else if (exception is StripeException stripeException && stripeException?.StripeError?.Type == "card_error")
             {
                 context.HttpContext.Response.StatusCode = 400;
-                if (_publicApi)
-                {
-                    publicErrorModel = new PublicApi.ErrorResponseModel(stripeException.StripeError.Param,
-                        stripeException.Message);
-                }
-                else
-                {
+
                     internalErrorModel = new InternalApi.ErrorResponseModel(stripeException.StripeError.Param,
                         stripeException.Message);
-                }
+                
             }
             else if (exception is GatewayException)
             {
@@ -105,13 +92,6 @@ namespace Bit.Api.Utilities
                 context.HttpContext.Response.StatusCode = 500;
             }
 
-            if (_publicApi)
-            {
-                var errorModel = publicErrorModel ?? new PublicApi.ErrorResponseModel(errorMessage);
-                context.Result = new ObjectResult(errorModel);
-            }
-            else
-            {
                 var errorModel = internalErrorModel ?? new InternalApi.ErrorResponseModel(errorMessage);
                 var env = context.HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
                 if (env.IsDevelopment())
@@ -121,7 +101,7 @@ namespace Bit.Api.Utilities
                     errorModel.InnerExceptionMessage = exception?.InnerException?.Message;
                 }
                 context.Result = new ObjectResult(errorModel);
-            }
+            
         }
     }
 }

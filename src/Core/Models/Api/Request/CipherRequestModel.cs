@@ -40,7 +40,7 @@ namespace Bit.Core.Models.Api
         public CipherSecureNoteModel SecureNote { get; set; }
         public DateTime? LastKnownRevisionDate { get; set; } = null;
 
-        public CipherDetails ToCipherDetails(Guid userId, bool allowOrgIdSet = true)
+        public CipherDetails ToCipherDetails(Guid userId=default(Guid), bool allowOrgIdSet = true)
         {
             var hasOrgId = !string.IsNullOrWhiteSpace(OrganizationId);
             var cipher = new CipherDetails

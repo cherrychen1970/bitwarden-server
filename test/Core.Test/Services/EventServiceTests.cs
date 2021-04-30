@@ -13,7 +13,7 @@ namespace Bit.Core.Test.Services
         private readonly IEventWriteService _eventWriteService;
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IApplicationCacheService _applicationCacheService;
-        private readonly CurrentContext _currentContext;
+        private readonly ISessionContext _currentContext;
         private readonly GlobalSettings _globalSettings;
 
         public EventServiceTests()
@@ -21,7 +21,7 @@ namespace Bit.Core.Test.Services
             _eventWriteService = Substitute.For<IEventWriteService>();
             _organizationUserRepository = Substitute.For<IOrganizationUserRepository>();
             _applicationCacheService = Substitute.For<IApplicationCacheService>();
-            _currentContext = new CurrentContext();
+            _currentContext = new ISessionContext();
             _globalSettings = new GlobalSettings();
 
             _sut = new EventService(
