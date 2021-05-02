@@ -113,7 +113,7 @@ namespace Bit.Identity.Controllers
         [HttpGet()]
         public async Task<IActionResult> Debug()
         {
-            return Ok(HttpContext.User.Claims.Select(x=> new {x.Type, x.Value}));
+            return Ok(HttpContext.User.Claims.Select(x => new { x.Type, x.Value }));
         }
 
 
@@ -324,7 +324,7 @@ namespace Bit.Identity.Controllers
         {
             var name = claims.GetName();
             var email = claims.GetEmailAddress();
-            var orgIdentifier = claims.GetClaim(_globalSettings.Oidc.OrganizationIdentifier);
+
             // Create user record - all existing user flows are handled above
             var user = new User
             {
@@ -336,19 +336,22 @@ namespace Bit.Identity.Controllers
             await _userService.RegisterUserAsync(user);
             user = await _userService.GetUserByIdAsync(user.Id);
 
-            OrganizationUser orgUser = null;
-            var organization = await _organizationRepository.GetByIdentifierAsync(orgIdentifier);
-            if (organization != null)
+            var orgIdentifier = claims.GetClaim(_globalSettings.Oidc.OrganizationIdentifier);
+            if (orgIdentifier!=null)
             {
-                //throw new Exception($"Organization: {orgIdentifier} not found" );
-                orgUser = new OrganizationUser
+                var organization = await _organizationRepository.GetByIdentifierAsync(orgIdentifier);
+                if (organization != null)
                 {
-                    OrganizationId = organization.Id,
-                    UserId = user.Id,
-                    Type = OrganizationUserType.User,
-                    Status = OrganizationUserStatusType.Invited
-                };
-                await _organizationUserRepository.CreateAsync(orgUser);
+                    //throw new Exception($"Organization: {orgIdentifier} not found" );
+                    var orgUser = new OrganizationUser
+                    {
+                        OrganizationId = organization.Id,
+                        UserId = user.Id,
+                        Type = OrganizationUserType.User,
+                        Status = OrganizationUserStatusType.Invited
+                    };
+                    await _organizationUserRepository.CreateAsync(orgUser);
+                }
             }
 
             return user;
@@ -358,5 +361,5 @@ namespace Bit.Identity.Controllers
     public class RedirectViewModel
     {
         public string RedirectUrl { get; set; }
-    }    
+    }
 }

@@ -9,8 +9,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Bit.Core.Migrations.SqliteDatabase
 {
     [DbContext(typeof(SqliteDatabaseContext))]
-    [Migration("20210331075124_collection")]
-    partial class collection
+    [Migration("20210430222310_init")]
+    partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

@@ -33,6 +33,7 @@ namespace Bit.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHttpContextAccessor();
             // Options
             services.AddOptions();
 
@@ -181,7 +182,7 @@ namespace Bit.Api
             app.UseAuthorization();
 
             // Add current context
-            app.UseMiddleware<SessionContextMiddleware>();
+            //app.UseMiddleware<SessionContextMiddleware>();
 
             // Add IdentityServer to the request pipeline.
             app.UseIdentityServer();

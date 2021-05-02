@@ -62,6 +62,13 @@ namespace Bit.Core
         private bool _builtHttpContext;
         private bool _builtClaimsPrincipal;
 
+
+         public SessionContext(IHttpContextAccessor httpContextAccessor, GlobalSettings settings)
+        {
+            if (httpContextAccessor.HttpContext!=null)
+                Build(httpContextAccessor.HttpContext.User, settings);
+        }
+
         // debug : cherry
 
         public virtual Dictionary<string, IEnumerable<string>> claims { get; set; }
@@ -79,7 +86,7 @@ namespace Bit.Core
 
         public bool HasOrganizations()=> Organizations?.Any() ?? false;
 
-        public async virtual Task BuildAsync(HttpContext httpContext, GlobalSettings globalSettings)
+        public async virtual void BuildAsync(HttpContext httpContext, GlobalSettings globalSettings)
         {
             if (_builtHttpContext)
             {
@@ -88,7 +95,7 @@ namespace Bit.Core
 
             _builtHttpContext = true;
             HttpContext = httpContext;
-            await BuildAsync(httpContext.User, globalSettings);
+            Build(httpContext.User, globalSettings);
 
             if (DeviceIdentifier == null && httpContext.Request.Headers.ContainsKey("Device-Identifier"))
             {
@@ -102,7 +109,7 @@ namespace Bit.Core
             }
         }
 
-        public async virtual Task BuildAsync(ClaimsPrincipal user, GlobalSettings globalSettings)
+        public virtual void Build(ClaimsPrincipal user, GlobalSettings globalSettings)
         {
             if (_builtClaimsPrincipal)
             {
@@ -111,14 +118,14 @@ namespace Bit.Core
 
             _builtClaimsPrincipal = true;
             IpAddress = HttpContext.GetIpAddress(globalSettings);
-            await SetContextAsync(user);
+           SetContext(user);
         }
 
-        public virtual Task SetContextAsync(ClaimsPrincipal user)
+        public virtual void SetContext(ClaimsPrincipal user)
         {
             if (user == null || !user.Claims.Any())
             {
-                return Task.FromResult(0);
+                return;
             }
 
             claims = user.Claims.GroupBy(c => c.Type).ToDictionary(c => c.Key, c => c.Select(v => v.Value));
@@ -212,8 +219,6 @@ namespace Bit.Core
                         Permissions = SetOrganizationPermissionsFromClaims(c, claims)
                     }));
             }
-
-            return Task.FromResult(0);
         }
 
         public bool IsOrganizationMember(Guid orgId)

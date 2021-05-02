@@ -14,7 +14,7 @@ namespace Bit.Core.Migrations
                     Id = table.Column<Guid>(nullable: false),
                     UserId = table.Column<Guid>(nullable: false),
                     Name = table.Column<string>(nullable: true),
-                    Type = table.Column<byte>(nullable: false),
+                    Type = table.Column<short>(nullable: false),
                     Identifier = table.Column<string>(nullable: true),
                     PushToken = table.Column<string>(nullable: true),
                     CreationDate = table.Column<DateTime>(nullable: false),
@@ -226,17 +226,26 @@ namespace Bit.Core.Migrations
                 name: "CollectionCipher",
                 columns: table => new
                 {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     CollectionId = table.Column<Guid>(nullable: false),
-                    CipherId = table.Column<Guid>(nullable: false)
+                    CipherId = table.Column<Guid>(nullable: false),
+                    CipherId1 = table.Column<Guid>(nullable: true)
                 },
                 constraints: table =>
                 {
+                    table.PrimaryKey("PK_CollectionCipher", x => x.Id);
                     table.ForeignKey(
                         name: "FK_CollectionCipher_Cipher_CipherId",
                         column: x => x.CipherId,
                         principalTable: "Cipher",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_CollectionCipher_Cipher_CipherId1",
+                        column: x => x.CipherId1,
+                        principalTable: "Cipher",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_CollectionCipher_Collection_CollectionId",
                         column: x => x.CollectionId,
@@ -249,6 +258,8 @@ namespace Bit.Core.Migrations
                 name: "CollectionUser",
                 columns: table => new
                 {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     CollectionId = table.Column<Guid>(nullable: false),
                     OrganizationUserId = table.Column<Guid>(nullable: false),
                     ReadOnly = table.Column<bool>(nullable: false),
@@ -256,6 +267,7 @@ namespace Bit.Core.Migrations
                 },
                 constraints: table =>
                 {
+                    table.PrimaryKey("PK_CollectionUser", x => x.Id);
                     table.ForeignKey(
                         name: "FK_CollectionUser_Collection_CollectionId",
                         column: x => x.CollectionId,
@@ -266,8 +278,7 @@ namespace Bit.Core.Migrations
                         name: "FK_CollectionUser_OrganizationUser_OrganizationUserId",
                         column: x => x.OrganizationUserId,
                         principalTable: "OrganizationUser",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -289,6 +300,11 @@ namespace Bit.Core.Migrations
                 name: "IX_CollectionCipher_CipherId",
                 table: "CollectionCipher",
                 column: "CipherId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CollectionCipher_CipherId1",
+                table: "CollectionCipher",
+                column: "CipherId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CollectionCipher_CollectionId",

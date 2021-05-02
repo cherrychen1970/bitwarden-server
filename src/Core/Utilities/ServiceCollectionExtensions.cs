@@ -48,7 +48,7 @@ namespace Bit.Core.Utilities
         {
 
             services.AddAutoMapper(typeof(EntityFrameworkRepos.UserRepository));
-            services.MigrateSql(globalSettings.SqlServer.ConnectionString);
+            services.MigrateSqlite(globalSettings.Sqlite.ConnectionString);
             //services.AddDbContext<EntityFrameworkRepos.DatabaseContext>(options => options.UseSqlServer(globalSettings.SqlServer.ConnectionString));
 
             services.AddScoped<IUserRepository, EntityFrameworkRepos.UserRepository>();
