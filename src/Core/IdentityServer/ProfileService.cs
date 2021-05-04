@@ -25,8 +25,8 @@ namespace Bit.Core.IdentityServer
         public ProfileService(
             IUserService userService,
             IOrganizationUserRepository organizationUserRepository,
-            ILicensingService licensingService,
-            ISessionContext currentContext)
+            ILicensingService licensingService
+            )
         {
             _userService = userService;
             _organizationUserRepository = organizationUserRepository;

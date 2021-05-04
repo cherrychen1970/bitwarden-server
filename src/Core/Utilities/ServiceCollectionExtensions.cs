@@ -93,7 +93,7 @@ namespace Bit.Core.Utilities
             services.AddScoped<ICollectionService, CollectionService>();
             //services.AddScoped<IGroupService, GroupService>();
             //services.AddScoped<IPolicyService, PolicyService>();
-            services.AddScoped<IEventService, EventService>();
+            
             //services.AddScoped<IEmergencyAccessService, EmergencyAccessService>();
 
             services.AddScoped<IDeviceService, DeviceService>();
@@ -111,6 +111,7 @@ namespace Bit.Core.Utilities
             services.AddScoped<IEventWriteService, NoopEventWriteService>();
             services.AddScoped<IPaymentService, NoopPaymentService>();
             services.AddScoped<IMailService, NoopMailService>();
+            services.AddScoped<IEventService, NoopEventService>();
             services.AddScoped<IMailDeliveryService, NoopMailDeliveryService>();
             services.AddScoped<IPushNotificationService, NoopPushNotificationService>();
             services.AddScoped<IBlockIpService, NoopBlockIpService>();

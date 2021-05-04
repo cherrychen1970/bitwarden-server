@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -46,9 +47,10 @@ namespace Bit.Core.Services
         private readonly IPolicyRepository _policyRepository;
         private readonly IDataProtector _organizationServiceDataProtector;
         private readonly IReferenceEventService _referenceEventService;
-        private readonly ISessionContext _currentContext;
+        //private readonly ISessionContext _currentContext;
         private readonly GlobalSettings _globalSettings;
         private readonly IOrganizationService _organizationService;
+        private readonly HttpContext _httpContext;
 
         public UserService(
             IUserRepository userRepository,
@@ -74,7 +76,8 @@ namespace Bit.Core.Services
             IPaymentService paymentService,
             IPolicyRepository policyRepository,
             IReferenceEventService referenceEventService,
-            ISessionContext currentContext,
+            //ISessionContext currentContext,
+            IHttpContextAccessor httpContextAccessor,
             GlobalSettings globalSettings,
             IOrganizationService organizationService)
             : base(
@@ -88,6 +91,7 @@ namespace Bit.Core.Services
                   services,
                   logger)
         {
+            _httpContext = httpContextAccessor.HttpContext;
             _userRepository = userRepository;
             _cipherRepository = cipherRepository;
             _organizationUserRepository = organizationUserRepository;
@@ -107,7 +111,7 @@ namespace Bit.Core.Services
             _organizationServiceDataProtector = dataProtectionProvider.CreateProtector(
                 "OrganizationServiceDataProtector");
             _referenceEventService = referenceEventService;
-            _currentContext = currentContext;
+            //_currentContext = currentContext;
             _globalSettings = globalSettings;
             _organizationService = organizationService;
         }
@@ -705,7 +709,7 @@ namespace Bit.Core.Services
             user.TwoFactorProviders = null;
             user.TwoFactorRecoveryCode = CoreHelpers.SecureRandomString(32, upper: false, special: false);
             await SaveUserAsync(user);
-            await _mailService.SendRecoverTwoFactorEmail(user.Email, DateTime.UtcNow, _currentContext.IpAddress);
+            await _mailService.SendRecoverTwoFactorEmail(user.Email, DateTime.UtcNow, _httpContext.GetIpAddress(_globalSettings));
             await _eventService.LogUserEventAsync(user.Id, EventType.User_Recovered2fa);
             await CheckPoliciesOnTwoFactorRemovalAsync(user, organizationService);
 

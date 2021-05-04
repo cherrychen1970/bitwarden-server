@@ -3,6 +3,7 @@ using Bit.Core.Enums;
 using Bit.Core.Repositories;
 using IdentityServer4.Validation;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -33,9 +34,11 @@ namespace Bit.Core.IdentityServer
         private readonly IApplicationCacheService _applicationCacheService;
         private readonly IMailService _mailService;
         private readonly ILogger<ResourceOwnerPasswordValidator> _logger;
-        private readonly ISessionContext _currentContext;
+        //private readonly ISessionContext _currentContext;
         private readonly GlobalSettings _globalSettings;
         private readonly IPolicyRepository _policyRepository;
+
+        private readonly HttpContext _httpContext;
 
         public BaseRequestValidator(
             UserManager<User> userManager,
@@ -49,7 +52,7 @@ namespace Bit.Core.IdentityServer
             IApplicationCacheService applicationCacheService,
             IMailService mailService,
             ILogger<ResourceOwnerPasswordValidator> logger,
-            ISessionContext currentContext,
+            IHttpContextAccessor httpContextAccessor,
             GlobalSettings globalSettings,
             IPolicyRepository policyRepository)
         {
@@ -64,7 +67,7 @@ namespace Bit.Core.IdentityServer
             _applicationCacheService = applicationCacheService;
             _mailService = mailService;
             _logger = logger;
-            _currentContext = currentContext;
+            _httpContext = httpContextAccessor.HttpContext;
             _globalSettings = globalSettings;
             _policyRepository = policyRepository;
         }
@@ -237,7 +240,7 @@ namespace Bit.Core.IdentityServer
             {
                 _logger.LogWarning(Constants.BypassFiltersEventId,
                     string.Format("Failed login attempt{0}{1}", twoFactorRequest ? ", 2FA invalid." : ".",
-                        $" {_currentContext.IpAddress}"));
+                        $" {_httpContext.GetIpAddress(_globalSettings)}"));
             }
 
             await Task.Delay(2000); // Delay for brute force.
@@ -467,7 +470,7 @@ namespace Bit.Core.IdentityServer
                         if (!_globalSettings.DisableEmailNewDevice)
                         {
                             await _mailService.SendNewDeviceLoggedInEmail(user.Email, deviceType, now,
-                                _currentContext.IpAddress);
+                                _httpContext.GetIpAddress(_globalSettings));
                         }
                     }
 

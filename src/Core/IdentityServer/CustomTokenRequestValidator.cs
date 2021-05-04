@@ -1,6 +1,7 @@
 ﻿using Bit.Core.Models.Table;
 using Bit.Core.Repositories;
 using IdentityServer4.Validation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using System.Collections.Generic;
 using System.Security.Claims;
@@ -31,12 +32,12 @@ namespace Bit.Core.IdentityServer
             IApplicationCacheService applicationCacheService,
             IMailService mailService,
             ILogger<ResourceOwnerPasswordValidator> logger,
-            ISessionContext currentContext,
+            IHttpContextAccessor httpContextAccessor,
             GlobalSettings globalSettings,
             IPolicyRepository policyRepository)
             : base(userManager, deviceRepository, deviceService, userService, eventService,
                   organizationDuoWebTokenProvider, organizationRepository, organizationUserRepository,
-                  applicationCacheService, mailService, logger, currentContext, globalSettings, policyRepository)
+                  applicationCacheService, mailService, logger, httpContextAccessor, globalSettings, policyRepository)
         {
             _userManager = userManager;
         }
