@@ -59,8 +59,8 @@ namespace Bit.Api
                     // well this is not automatic...                    
                     options.ClaimActions.MapUniqueJsonKey(JwtClaimTypes.Email,JwtClaimTypes.Email);                    
                     options.ClaimActions.MapUniqueJsonKey(globalSettings.Oidc.OrganizationIdentifier,globalSettings.Oidc.OrganizationIdentifier);                    
-                    //foreach (var item in globalSettings.Oidc.Scopes)                    
-                    //    options.Scope.Add(item);
+                    foreach (var item in globalSettings.Oidc.Scopes)                    
+                        options.Scope.Add(item);
 
                     options.Events = new Microsoft.AspNetCore.Authentication.OpenIdConnect.OpenIdConnectEvents
                     {

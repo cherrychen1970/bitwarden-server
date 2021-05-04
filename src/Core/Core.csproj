@@ -62,6 +62,7 @@
     <PackageReference Include="YubicoDotNetClient" Version="1.2.0" />
     <PackageReference Include="System.Data.SqlClient" Version="4.8.1" />
     <PackageReference Include="Microsoft.Extensions.Caching.Redis" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="3.1.6" />    
   </ItemGroup>
 
   <ItemGroup>

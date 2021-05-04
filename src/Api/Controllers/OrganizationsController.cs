@@ -23,7 +23,7 @@ namespace Bit.Api.Controllers
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IOrganizationService _organizationService;
         private readonly IUserService _userService;
-        private readonly IPaymentService _paymentService;
+        //private readonly IPaymentService _paymentService;
         private readonly ISessionContext _currentContext;
         private readonly GlobalSettings _globalSettings;
         private readonly IPolicyRepository _policyRepository;
@@ -32,8 +32,7 @@ namespace Bit.Api.Controllers
             IOrganizationRepository organizationRepository,
             IOrganizationUserRepository organizationUserRepository,
             IOrganizationService organizationService,
-            IUserService userService,
-            IPaymentService paymentService,
+            IUserService userService,            
             ISessionContext currentContext,
             GlobalSettings globalSettings,
             IPolicyRepository policyRepository)
@@ -41,8 +40,7 @@ namespace Bit.Api.Controllers
             _organizationRepository = organizationRepository;
             _organizationUserRepository = organizationUserRepository;
             _organizationService = organizationService;
-            _userService = userService;
-            _paymentService = paymentService;
+            _userService = userService;            
             _currentContext = currentContext;
             _globalSettings = globalSettings;
             _policyRepository = policyRepository;
@@ -57,7 +55,6 @@ namespace Bit.Api.Controllers
                 throw new NotFoundException();
             }  
                       
-
             var organization = await _organizationRepository.GetByIdAsync(id);
             if (organization == null)
             {                
@@ -65,56 +62,6 @@ namespace Bit.Api.Controllers
             }
 
             return new OrganizationResponseModel(organization);
-        }
-
-        [HttpGet("{id}/billing")]
-        [SelfHosted(NotSelfHostedOnly = true)]
-        public async Task<BillingResponseModel> GetBilling(string id)
-        {
-            var orgIdGuid = new Guid(id);
-            if (!_currentContext.IsOrganizationOwner(orgIdGuid))
-            {
-                throw new NotFoundException();
-            }
-
-            var organization = await _organizationRepository.GetByIdAsync(orgIdGuid);
-            if (organization == null)
-            {
-                throw new NotFoundException();
-            }
-
-            var billingInfo = await _paymentService.GetBillingAsync(organization);
-            return new BillingResponseModel(billingInfo);
-        }
-
-        [HttpGet("{id}/subscription")]
-        public async Task<OrganizationSubscriptionResponseModel> GetSubscription(string id)
-        {
-            var orgIdGuid = new Guid(id);
-            if (!_currentContext.IsOrganizationOwner(orgIdGuid))
-            {
-                throw new NotFoundException();
-            }
-
-            var organization = await _organizationRepository.GetByIdAsync(orgIdGuid);
-            if (organization == null)
-            {
-                throw new NotFoundException();
-            }
-
-            if (!_globalSettings.SelfHosted && organization.Gateway != null)
-            {
-                var subscriptionInfo = await _paymentService.GetSubscriptionAsync(organization);
-                if (subscriptionInfo == null)
-                {
-                    throw new NotFoundException();
-                }
-                return new OrganizationSubscriptionResponseModel(organization, subscriptionInfo);
-            }
-            else
-            {
-                return new OrganizationSubscriptionResponseModel(organization);
-            }
         }
 
         [HttpGet("{id}/license")]
@@ -492,55 +439,6 @@ namespace Bit.Api.Controllers
                 var response = new ApiKeyResponseModel(organization);
                 return response;
             }
-        }
-
-        [HttpGet("{id}/tax")]
-        [SelfHosted(NotSelfHostedOnly = true)]
-        public async Task<TaxInfoResponseModel> GetTaxInfo(string id)
-        {
-            var orgIdGuid = new Guid(id);
-            if (!_currentContext.IsOrganizationOwner(orgIdGuid))
-            {
-                throw new NotFoundException();
-            }
-
-            var organization = await _organizationRepository.GetByIdAsync(orgIdGuid);
-            if (organization == null)
-            {
-                throw new NotFoundException();
-            }
-
-            var taxInfo = await _paymentService.GetTaxInfoAsync(organization);
-            return new TaxInfoResponseModel(taxInfo);
-        }
-
-        [HttpPut("{id}/tax")]
-        [SelfHosted(NotSelfHostedOnly = true)]
-        public async Task PutTaxInfo(string id, [FromBody]OrganizationTaxInfoUpdateRequestModel model)
-        {
-            var orgIdGuid = new Guid(id);
-            if (!_currentContext.IsOrganizationOwner(orgIdGuid))
-            {
-                throw new NotFoundException();
-            }
-
-            var organization = await _organizationRepository.GetByIdAsync(orgIdGuid);
-            if (organization == null)
-            {
-                throw new NotFoundException();
-            }
-
-            var taxInfo = new TaxInfo
-            {
-                TaxIdNumber = model.TaxId,
-                BillingAddressLine1 = model.Line1,
-                BillingAddressLine2 = model.Line2,
-                BillingAddressCity = model.City,
-                BillingAddressState = model.State,
-                BillingAddressPostalCode = model.PostalCode,
-                BillingAddressCountry = model.Country,
-            };
-            await _paymentService.SaveTaxInfoAsync(organization, taxInfo);
         }
     }
 }

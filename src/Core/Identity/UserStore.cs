@@ -17,17 +17,15 @@ namespace Bit.Core.Identity
         IUserSecurityStampStore<User>
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IUserRepository _userRepository;
-        //private readonly AuthorizedContext _currentContext;
+        private readonly IUserRepository _userRepository;        
 
         public UserStore(
             IServiceProvider serviceProvider,
-            IUserRepository userRepository,
-            ISessionContext currentContext)
+            IUserRepository userRepository            
+            )
         {
             _serviceProvider = serviceProvider;
-            _userRepository = userRepository;
-            //_currentContext = currentContext;
+            _userRepository = userRepository;            
         }
 
         public void Dispose() { }

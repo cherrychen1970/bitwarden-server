@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Bit.Api.Utilities;
+using Bit.Notifications;
 using Bit.Core;
 using Bit.Core.Identity;
 using Newtonsoft.Json.Serialization;
@@ -33,7 +33,7 @@ namespace Bit.Api
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddHttpContextAccessor();
+            
             // Options
             services.AddOptions();
 
@@ -55,8 +55,7 @@ namespace Bit.Api
             //services.AddSqlServerRepositories(globalSettings);
             services.AddSqlServerRepositories(globalSettings);
 
-            // Context
-            services.AddScoped<ISessionContext,SessionContext >();
+            // Context            
 
             // Caching
             services.AddMemoryCache();
@@ -108,9 +107,12 @@ namespace Bit.Api
             });
             */
             services.AddControllers().AddNewtonsoftJson();
+            services.AddScoped<ISessionContext,SessionContext >();
+            services.AddHttpContextAccessor();
 
             //services.AddSwagger(globalSettings);
             services.AddSwaggerGen();
+            services.AddCustomSignalR();
             //services.AddSwaggerGenNewtonsoftSupport();
 
             //Jobs.JobsHostedService.AddJobsServices(services);
@@ -188,8 +190,17 @@ namespace Bit.Api
             app.UseIdentityServer();
 
             // Add endpoints to the request pipeline.
-            app.UseEndpoints(endpoints => endpoints.MapDefaultControllerRoute());
-
+            app.UseEndpoints(endpoints =>
+            {
+                
+                endpoints.MapHub<Bit.Notifications.NotificationsHub>("/hub", options =>
+                {
+                    options.ApplicationMaxBufferSize = 2048; // client => server messages are not even used
+                    options.TransportMaxBufferSize = 4096;
+                });
+                
+                endpoints.MapDefaultControllerRoute();
+            });                        
             // Add Swagger
             /*
             if (Environment.IsDevelopment() || globalSettings.SelfHosted)
@@ -215,15 +226,6 @@ namespace Bit.Api
             }
             */
        
-            // TODO : merge with identity
-            // 33656 : identity, 51822 : sso
-            /*
-            app.Map("/signin-oidc",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
-            app.Map("/authorize",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
-            app.Map("/connect",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
-            app.Map("/account",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
-            app.Map("/.well-known",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
-            */
             app.RunProxy(new ProxyOptions(){Host="localhost",Port="8080", Scheme="http"});
 
             // Log startup

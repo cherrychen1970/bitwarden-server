@@ -76,6 +76,7 @@ namespace Bit.Core
 
         public class SqlSettings
         {
+            public bool HasConnection => !string.IsNullOrEmpty(_connectionString);
             private string _connectionString;
             private string _readOnlyConnectionString;
 

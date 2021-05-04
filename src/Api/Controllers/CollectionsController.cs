@@ -36,12 +36,6 @@ namespace Bit.Api.Controllers
             _currentContext = currentContext;
         }
 
-        [HttpGet("debug")]
-        public IActionResult Debug()
-        {
-            return Ok(_currentContext);
-        }
-
         [HttpGet("{id}")]
         public async Task<CollectionResponseModel> Get(string orgId, string id)
         {

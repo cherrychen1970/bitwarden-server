@@ -22,13 +22,14 @@ namespace Bit.Core
         string IpAddress { get; set; }
         Guid? InstallationId { get; set; }
         Guid? OrganizationId { get; set; }
-        
+        List<OrganizationMembership> Organizations { get; set; }
+
         bool HasOrganizations();
         bool ManageAllCollections(Guid orgId);
         bool ManageAssignedCollections(Guid orgId);
         bool ManageGroups(Guid orgId);
         bool ManageUsers(Guid orgId);
-        bool ManagePolicies(Guid orgId);        
+        bool ManagePolicies(Guid orgId);
 
         bool IsOrganizationMember(Guid orgId);
         //bool CanManageOrganization(Guid orgId);
@@ -59,22 +60,26 @@ namespace Bit.Core
     // need better name.. this is the wrapper for claims.
     public class SessionContext : ISessionContext
     {
-        private bool _builtHttpContext;
-        private bool _builtClaimsPrincipal;
-
-
-         public SessionContext(IHttpContextAccessor httpContextAccessor, GlobalSettings settings)
+        public SessionContext(IHttpContextAccessor httpContextAccessor, GlobalSettings settings)
         {
-            if (httpContextAccessor.HttpContext!=null)
-                Build(httpContextAccessor.HttpContext.User, settings);
+            if (httpContextAccessor.HttpContext == null){
+                Serilog.Log.Warning("sessionContext creation failed");    
+                return;
+            }
+
+            if (httpContextAccessor.HttpContext.User == null){
+                Serilog.Log.Warning("sessionContext user is null");    
+                return;
+            }
+            if (!httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+                throw new Exception("SessionContext can't get called before authentication. clean up wrong dependency");
+            
+            Build(httpContextAccessor.HttpContext, settings);            
         }
 
         // debug : cherry
-
         public virtual Dictionary<string, IEnumerable<string>> claims { get; set; }
 
-        [JsonIgnore]
-        public virtual HttpContext HttpContext { get; set; }
         public virtual Guid UserId { get; set; }
         //public virtual User User { get; set; }
         public virtual string DeviceIdentifier { get; set; }
@@ -84,19 +89,10 @@ namespace Bit.Core
         public virtual Guid? InstallationId { get; set; }
         public virtual Guid? OrganizationId { get; set; }
 
-        public bool HasOrganizations()=> Organizations?.Any() ?? false;
+        public bool HasOrganizations() => Organizations?.Any() ?? false;
 
-        public async virtual void BuildAsync(HttpContext httpContext, GlobalSettings globalSettings)
+        private void Build(HttpContext httpContext, GlobalSettings globalSettings)
         {
-            if (_builtHttpContext)
-            {
-                return;
-            }
-
-            _builtHttpContext = true;
-            HttpContext = httpContext;
-            Build(httpContext.User, globalSettings);
-
             if (DeviceIdentifier == null && httpContext.Request.Headers.ContainsKey("Device-Identifier"))
             {
                 DeviceIdentifier = httpContext.Request.Headers["Device-Identifier"];
@@ -107,22 +103,10 @@ namespace Bit.Core
             {
                 DeviceType = dType;
             }
-        }
 
-        public virtual void Build(ClaimsPrincipal user, GlobalSettings globalSettings)
-        {
-            if (_builtClaimsPrincipal)
-            {
-                return;
-            }
+            IpAddress = httpContext.GetIpAddress(globalSettings);
+            var user = httpContext.User;
 
-            _builtClaimsPrincipal = true;
-            IpAddress = HttpContext.GetIpAddress(globalSettings);
-           SetContext(user);
-        }
-
-        public virtual void SetContext(ClaimsPrincipal user)
-        {
             if (user == null || !user.Claims.Any())
             {
                 return;

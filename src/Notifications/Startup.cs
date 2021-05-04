@@ -77,10 +77,6 @@ namespace Bit.Notifications
                 // Hosted Services
                 Jobs.JobsHostedService.AddJobsServices(services);
                 services.AddHostedService<Jobs.JobsHostedService>();
-                if (CoreHelpers.SettingHasValue(globalSettings.Notifications?.ConnectionString))
-                {
-                    services.AddHostedService<AzureQueueHostedService>();
-                }
             }
         }
 

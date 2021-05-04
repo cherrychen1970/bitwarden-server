@@ -48,8 +48,10 @@ namespace Bit.Core.Utilities
         {
 
             services.AddAutoMapper(typeof(EntityFrameworkRepos.UserRepository));
-            services.MigrateSqlite(globalSettings.Sqlite.ConnectionString);
-            //services.AddDbContext<EntityFrameworkRepos.DatabaseContext>(options => options.UseSqlServer(globalSettings.SqlServer.ConnectionString));
+            if (globalSettings.Sqlite.HasConnection)
+                services.MigrateSqlite(globalSettings.Sqlite.ConnectionString);
+            else if (globalSettings.SqlServer.HasConnection)            
+                services.AddDbContext<EntityFrameworkRepos.DatabaseContext>(options => options.UseSqlServer(globalSettings.SqlServer.ConnectionString));
 
             services.AddScoped<IUserRepository, EntityFrameworkRepos.UserRepository>();
             services.AddScoped<ICipherRepository, EntityFrameworkRepos.CipherRepository>();
@@ -124,15 +126,15 @@ namespace Bit.Core.Utilities
 
         }
 
-        public static void AddDefaultServices(this IServiceCollection services, GlobalSettings globalSettings)
+        // not supported
+        private static void AddDefaultServices(this IServiceCollection services, GlobalSettings globalSettings)
         {
             services.AddScoped<IGroupService, GroupService>();
             services.AddScoped<IPolicyService, PolicyService>();
             services.AddScoped<IEmergencyAccessService, EmergencyAccessService>();
 
             services.AddSingleton<IAppleIapService, AppleIapService>();
-            services.AddSingleton<ISsoConfigService, SsoConfigService>();
-            services.AddScoped<ISendService, SendService>();
+            services.AddSingleton<ISsoConfigService, SsoConfigService>();            
 
             services.AddSingleton<IPaymentService, StripePaymentService>();
             services.AddSingleton<IMailService, HandlebarsMailService>();

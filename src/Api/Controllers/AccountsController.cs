@@ -59,6 +59,20 @@ namespace Bit.Api.Controllers
             _currentContext = currentContext;
         }
 
+
+        [HttpGet("test")]
+        public IActionResult test()
+        {
+            var claims = HttpContext.User.Claims.GroupBy(c => c.Type).ToDictionary(c => c.Key, c => c.Select(v => v.Value));
+            return Ok(claims);
+        }    
+
+        [HttpGet("debug")]
+        public IActionResult Debug()
+        {
+            return Ok(HttpContext.User.Identities.Select(x=>x.AuthenticationType));
+        }        
+
         [HttpPost("prelogin")]
         [AllowAnonymous]
         public async Task<PreloginResponseModel> PostPrelogin([FromBody] PreloginRequestModel model)
@@ -231,7 +245,7 @@ namespace Bit.Api.Controllers
             var user = await _userService.GetUserByIdAsync(_currentContext.UserId);
             if (user == null)
             {
-                throw new UnauthorizedAccessException();
+                throw new UnauthorizedAccessException(_currentContext.UserId.ToString());
             }
 
             if (await _userService.CheckPasswordAsync(user, model.MasterPasswordHash))

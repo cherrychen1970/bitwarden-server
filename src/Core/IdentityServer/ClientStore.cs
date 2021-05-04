@@ -20,8 +20,7 @@ namespace Bit.Core.IdentityServer
         private readonly IUserRepository _userRepository;
         private readonly GlobalSettings _globalSettings;
         private readonly StaticClientStore _staticClientStore;
-        private readonly ILicensingService _licensingService;
-        private readonly ISessionContext _currentContext;
+        private readonly ILicensingService _licensingService;        
         private readonly IOrganizationUserRepository _organizationUserRepository;
 
         public ClientStore(
@@ -30,8 +29,7 @@ namespace Bit.Core.IdentityServer
             IUserRepository userRepository,
             GlobalSettings globalSettings,
             StaticClientStore staticClientStore,
-            ILicensingService licensingService,
-            ISessionContext currentContext,
+            ILicensingService licensingService,            
             IOrganizationUserRepository organizationUserRepository)
         {
             _installationRepository = installationRepository;
@@ -39,8 +37,7 @@ namespace Bit.Core.IdentityServer
             _userRepository = userRepository;
             _globalSettings = globalSettings;
             _staticClientStore = staticClientStore;
-            _licensingService = licensingService; 
-            _currentContext = currentContext;
+            _licensingService = licensingService;             
             _organizationUserRepository = organizationUserRepository;
         }
 
