@@ -1,0 +1,110 @@
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using Bit.Core.Utilities;
+using Bit.Core.Models;
+using Bit.Core.Enums;
+using Newtonsoft.Json;
+using System.Collections.Generic;
+using System.Linq;
+using Bit.Core.Models.Data;
+using Newtonsoft.Json.Linq;
+
+namespace Bit.Core.Models.Api
+{
+    public class CipherRequestModel
+    {
+        public CipherType Type { get; set; }        
+        public Guid? OrganizationId { get; set; }
+        public Guid? FolderId { get; set; }
+        public bool Favorite { get; set; }
+        [Required]
+        [EncryptedString]
+        [EncryptedStringLength(1000)]
+        public string Name { get; set; }
+        [EncryptedString]
+        [EncryptedStringLength(10000)]
+        public string Notes { get; set; }
+        public IEnumerable<CipherFieldModel> Fields { get; set; }
+        public IEnumerable<CipherPasswordHistoryModel> PasswordHistory { get; set; }
+        public CipherLoginModel Login { get; set; }
+        public DateTime? LastKnownRevisionDate { get; set; } = null;
+
+        public Cipher ToCipherDetails(Guid? userId=null)
+        {            
+            var cipher = new Cipher
+            {
+                Type = Type,
+                UserId = userId,
+                OrganizationId = OrganizationId,
+                Edit = true,
+                ViewPassword = true,
+            };
+            ToCipher(cipher);
+            return cipher;
+        }
+
+        public Cipher ToCipher(Cipher existingCipher)
+        {
+            existingCipher.FolderId = FolderId;
+            existingCipher.Favorite = Favorite;
+
+            switch (existingCipher.Type)
+            {
+                case CipherType.Login:
+                    existingCipher.Data= this.Login.ToCipherLoginData(Name);
+                    break;
+                default:
+                    throw new ArgumentException("Unsupported type: " + nameof(Type) + ".");
+            }
+            return existingCipher;
+        }
+    }
+
+    public class CipherWithIdRequestModel : CipherRequestModel
+    {
+        [Required]
+        public Guid? Id { get; set; }
+    }
+
+    public class CipherCreateRequestModel : IValidatableObject
+    {
+        public IEnumerable<Guid> CollectionIds { get; set; }
+        [Required]
+        public CipherRequestModel Cipher { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Cipher.OrganizationId.HasValue && (!CollectionIds?.Any() ?? true))
+            {
+                yield return new ValidationResult("You must select at least one collection.",
+                   new string[] { nameof(CollectionIds) });
+            }
+        }
+    }
+
+    public class CipherCollectionsRequestModel
+    {
+        [Required]
+        public IEnumerable<Guid> CollectionIds { get; set; }
+    }
+
+    public class CipherBulkDeleteRequestModel
+    {
+        [Required]
+        public IEnumerable<Guid> Ids { get; set; }
+        public Guid? OrganizationId { get; set; }
+    }
+
+    public class CipherBulkRestoreRequestModel
+    {
+        [Required]
+        public IEnumerable<Guid> Ids { get; set; }
+    }
+
+    public class CipherBulkMoveRequestModel
+    {
+        [Required]
+        public IEnumerable<Guid> Ids { get; set; }
+        public Guid FolderId { get; set; }
+    }
+}
