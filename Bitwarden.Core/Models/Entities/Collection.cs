@@ -12,6 +12,7 @@ namespace Bit.Core.Models
         public DateTime CreationDate { get; private set; } = DateTime.UtcNow;
         public DateTime RevisionDate { get; private set; } = DateTime.UtcNow;
         public bool ReadOnly { get; set; }=false;
-        public bool HidePasswords { get; set; } =false;       
+        public bool HidePasswords { get; set; } =false; 
+        public void SetNewId()=>Id=Guid.NewGuid();      
     }
 }

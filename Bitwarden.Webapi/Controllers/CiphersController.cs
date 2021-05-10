@@ -161,7 +161,7 @@ namespace Bit.Api.Controllers
             if (cipher == null || !_sessionContext.ManageAllCollections(cipher.OrganizationId))
                 throw new NotFoundException();
 
-            await _cipherService.SaveAsync(cipher);
+            await _cipherService.SaveAsync(model.ToOrganizationCipher(cipher));
             var response = new CipherResponseModel(cipher);
             return response;
         }

@@ -10,7 +10,7 @@ namespace Bit.Core.Models.Business
         public Enums.OrganizationUserType Type { get; set; }
         public bool AccessAll { get; set; }
         public Permissions Permissions { get; set; }
-        public IEnumerable<CollectionAssigned> Collections { get; set; }
+        public IEnumerable<CollectionMember> Collections { get; set; }
         public OrganizationUserInvite() {}
     }
 }

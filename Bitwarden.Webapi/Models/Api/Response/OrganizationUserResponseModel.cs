@@ -27,7 +27,7 @@ namespace Bit.Core.Models.Api
         }
 
         public OrganizationUserResponseModel(OrganizationMembershipProfile organizationUser,
-            IEnumerable<CollectionAssigned> collections)
+            IEnumerable<CollectionMember> collections)
             : this(organizationUser, "organizationUserDetails")
         {
             Collections = collections.Select(c => new CollectionUserResponseModel(c));

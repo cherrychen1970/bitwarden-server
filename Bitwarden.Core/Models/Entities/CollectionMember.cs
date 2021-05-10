@@ -5,9 +5,9 @@ using AutoMapper;
 
 namespace Bit.Core.Models
 {
-    public class CollectionAssigned 
+    public class CollectionMember 
     {        
-        virtual public int Id {get;set;}
+        //virtual public int Id {get;set;}
         public Guid CollectionId {get;set;}
         public Guid UserId {get;set;}
         public virtual bool ReadOnly {get;set;}

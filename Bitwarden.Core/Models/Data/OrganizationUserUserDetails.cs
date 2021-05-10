@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 
 namespace Bit.Core.Models.Data
 {
-    public class OrganizationUserUserDetails : IExternal, ITwoFactorProvidersUser
+    public class OrganizationUserUserDetails_notused : IExternal, ITwoFactorProvidersUser
     {
         private Dictionary<TwoFactorProviderType, TwoFactorProvider> _twoFactorProviders;
 

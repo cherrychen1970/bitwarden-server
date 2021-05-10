@@ -9,7 +9,6 @@ using AutoMapper;
 
 using Bit.Core.Models;
 using Bit.Core.Repositories;
-using Bit.Core.Models;
 using Bit.Core.Models.Data;
 using Bit.Core.Utilities;
 using EFModel = Bit.Core.Entities;

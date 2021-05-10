@@ -102,7 +102,7 @@ namespace Bit.Api.Controllers
         public async Task PutUsers(Guid orgId, Guid id, [FromBody]IEnumerable<CollectionUserRequestModel> model)
         {
             var collection = await GetCollectionAsync(id,orgId);
-            await _collectionRepository.UpdateUsersAsync(model?.Select(g => g.ToCollectionAssigned(collection)));
+            await _collectionRepository.UpdateMembersAsync(model?.Select(g => g.ToCollectionAssigned(collection)));
         }
 
         [HttpDelete("{id}")]

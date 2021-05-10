@@ -11,7 +11,7 @@ namespace Bit.Core.Models
     {
         private Dictionary<TwoFactorProviderType, TwoFactorProvider> _twoFactorProviders;
 
-        public Guid Id { get; set; }
+        public Guid Id { get; set; }=Guid.NewGuid();
         public string Identifier { get; set; }
         public string Name { get; set; }
         public string BusinessName { get; set; }

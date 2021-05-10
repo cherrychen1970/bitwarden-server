@@ -28,9 +28,9 @@ namespace Bit.Core.Entities
     {
         public UserMapperProfile()
         {
-            CreateMap<DomainModels.User, User>().ReverseMap();
-            CreateMap<User, DomainModels.Data.OrganizationUserUserDetails>()
-            .ForMember(d=>d.UserId, opt=>opt.MapFrom(s=>s.Id))
+            CreateMap<User, DomainModels.User>()
+                .ReverseMap()
+                .Ignore(x=>x.Id);
             ;
         }
     }

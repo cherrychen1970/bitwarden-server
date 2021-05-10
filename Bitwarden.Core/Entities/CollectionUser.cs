@@ -22,9 +22,10 @@ namespace Bit.Core.Entities
     {
         public CollectionUserProfile()
         {
-            CreateMap<CollectionUser,DomainModels.CollectionAssigned>()                        
+            CreateMap<CollectionUser,DomainModels.CollectionMember>()                        
             .ForMember(dst=>dst.UserId, opt=>opt.MapFrom(src=>src.OrganizationUser.UserId))
             .ReverseMap()
+            .Ignore(x=>x.Id)
             .ForMember(dst=>dst.OrganizationUser,opt=>opt.Ignore())
             ;
             ;

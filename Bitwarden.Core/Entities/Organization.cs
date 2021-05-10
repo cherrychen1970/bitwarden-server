@@ -38,7 +38,9 @@ namespace Bit.Core.Entities
     {
         public OrganizationMapperProfile()
         {
-            CreateMap<DomainModels.Organization, Organization>().ReverseMap();
+            CreateMap<Organization, DomainModels.Organization>()
+                .ReverseMap()
+                .Ignore(x=>x.Id);
         }
     }
 }

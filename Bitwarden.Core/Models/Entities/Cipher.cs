@@ -23,7 +23,7 @@ namespace Bit.Core.Models
     }
     abstract public class Cipher : IKey<Guid>, ICloneable
     {
-        public Guid Id { get; set; } = Guid.NewGuid();
+        public Guid Id { get; set; }// = Guid.NewGuid();
         public Enums.CipherType Type { get; set; }
         //public string Data { get; set; }
         public CipherData Data { get; set; }
@@ -33,6 +33,7 @@ namespace Bit.Core.Models
         public DateTime CreationDate { get; private set; } = DateTime.UtcNow;
         public DateTime RevisionDate { get; private set; } = DateTime.UtcNow;
         public DateTime? DeletedDate { get; set; }
+        public void SetNewId()=>Id=Guid.NewGuid();
 
         object ICloneable.Clone() => Clone();
         public Cipher Clone()

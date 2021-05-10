@@ -135,7 +135,7 @@ namespace Bit.Api.Controllers
             }
 
             await _organizationService.SaveUserAsync(model.ToOrganizationUser(orgUser));
-            await _collectionRepository.UpdateUsersAsync(model.Collections?.Select(c => c.ToCollectionAssigned(orgUser)));
+            await _collectionRepository.UpdateMembersAsync(model.Collections?.Select(c => c.ToCollectionAssigned(orgUser)));
         }
 
         [HttpDelete("{id}")]

@@ -16,7 +16,7 @@ namespace Bit.Core.Models
 
         public void SetNewId()
         {
-            Id = CoreHelpers.GenerateComb();
+            Id = Guid.NewGuid();
         }
     }
 }

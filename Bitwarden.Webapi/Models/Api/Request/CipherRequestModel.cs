@@ -40,6 +40,12 @@ namespace Bit.Core.Models.Api
             };
             return (OrganizationCipher)ToCipher((Cipher)cipher);
         }
+        public OrganizationCipher ToOrganizationCipher(OrganizationCipher cipher)
+        {
+            cipher.Edit = true;
+            cipher.ViewPassword = true;
+            return (OrganizationCipher)ToCipher((Cipher)cipher);
+        }
         public UserCipher ToCipher(Guid userId)
         {
             var cipher = new UserCipher

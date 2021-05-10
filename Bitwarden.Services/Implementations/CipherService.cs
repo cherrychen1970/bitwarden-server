@@ -75,13 +75,26 @@ namespace Bit.Core.Services
             {
                 throw new BadRequestException("You do not have permissions to edit this.");
             }
-            await _orgCipherRepository.CreateAsync(cipher);
+            if (cipher.Id == default(Guid))
+            {
+                cipher.SetNewId();
+                await _orgCipherRepository.CreateAsync(cipher);
+                //await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Created);
+                //await _pushService.PushSyncCipherCreateAsync(cipher, null);
+            }
+            else
+            {
+                await _orgCipherRepository.ReplaceAsync(cipher);
+                //await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Updated);
+                //await _pushService.PushSyncCipherUpdateAsync(cipher, null);
+            }
         }
         public async Task SaveAsync(Models.UserCipher cipher)
         {
             cipher.UserId = _sessionUserId;
             if (cipher.Id == default(Guid))
             {
+                cipher.SetNewId();
                 await _cipherRepository.CreateAsync(cipher);
                 //await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Created);
                 //await _pushService.PushSyncCipherCreateAsync(cipher, null);

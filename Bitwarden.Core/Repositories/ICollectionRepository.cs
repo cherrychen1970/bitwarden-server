@@ -8,13 +8,13 @@ namespace Bit.Core.Repositories
 {
     public interface ICollectionRepository : IRepository<Collection, Guid>
     {
-        Task<ICollection<CollectionAssigned>> GetAssignments(OrganizationMembership membership);
-        Task<ICollection<CollectionAssigned>> GetAssignments(Guid id);
+        Task<ICollection<CollectionMember>> GetAssignments(OrganizationMembership membership);
+        Task<ICollection<CollectionMember>> GetAssignments(Guid id);
         Task<Collection> GetByIdAsync(Guid id, Guid userId);
         Task<ICollection<Collection>> GetManyAsync(OrganizationMembership membership);
         Task<ICollection<Collection>> GetManyAsync(IEnumerable<OrganizationMembership> memberships);
         //Task DeleteUserAsync(CollectionAssigned assigned);
-        Task DeleteUserAsync(Guid id, OrganizationMembership user);
-        Task UpdateUsersAsync(IEnumerable<CollectionAssigned> users);
+        Task DeleteMembersAsync(Guid id, OrganizationMembership user);
+        Task UpdateMembersAsync(IEnumerable<CollectionMember> users);
     }
 }

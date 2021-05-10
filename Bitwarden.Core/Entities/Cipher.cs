@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.Json;
+using System.Linq.Expressions;
 using Newtonsoft.Json;
 using AutoMapper;
-using DomainModels=Bit.Core.Models;
+using DomainModels = Bit.Core.Models;
 using Bit.Core.Enums;
 using Bit.Core.Models.Data;
 
 namespace Bit.Core.Entities
 {
-    public class Cipher :  DomainModels.IKey<Guid>, IEntityCreated,IEntityUpdated
+    public class Cipher : DomainModels.IKey<Guid>, IEntityCreated, IEntityUpdated
     {
         public Guid Id { get; set; }
         public Guid? UserId { get; set; }
@@ -25,37 +25,41 @@ namespace Bit.Core.Entities
         public string Attachments { get; set; }
         public DateTime CreationDate { get; private set; } = DateTime.UtcNow;
         public DateTime RevisionDate { get; private set; } = DateTime.UtcNow;
-        public DateTime? DeletedDate { get; set; }        
+        public DateTime? DeletedDate { get; set; }
         //public bool Edit { get; set; }=true;
         //public bool ViewPassword { get; set; }=true;        
-        public Cipher() {            
+        public Cipher()
+        {
         }
 
         public User User { get; set; }
         public Organization Organization { get; set; }
-        public Collection Collection {get;set;}
+        public Collection Collection { get; set; }
     }
+
 
     public class CipherMapperProfile : Profile
     {
         public CipherMapperProfile()
         {
             CreateMap<DomainModels.UserCipher, Cipher>()
-                .ForMember(x=>x.Organization, o=>o.Ignore())
-                .ForMember(x=>x.Data, o=>o.MapFrom(src=> JsonConvert.SerializeObject(src.Data) ))
-                //.AfterMap((src,dest)=>dest.Data=  JsonConvert.SerializeObject(src.Data.ToString()))
+                .Ignore(x => x.Id)
+                .Ignore(x => x.Organization)
+                .ForMember(x => x.Data, o => o.MapFrom(src => JsonConvert.SerializeObject(src.Data)))
+            //.AfterMap((src,dest)=>dest.Data=  JsonConvert.SerializeObject(src.Data.ToString()))
             ;
             CreateMap<Cipher, DomainModels.UserCipher>()
-                .ForMember(x=>x.Data, o=>o.MapFrom(src=> JsonConvert.DeserializeObject<CipherLoginData>(src.Data) ));
-                //.AfterMap((src,dest)=>dest.Data=  JsonConvert.DeserializeObject<CipherLoginData>(src.Data));
+                .ForMember(x => x.Data, o => o.MapFrom(src => JsonConvert.DeserializeObject<CipherLoginData>(src.Data)));
+            //.AfterMap((src,dest)=>dest.Data=  JsonConvert.DeserializeObject<CipherLoginData>(src.Data));
             CreateMap<DomainModels.OrganizationCipher, Cipher>()
-                .ForMember(x=>x.Organization, o=>o.Ignore())
-                .ForMember(x=>x.Data, o=>o.MapFrom(src=> JsonConvert.SerializeObject(src.Data) ))
-                //.AfterMap((src,dest)=>dest.Data=  JsonConvert.SerializeObject(src.Data.ToString()))
+                .Ignore(x => x.Id)
+                .ForMember(x => x.Organization, o => o.Ignore())
+                .ForMember(x => x.Data, o => o.MapFrom(src => JsonConvert.SerializeObject(src.Data)))
+            //.AfterMap((src,dest)=>dest.Data=  JsonConvert.SerializeObject(src.Data.ToString()))
             ;
             CreateMap<Cipher, DomainModels.OrganizationCipher>()
-                .ForMember(x=>x.Data, o=>o.MapFrom(src=> JsonConvert.DeserializeObject<CipherLoginData>(src.Data) ));
-                //.AfterMap((src,dest)=>dest.Data=  JsonConvert.DeserializeObject<CipherLoginData>(src.Data));
+                .ForMember(x => x.Data, o => o.MapFrom(src => JsonConvert.DeserializeObject<CipherLoginData>(src.Data)));
+            //.AfterMap((src,dest)=>dest.Data=  JsonConvert.DeserializeObject<CipherLoginData>(src.Data));
 
             // FIX
             CreateMap<DomainModels.Grant, DomainModels.Grant>();

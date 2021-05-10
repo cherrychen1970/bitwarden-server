@@ -26,18 +26,18 @@ namespace Bit.Infrastructure.EntityFramework
             dbContext.Add(entity);
             //return await Task.CompletedTask;
         }
-        public async Task<ICollection<CollectionAssigned>> GetAssignments(OrganizationMembership membership)
+        public async Task<ICollection<CollectionMember>> GetAssignments(OrganizationMembership membership)
         {
             return await dbContext.CollectionUsers
                 .Where(x=>x.OrganizationUser.UserId==membership.UserId)
                 .Where(x=>x.OrganizationUser.OrganizationId==membership.OrganizationId)
-                .ProjectTo<CollectionAssigned>(MapperProvider).ToListAsync();
+                .ProjectTo<CollectionMember>(MapperProvider).ToListAsync();
         }
-        public async Task<ICollection<CollectionAssigned>> GetAssignments(Guid id)
+        public async Task<ICollection<CollectionMember>> GetAssignments(Guid id)
         {
             return await dbContext.CollectionUsers
                 .Where(x=>x.CollectionId==id)
-                .ProjectTo<CollectionAssigned>(MapperProvider).ToListAsync();
+                .ProjectTo<CollectionMember>(MapperProvider).ToListAsync();
         }
 
         public async Task<ICollection<Collection>> GetManyAsync(OrganizationMembership membership)
@@ -75,7 +75,7 @@ namespace Bit.Infrastructure.EntityFramework
             await SaveChangesAsync();
         }
 
-        public async Task DeleteUserAsync(Guid collectionId, OrganizationMembership membership)
+        public async Task DeleteMembersAsync(Guid collectionId, OrganizationMembership membership)
         {
             var item = dbContext.CollectionUsers
                 .Where(x => x.CollectionId == collectionId)
@@ -85,7 +85,7 @@ namespace Bit.Infrastructure.EntityFramework
             await SaveChangesAsync();
         }
 
-        public async Task UpdateUsersAsync(IEnumerable<CollectionAssigned> users)
+        public async Task UpdateMembersAsync(IEnumerable<CollectionMember> users)
         {
             throw new NotImplementedException();
             /*

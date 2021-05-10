@@ -5,7 +5,7 @@ namespace Bit.Core.Models.Api
 {
     public class CollectionUserResponseModel
     {
-        public CollectionUserResponseModel(CollectionAssigned selection)
+        public CollectionUserResponseModel(CollectionMember selection)
         {
             Id = selection.UserId;
             ReadOnly = selection.ReadOnly;

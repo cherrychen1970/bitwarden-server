@@ -31,17 +31,13 @@ namespace Bit.Core.Entities
     {
         public OrganizationUserProfile()
         {
-            CreateMap<DomainModels.OrganizationMembershipProfile, OrganizationUser>();
-
-             CreateMap<OrganizationUser,  DomainModels.OrganizationMembershipProfile>()
-                .ForMember(x=>x.UserName, opt=>opt.MapFrom(s=>s.User.Name))
-                .ForMember(x=>x.OrganizationName, opt=>opt.MapFrom(s=>s.Organization.Name));
-                
-
-            CreateMap<Entities.OrganizationUser, DomainModels.OrganizationMembership>().ReverseMap();
-            
-            CreateMap<DomainModels.OrganizationMembershipProfile, DomainModels.Data.OrganizationUserUserDetails>();
-            //CreateMap<DomainModels.OrganizationUser, DomainModels.Data.OrganizationUserOrganizationDetails>();
+            CreateMap<OrganizationUser,DomainModels.OrganizationMembershipProfile>()
+                .ReverseMap()
+                .Ignore(x=>x.Id);
+               
+            CreateMap<OrganizationUser, DomainModels.OrganizationMembership>()
+                .ReverseMap()
+                .Ignore(x=>x.Id);            
         }
     }
 }
