@@ -15,7 +15,7 @@ namespace Bit.Core.Models.Api
         public string Name { get; set; }
         [StringLength(300)]
         public string ExternalId { get; set; }
-        public IEnumerable<SelectionReadOnlyRequestModel> Groups { get; set; }
+        public IEnumerable<CollectionUserRequestModel> Groups { get; set; }
 
         public Collection ToCollection(Guid orgId)
         {

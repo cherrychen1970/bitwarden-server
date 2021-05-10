@@ -21,12 +21,12 @@ namespace Bit.Core.Services
         public EventService(
             IEventWriteService eventWriteService,
             IOrganizationUserRepository organizationUserRepository,
-            IApplicationCacheService applicationCacheService,            
+            IApplicationCacheService applicationCacheService,
             GlobalSettings globalSettings)
         {
             _eventWriteService = eventWriteService;
             _organizationUserRepository = organizationUserRepository;
-            _applicationCacheService = applicationCacheService;            
+            _applicationCacheService = applicationCacheService;
             _globalSettings = globalSettings;
         }
 
@@ -46,7 +46,7 @@ namespace Bit.Core.Services
             };
 
             var orgAbilities = await _applicationCacheService.GetOrganizationAbilitiesAsync();
-            var orgs = await _organizationUserRepository.GetManyByUserAsync<OrganizationMembership>(userId, true);
+            var orgs = await _organizationUserRepository.GetMemberships(userId);
             var orgEvents = orgs.Where(o => CanUseEvents(orgAbilities, o.OrganizationId))
                 .Select(o => new EventMessage()
                 {
@@ -70,7 +70,7 @@ namespace Bit.Core.Services
             }
         }
 
-        public async Task LogCipherEventAsync(Cipher cipher, EventType type, DateTime? date = null)
+        public async Task LogCipherEventAsync(OrganizationCipher cipher, EventType type, DateTime? date = null)
         {
             var e = await BuildCipherEventMessageAsync(cipher, type, date);
             if (e != null)
@@ -79,7 +79,7 @@ namespace Bit.Core.Services
             }
         }
 
-        public async Task LogCipherEventsAsync(IEnumerable<Tuple<Cipher, EventType, DateTime?>> events)
+        public async Task LogCipherEventsAsync(IEnumerable<Tuple<OrganizationCipher, EventType, DateTime?>> events)
         {
             var cipherEvents = new List<IEvent>();
             foreach (var ev in events)
@@ -93,21 +93,17 @@ namespace Bit.Core.Services
             await _eventWriteService.CreateManyAsync(cipherEvents);
         }
 
-        private async Task<EventMessage> BuildCipherEventMessageAsync(Cipher cipher, EventType type, DateTime? date = null)
+        private async Task<EventMessage> BuildCipherEventMessageAsync(UserCipher cipher, EventType type, DateTime? date = null)
         {
-            // Only logging organization cipher events for now.
-            if (!cipher.OrganizationId.HasValue)
+            return null;
+        }
+        private async Task<EventMessage> BuildCipherEventMessageAsync(OrganizationCipher cipher, EventType type, DateTime? date = null)
+        {
+
+            var orgAbilities = await _applicationCacheService.GetOrganizationAbilitiesAsync();
+            if (!CanUseEvents(orgAbilities, cipher.OrganizationId))
             {
                 return null;
-            }
-
-            if (cipher.OrganizationId.HasValue)
-            {
-                var orgAbilities = await _applicationCacheService.GetOrganizationAbilitiesAsync();
-                if (!CanUseEvents(orgAbilities, cipher.OrganizationId.Value))
-                {
-                    return null;
-                }
             }
 
             return new EventMessage()
@@ -116,7 +112,6 @@ namespace Bit.Core.Services
                 DeviceType = _httpContext?.DeviceType(),
 
                 OrganizationId = cipher.OrganizationId,
-                UserId = cipher.OrganizationId.HasValue ? null : cipher.UserId,
                 CipherId = cipher.Id,
                 Type = type,
                 ActingUserId = _httpContext?.UserId(),
@@ -187,7 +182,7 @@ namespace Bit.Core.Services
             await _eventWriteService.CreateAsync(e);
         }
 
-        public async Task LogOrganizationUserEventAsync(OrganizationUser organizationUser, EventType type,
+        public async Task LogOrganizationUserEventAsync(OrganizationMembershipProfile organizationUser, EventType type,
             DateTime? date = null)
         {
             var orgAbilities = await _applicationCacheService.GetOrganizationAbilitiesAsync();

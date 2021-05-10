@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using AutoMapper;
 
-using DomainModel = Bit.Core.Models;
+using Bit.Core.Models;
 using Bit.Core.Repositories;
 using Bit.Core.Models;
 using Bit.Core.Models.Data;
@@ -17,27 +17,26 @@ using EFModel = Bit.Core.Entities;
 
 namespace Bit.Infrastructure.EntityFramework
 {
-    public class CipherRepository : Repository<DomainModel.Cipher, EFModel.Cipher, Guid>, ICipherRepository
+    public class CipherRepository : Repository<UserCipher, EFModel.Cipher, Guid>, ICipherRepository
     {
         public CipherRepository(IMapper mapper, DatabaseContext context)
             : base(context, mapper)
         { }
 
-        public async Task<DomainModel.Cipher> GetByIdAsync(Guid id, Guid userId)
+        public async Task<UserCipher> GetByIdAsync(Guid id, Guid userId)
         {
-            var cipher = await base.GetByIdAsync<DomainModel.Cipher>(id);
+            var cipher = await base.GetByIdAsync<UserCipher>(id);
             if (cipher != null && cipher.UserId == userId) return cipher;
-            return default(DomainModel.Cipher);
+            return null;
         }
 
-        public async Task<ICollection<DomainModel.Cipher>> GetManyAsync(Guid userId)
+        public async Task<ICollection<UserCipher>> GetManyAsync(Guid userId)
         {            
-            return await base.GetMany<DomainModel.Cipher>(x => x.UserId == userId);
+            return await base.GetMany<UserCipher>(x => x.UserId == userId);
         }
 
-        override public async Task CreateAsync(DomainModel.Cipher cipher)
-        {
-            cipher.SetNewId();                        
+        override public async Task CreateAsync(UserCipher cipher)
+        {                    
             var entity = Mapper.Map<EFModel.Cipher>(cipher);            
             dbContext.Add(entity);
             await SaveChangesAsync();
@@ -47,12 +46,12 @@ namespace Bit.Infrastructure.EntityFramework
         }
 
 
-        public async Task ReplaceAsync(DomainModel.Cipher obj)
+        public async Task ReplaceAsync(UserCipher obj)
         {
             await base.ReplaceAsync(obj);
         }
 
-        public async Task UpsertAsync(DomainModel.Cipher cipher)
+        public async Task UpsertAsync(UserCipher cipher)
         {
             if (cipher.Id.Equals(default))
             {
@@ -64,7 +63,7 @@ namespace Bit.Infrastructure.EntityFramework
             }
         }
 
-        public async Task UpdatePartialAsync(DomainModel.Cipher cipher, Guid? folderId, bool favorite)
+        public async Task UpdatePartialAsync(UserCipher cipher, Guid? folderId, bool favorite)
         {
             throw new NotImplementedException();
         }
@@ -75,7 +74,7 @@ namespace Bit.Infrastructure.EntityFramework
         }
 
 
-        public async Task MoveAsync(IEnumerable<Guid> ids, Guid? folderId, Guid userId)
+        public async Task MoveAsync(IEnumerable<Guid> ids, Guid folderId, Guid userId)
         {
             throw new NotImplementedException();
         }
@@ -85,7 +84,7 @@ namespace Bit.Infrastructure.EntityFramework
             throw new NotImplementedException();
         }
 
-        public async Task UpdateManyAsync(IEnumerable<DomainModel.Cipher> ciphers,Guid userId)
+        public async Task UpdateManyAsync(IEnumerable<UserCipher> ciphers,Guid userId)
         {
             if (!ciphers.Any())
             {
@@ -94,7 +93,7 @@ namespace Bit.Infrastructure.EntityFramework
             throw new NotImplementedException();
         }
 
-        public async Task CreateAsync(IEnumerable<DomainModel.Cipher> ciphers, IEnumerable<Folder> folders)
+        public async Task CreateAsync(IEnumerable<UserCipher> ciphers, IEnumerable<Folder> folders)
         {
             if (!ciphers.Any())
             {
@@ -103,12 +102,18 @@ namespace Bit.Infrastructure.EntityFramework
 
 
             throw new NotImplementedException();
+        }
+
+        public async Task SoftDeleteAsync(Guid id, Guid userId)
+        {
+            var cipher = dbSet.SingleOrDefault(x=>x.Id==id && x.UserId==userId);
+            cipher.DeletedDate=null;
+            await SaveChangesAsync();            
         }
 
         public async Task SoftDeleteManyAsync(IEnumerable<Guid> ids, Guid userId)
         {
-            throw new NotImplementedException();
-            var ciphers = await GetMany(x=> ids.Contains(x.Id));
+            var ciphers = await GetMany(x=> ids.Contains(x.Id) && x.UserId==userId );
             ciphers.ToList().ForEach(x=>x.DeletedDate=null);
             await SaveChangesAsync();            
         }

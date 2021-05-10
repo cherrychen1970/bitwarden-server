@@ -52,37 +52,8 @@ namespace Bit.Core.Migrations.SqliteDatabase
                     Id = table.Column<Guid>(nullable: false),
                     Identifier = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: true),
-                    BusinessName = table.Column<string>(nullable: true),
-                    BusinessAddress1 = table.Column<string>(nullable: true),
-                    BusinessAddress2 = table.Column<string>(nullable: true),
-                    BusinessAddress3 = table.Column<string>(nullable: true),
-                    BusinessCountry = table.Column<string>(nullable: true),
-                    BusinessTaxNumber = table.Column<string>(nullable: true),
-                    BillingEmail = table.Column<string>(nullable: true),
-                    Plan = table.Column<string>(nullable: true),
-                    PlanType = table.Column<byte>(nullable: false),
-                    Seats = table.Column<short>(nullable: true),
-                    MaxCollections = table.Column<short>(nullable: true),
-                    UsePolicies = table.Column<bool>(nullable: false),
-                    UseSso = table.Column<bool>(nullable: false),
-                    UseGroups = table.Column<bool>(nullable: false),
-                    UseDirectory = table.Column<bool>(nullable: false),
-                    UseEvents = table.Column<bool>(nullable: false),
-                    UseTotp = table.Column<bool>(nullable: false),
-                    Use2fa = table.Column<bool>(nullable: false),
-                    UseApi = table.Column<bool>(nullable: false),
-                    SelfHost = table.Column<bool>(nullable: false),
-                    UsersGetPremium = table.Column<bool>(nullable: false),
-                    Storage = table.Column<long>(nullable: true),
-                    MaxStorageGb = table.Column<short>(nullable: true),
-                    Gateway = table.Column<byte>(nullable: true),
-                    GatewayCustomerId = table.Column<string>(nullable: true),
-                    GatewaySubscriptionId = table.Column<string>(nullable: true),
-                    ReferenceData = table.Column<string>(nullable: true),
                     Enabled = table.Column<bool>(nullable: false),
-                    LicenseKey = table.Column<string>(nullable: true),
                     ApiKey = table.Column<string>(nullable: true),
-                    TwoFactorProviders = table.Column<string>(nullable: true),
                     ExpirationDate = table.Column<DateTime>(nullable: true),
                     CreationDate = table.Column<DateTime>(nullable: false),
                     RevisionDate = table.Column<DateTime>(nullable: false)
@@ -156,39 +127,6 @@ namespace Bit.Core.Migrations.SqliteDatabase
                 });
 
             migrationBuilder.CreateTable(
-                name: "Cipher",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(nullable: false),
-                    UserId = table.Column<Guid>(nullable: true),
-                    OrganizationId = table.Column<Guid>(nullable: true),
-                    Type = table.Column<byte>(nullable: false),
-                    Data = table.Column<string>(nullable: true),
-                    Favorites = table.Column<string>(nullable: true),
-                    Folders = table.Column<string>(nullable: true),
-                    Attachments = table.Column<string>(nullable: true),
-                    CreationDate = table.Column<DateTime>(nullable: false),
-                    RevisionDate = table.Column<DateTime>(nullable: false),
-                    DeletedDate = table.Column<DateTime>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Cipher", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Cipher_Organization_OrganizationId",
-                        column: x => x.OrganizationId,
-                        principalTable: "Organization",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Cipher_User_UserId",
-                        column: x => x.UserId,
-                        principalTable: "User",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "OrganizationUser",
                 columns: table => new
                 {
@@ -223,35 +161,43 @@ namespace Bit.Core.Migrations.SqliteDatabase
                 });
 
             migrationBuilder.CreateTable(
-                name: "CollectionCipher",
+                name: "Cipher",
                 columns: table => new
                 {
-                    Id = table.Column<int>(nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    CollectionId = table.Column<Guid>(nullable: false),
-                    CipherId = table.Column<Guid>(nullable: false),
-                    CipherId1 = table.Column<Guid>(nullable: true)
+                    Id = table.Column<Guid>(nullable: false),
+                    UserId = table.Column<Guid>(nullable: true),
+                    OrganizationId = table.Column<Guid>(nullable: true),
+                    Type = table.Column<byte>(nullable: false),
+                    Data = table.Column<string>(nullable: true),
+                    FolderId = table.Column<Guid>(nullable: true),
+                    CollectionId = table.Column<Guid>(nullable: true),
+                    Favorite = table.Column<bool>(nullable: false),
+                    Attachments = table.Column<string>(nullable: true),
+                    CreationDate = table.Column<DateTime>(nullable: false),
+                    RevisionDate = table.Column<DateTime>(nullable: false),
+                    DeletedDate = table.Column<DateTime>(nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CollectionCipher", x => x.Id);
+                    table.PrimaryKey("PK_Cipher", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CollectionCipher_Cipher_CipherId",
-                        column: x => x.CipherId,
-                        principalTable: "Cipher",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_CollectionCipher_Cipher_CipherId1",
-                        column: x => x.CipherId1,
-                        principalTable: "Cipher",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_CollectionCipher_Collection_CollectionId",
+                        name: "FK_Cipher_Collection_CollectionId",
                         column: x => x.CollectionId,
                         principalTable: "Collection",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Cipher_Organization_OrganizationId",
+                        column: x => x.OrganizationId,
+                        principalTable: "Organization",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Cipher_User_UserId",
+                        column: x => x.UserId,
+                        principalTable: "User",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -281,6 +227,36 @@ namespace Bit.Core.Migrations.SqliteDatabase
                         principalColumn: "Id");
                 });
 
+            migrationBuilder.CreateTable(
+                name: "CollectionCipher",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    CollectionId = table.Column<Guid>(nullable: false),
+                    CipherId = table.Column<Guid>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CollectionCipher", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CollectionCipher_Cipher_CipherId",
+                        column: x => x.CipherId,
+                        principalTable: "Cipher",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_CollectionCipher_Collection_CollectionId",
+                        column: x => x.CollectionId,
+                        principalTable: "Collection",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Cipher_CollectionId",
+                table: "Cipher",
+                column: "CollectionId");
+
             migrationBuilder.CreateIndex(
                 name: "IX_Cipher_OrganizationId",
                 table: "Cipher",
@@ -300,11 +276,6 @@ namespace Bit.Core.Migrations.SqliteDatabase
                 name: "IX_CollectionCipher_CipherId",
                 table: "CollectionCipher",
                 column: "CipherId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CollectionCipher_CipherId1",
-                table: "CollectionCipher",
-                column: "CipherId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CollectionCipher_CollectionId",
@@ -350,16 +321,16 @@ namespace Bit.Core.Migrations.SqliteDatabase
                 name: "Cipher");
 
             migrationBuilder.DropTable(
-                name: "Collection");
-
-            migrationBuilder.DropTable(
                 name: "OrganizationUser");
 
             migrationBuilder.DropTable(
-                name: "Organization");
+                name: "Collection");
 
             migrationBuilder.DropTable(
                 name: "User");
+
+            migrationBuilder.DropTable(
+                name: "Organization");
         }
     }
 }

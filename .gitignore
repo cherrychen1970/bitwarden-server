@@ -215,3 +215,5 @@ bitwarden_license/src/Sso/wwwroot/lib
 bitwarden_license/src/Sso/wwwroot/css
 .github/test/build.secrets
 src/Identity/signingkey.rsa
+*.db
+http/temp.json

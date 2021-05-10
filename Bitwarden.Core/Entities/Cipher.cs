@@ -40,12 +40,20 @@ namespace Bit.Core.Entities
     {
         public CipherMapperProfile()
         {
-            CreateMap<DomainModels.Cipher, Cipher>()
+            CreateMap<DomainModels.UserCipher, Cipher>()
                 .ForMember(x=>x.Organization, o=>o.Ignore())
                 .ForMember(x=>x.Data, o=>o.MapFrom(src=> JsonConvert.SerializeObject(src.Data) ))
                 //.AfterMap((src,dest)=>dest.Data=  JsonConvert.SerializeObject(src.Data.ToString()))
             ;
-            CreateMap<Cipher, DomainModels.Cipher>()
+            CreateMap<Cipher, DomainModels.UserCipher>()
+                .ForMember(x=>x.Data, o=>o.MapFrom(src=> JsonConvert.DeserializeObject<CipherLoginData>(src.Data) ));
+                //.AfterMap((src,dest)=>dest.Data=  JsonConvert.DeserializeObject<CipherLoginData>(src.Data));
+            CreateMap<DomainModels.OrganizationCipher, Cipher>()
+                .ForMember(x=>x.Organization, o=>o.Ignore())
+                .ForMember(x=>x.Data, o=>o.MapFrom(src=> JsonConvert.SerializeObject(src.Data) ))
+                //.AfterMap((src,dest)=>dest.Data=  JsonConvert.SerializeObject(src.Data.ToString()))
+            ;
+            CreateMap<Cipher, DomainModels.OrganizationCipher>()
                 .ForMember(x=>x.Data, o=>o.MapFrom(src=> JsonConvert.DeserializeObject<CipherLoginData>(src.Data) ));
                 //.AfterMap((src,dest)=>dest.Data=  JsonConvert.DeserializeObject<CipherLoginData>(src.Data));
 

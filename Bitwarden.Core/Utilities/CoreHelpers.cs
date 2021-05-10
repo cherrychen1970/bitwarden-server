@@ -98,55 +98,6 @@ namespace Bit.Core.Utilities
             }
         }
 
-        public static DataTable ToGuidIdArrayTVP(this IEnumerable<Guid> ids)
-        {
-            return ids.ToArrayTVP("GuidId");
-        }
-
-        public static DataTable ToArrayTVP<T>(this IEnumerable<T> values, string columnName)
-        {
-            var table = new DataTable();
-            table.SetTypeName($"[dbo].[{columnName}Array]");
-            table.Columns.Add(columnName, typeof(T));
-
-            if (values != null)
-            {
-                foreach (var value in values)
-                {
-                    table.Rows.Add(value);
-                }
-            }
-
-            return table;
-        }
-
-        public static DataTable ToArrayTVP(this IEnumerable<SelectionReadOnly> values)
-        {
-            var table = new DataTable();
-            table.SetTypeName("[dbo].[SelectionReadOnlyArray]");
-
-            var idColumn = new DataColumn("Id", typeof(Guid));
-            table.Columns.Add(idColumn);
-            var readOnlyColumn = new DataColumn("ReadOnly", typeof(bool));
-            table.Columns.Add(readOnlyColumn);
-            var hidePasswordsColumn = new DataColumn("HidePasswords", typeof(bool));
-            table.Columns.Add(hidePasswordsColumn);
-
-            if (values != null)
-            {
-                foreach (var value in values)
-                {
-                    var row = table.NewRow();
-                    row[idColumn] = value.Id;
-                    row[readOnlyColumn] = value.ReadOnly;
-                    row[hidePasswordsColumn] = value.HidePasswords;
-                    table.Rows.Add(row);
-                }
-            }
-
-            return table;
-        }
-
         public static string CleanCertificateThumbprint(string thumbprint)
         {
             // Clean possible garbage characters from thumbprint copy/paste

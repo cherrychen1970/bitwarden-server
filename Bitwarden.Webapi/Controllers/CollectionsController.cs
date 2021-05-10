@@ -37,71 +37,41 @@ namespace Bit.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<CollectionResponseModel> Get(string orgId, string id)
+        [HttpGet("{id}/details")]
+        public async Task<CollectionResponseModel> Get(Guid orgId, Guid id)
         {
-            var collection = await GetCollectionAsync(new Guid(id), new Guid(orgId));
+            var collection = await GetCollectionAsync(id,orgId);
             return new CollectionResponseModel(collection);
         }
 
-        [HttpGet("{id}/details")]
-        public async Task<CollectionGroupDetailsResponseModel> GetDetails(string orgId, string id)
-        {
-            var orgIdGuid = new Guid(orgId);
-            if (!ManageAnyCollections(orgIdGuid) && !_currentContext.ManageUsers(orgIdGuid))
-            {
-                throw new NotFoundException();
-            }
-
-            var idGuid = new Guid(id);
-            if (_currentContext.ManageAllCollections(orgIdGuid))
-            {
-                var collectionDetails = await _collectionRepository.GetByIdWithGroupsAsync(idGuid);
-                if (collectionDetails?.Item1 == null || collectionDetails.Item1.OrganizationId != orgIdGuid)
-                {
-                    throw new NotFoundException();
-                }
-                return new CollectionGroupDetailsResponseModel(collectionDetails.Item1, collectionDetails.Item2);
-            }
-            else
-            {
-                var collectionDetails = await _collectionRepository.GetByIdWithGroupsAsync(idGuid,
-                    _currentContext.UserId);
-                if (collectionDetails?.Item1 == null || collectionDetails.Item1.OrganizationId != orgIdGuid)
-                {
-                    throw new NotFoundException();
-                }
-                return new CollectionGroupDetailsResponseModel(collectionDetails.Item1, collectionDetails.Item2);
-            }
-        }
-
         [HttpGet("")]
-        public async Task<ListResponseModel<CollectionResponseModel>> Get(string orgId)
+        public async Task<ListResponseModel<CollectionResponseModel>> Get(Guid orgId)
         {
-            var orgIdGuid = new Guid(orgId);
-            if (!_currentContext.ManageAllCollections(orgIdGuid) && !_currentContext.ManageUsers(orgIdGuid))
+            if (!_currentContext.ManageAllCollections(orgId) && !_currentContext.ManageUsers(orgId))
             {
                 throw new NotFoundException();
             }
 
-            var collections = await _collectionRepository.GetManyByOrganizationIdAsync(orgIdGuid);
+            var membership = _currentContext.GetMembership(orgId);
+            var collections = await _collectionRepository.GetManyAsync(membership);
             var responses = collections.Select(c => new CollectionResponseModel(c));
             return new ListResponseModel<CollectionResponseModel>(responses);
         }
 
         [HttpGet("~/collections")]
-        public async Task<ListResponseModel<CollectionDetailsResponseModel>> GetUser()
+        public async Task<ListResponseModel<CollectionDetailsResponseModel>> GetUser(Guid orgId)
         {
-            var collections = await _collectionRepository.GetManyByUserIdAsync(_currentContext.UserId);                
+            var membership = _currentContext.GetMembership(orgId);
+            var collections = await _collectionRepository.GetManyAsync(membership);                
             var responses = collections.Select(c => new CollectionDetailsResponseModel(c));
             return new ListResponseModel<CollectionDetailsResponseModel>(responses);
         }
 
         [HttpGet("{id}/users")]
-        public async Task<IEnumerable<SelectionReadOnlyResponseModel>> GetUsers(string orgId, string id)
+        public async Task<IEnumerable<CollectionUserResponseModel>> GetUsers(Guid orgId, Guid id)
         {
-            var collection = await GetCollectionAsync(new Guid(id), new Guid(orgId));
-            var collectionUsers = await _collectionRepository.GetManyUsersByIdAsync(collection.Id);
-            var responses = collectionUsers.Select(cu => new SelectionReadOnlyResponseModel(cu));
+            var collectionUsers = await _collectionRepository.GetAssignments(id);
+            var responses = collectionUsers.Select(cu => new CollectionUserResponseModel(cu));
             return responses;
         }
 
@@ -115,25 +85,24 @@ namespace Bit.Api.Controllers
             }
 
             var collection = model.ToCollection(orgIdGuid);
-            await _collectionService.SaveAsync(collection, model.Groups?.Select(g => g.ToSelectionReadOnly()));                
+            await _collectionService.SaveAsync(collection);                
             return new CollectionResponseModel(collection);
         }
 
         [HttpPut("{id}")]
         [HttpPost("{id}")]
-        public async Task<CollectionResponseModel> Put(string orgId, string id, [FromBody]CollectionRequestModel model)
+        public async Task<CollectionResponseModel> Put(Guid orgId, Guid id, [FromBody]CollectionRequestModel model)
         {
-            var collection = await GetCollectionAsync(new Guid(id), new Guid(orgId));
-            await _collectionService.SaveAsync(model.ToCollection(collection),
-                model.Groups?.Select(g => g.ToSelectionReadOnly()));
+            var collection = await GetCollectionAsync(id,orgId);
+            await _collectionService.SaveAsync(model.ToCollection(collection));
             return new CollectionResponseModel(collection);
         }
 
         [HttpPut("{id}/users")]
-        public async Task PutUsers(string orgId, string id, [FromBody]IEnumerable<SelectionReadOnlyRequestModel> model)
+        public async Task PutUsers(Guid orgId, Guid id, [FromBody]IEnumerable<CollectionUserRequestModel> model)
         {
-            var collection = await GetCollectionAsync(new Guid(id), new Guid(orgId));
-            await _collectionRepository.UpdateUsersAsync(collection.Id, model?.Select(g => g.ToSelectionReadOnly()));
+            var collection = await GetCollectionAsync(id,orgId);
+            await _collectionRepository.UpdateUsersAsync(model?.Select(g => g.ToCollectionAssigned(collection)));
         }
 
         [HttpDelete("{id}")]

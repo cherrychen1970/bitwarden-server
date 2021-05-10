@@ -15,7 +15,7 @@ namespace Bit.Core.Models.Api
         public bool? AccessAll { get; set; }
         [StringLength(300)]
         public string ExternalId { get; set; }
-        public IEnumerable<SelectionReadOnlyRequestModel> Collections { get; set; }
+        public IEnumerable<CollectionUserRequestModel> Collections { get; set; }
 
         public Group ToGroup(Guid orgId)
         {

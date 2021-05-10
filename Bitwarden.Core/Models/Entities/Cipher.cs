@@ -6,98 +6,33 @@ using System.Collections.Generic;
 
 namespace Bit.Core.Models
 {
-    public class Cipher : IKey<Guid>, ICloneable
+    public class UserCipher : Cipher
     {
-        private Dictionary<string, CipherAttachment.MetaData> _attachmentData;
+        public Guid UserId { get; set; }
+        public Guid? FolderId { get; set; }
+    }
 
-        public Guid Id { get; set; }=Guid.NewGuid();
-        public Guid? UserId { get; set; }
-        public Guid? OrganizationId { get; set; }
+    public class OrganizationCipher : Cipher
+    {
+
+        public Guid OrganizationId { get; set; }
+        public Guid? CollectionId { get; set; }
+        public bool Edit { get; set; } = true;
+        public bool ViewPassword { get; set; } = true;
+
+    }
+    abstract public class Cipher : IKey<Guid>, ICloneable
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
         public Enums.CipherType Type { get; set; }
         //public string Data { get; set; }
         public CipherData Data { get; set; }
         //public string Favorites { get; set; }
         //public string Folders { get; set; }
-        public Guid? FolderId { get; set; }
-        public Guid? CollectionId { get; set; }
         public bool Favorite { get; set; }
-        public string Attachments { get; set; }
         public DateTime CreationDate { get; private set; } = DateTime.UtcNow;
         public DateTime RevisionDate { get; private set; } = DateTime.UtcNow;
-        public DateTime? DeletedDate { get; set; }        
-        public bool Edit { get; set; }=true;
-        public bool ViewPassword { get; set; }=true;
-
-        public void SetNewId()
-        {
-            Id = Guid.NewGuid(); //CoreHelpers.GenerateComb();
-        }
-
-        public Dictionary<string, CipherAttachment.MetaData> GetAttachments()
-        {
-            if (string.IsNullOrWhiteSpace(Attachments))
-            {
-                return null;
-            }
-
-            if (_attachmentData != null)
-            {
-                return _attachmentData;
-            }
-
-            try
-            {
-                _attachmentData = JsonConvert.DeserializeObject<Dictionary<string, CipherAttachment.MetaData>>(Attachments);
-                return _attachmentData;
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public void SetAttachments(Dictionary<string, CipherAttachment.MetaData> data)
-        {
-            if (data == null || data.Count == 0)
-            {
-                _attachmentData = null;
-                Attachments = null;
-                return;
-            }
-
-            _attachmentData = data;
-            Attachments = JsonConvert.SerializeObject(_attachmentData);
-        }
-
-        public void AddAttachment(string id, CipherAttachment.MetaData data)
-        {
-            var attachments = GetAttachments();
-            if (attachments == null)
-            {
-                attachments = new Dictionary<string, CipherAttachment.MetaData>();
-            }
-
-            attachments.Add(id, data);
-            SetAttachments(attachments);
-        }
-
-        public void DeleteAttachment(string id)
-        {
-            var attachments = GetAttachments();
-            if (!attachments?.ContainsKey(id) ?? true)
-            {
-                return;
-            }
-
-            attachments.Remove(id);
-            SetAttachments(attachments);
-        }
-
-        public bool ContainsAttachment(string id)
-        {
-            var attachments = GetAttachments();
-            return attachments?.ContainsKey(id) ?? false;
-        }
+        public DateTime? DeletedDate { get; set; }
 
         object ICloneable.Clone() => Clone();
         public Cipher Clone()

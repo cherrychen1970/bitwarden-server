@@ -39,7 +39,7 @@ namespace Bit.Core.Services
         Task<IdentityResult> ChangeKdfAsync(User user, string masterPassword, string newMasterPassword, string key,
             KdfType kdf, int kdfIterations);
         Task<IdentityResult> UpdateKeyAsync(User user, string masterPassword, string key, string privateKey,
-            IEnumerable<Cipher> ciphers, IEnumerable<Folder> folders);
+            IEnumerable<UserCipher> ciphers, IEnumerable<Folder> folders);
         Task<IdentityResult> RefreshSecurityStampAsync(User user, string masterPasswordHash);
         Task UpdateTwoFactorProviderAsync(User user, TwoFactorProviderType type);
         Task DisableTwoFactorProviderAsync(User user, TwoFactorProviderType type,

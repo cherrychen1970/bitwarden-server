@@ -19,12 +19,12 @@ namespace Bit.Events.Controllers
     {
         private readonly ISessionContext _currentContext;
         private readonly IEventService _eventService;
-        private readonly ICipherRepository _cipherRepository;
+        private readonly IOrganizationCipherRepository _cipherRepository;
 
         public CollectController(
             ISessionContext currentContext,
             IEventService eventService,
-            ICipherRepository cipherRepository)
+            IOrganizationCipherRepository cipherRepository)
         {
             _currentContext = currentContext;
             _eventService = eventService;
@@ -42,12 +42,13 @@ namespace Bit.Events.Controllers
         [HttpPost]
         public async Task<IActionResult> Post([FromBody]IEnumerable<EventModel> model)
         {
+            /*
             if (model == null || !model.Any())
             {
                 return new BadRequestResult();
             }
-            var cipherEvents = new List<Tuple<Cipher, EventType, DateTime?>>();
-            var ciphersCache = new Dictionary<Guid, Cipher>();
+            var cipherEvents = new List<Tuple<OrganizationCipher, EventType, DateTime?>>();
+            var ciphersCache = new Dictionary<Guid, OrganizationCipher>();
             foreach (var eventModel in model)
             {
                 switch (eventModel.Type)
@@ -76,8 +77,7 @@ namespace Bit.Events.Controllers
                         }
                         else
                         {
-                            cipher = await _cipherRepository.GetByIdAsync(eventModel.CipherId.Value,
-                               _currentContext.UserId);
+                            cipher = await _cipherRepository.GetByIdAsync(eventModel.CipherId.Value);
                         }
                         if (cipher == null)
                         {
@@ -87,7 +87,7 @@ namespace Bit.Events.Controllers
                         {
                             ciphersCache.Add(eventModel.CipherId.Value, cipher);
                         }
-                        cipherEvents.Add(new Tuple<Cipher, EventType, DateTime?>(cipher, eventModel.Type, eventModel.Date));
+                        cipherEvents.Add(new Tuple<OrganizationCipher, EventType, DateTime?>(cipher, eventModel.Type, eventModel.Date));
                         break;
                     default:
                         continue;
@@ -100,6 +100,7 @@ namespace Bit.Events.Controllers
                     await _eventService.LogCipherEventsAsync(eventsBatch);
                 }
             }
+            */
             return new OkResult();
         }
     }

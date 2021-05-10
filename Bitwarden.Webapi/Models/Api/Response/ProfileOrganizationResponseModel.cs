@@ -1,15 +1,17 @@
-﻿using Bit.Core.Enums;
+﻿using System;
+using Bit.Core.Enums;
 using Bit.Core.Models.Data;
 using Bit.Core.Utilities;
 namespace Bit.Core.Models.Api
 {
     public class ProfileOrganizationResponseModel : ResponseModel
     {
-        public ProfileOrganizationResponseModel(OrganizationUserOrganizationDetails organization)
+        public ProfileOrganizationResponseModel(OrganizationMembershipProfile membership)
             : base("profileOrganization")
         {
-            Id = organization.OrganizationId.ToString();
-            Name = organization.Name;
+            Id = membership.OrganizationId;
+            Name = membership.OrganizationName;
+            /*
             UsePolicies = organization.UsePolicies;
             UseSso = organization.UseSso;
             UseGroups = organization.UseGroups;
@@ -20,19 +22,16 @@ namespace Bit.Core.Models.Api
             UseApi = organization.UseApi;
             UsersGetPremium = organization.UsersGetPremium;
             SelfHost = organization.SelfHost;
-            Seats = organization.Seats;
-            MaxCollections = organization.MaxCollections;
             MaxStorageGb = organization.MaxStorageGb;
-            Key = organization.Key;
-            Status = organization.Status;
-            Type = organization.Type;
             Enabled = organization.Enabled;
-            SsoBound = !string.IsNullOrWhiteSpace(organization.SsoExternalId);
-            Identifier = organization.Identifier;
-            Permissions = CoreHelpers.LoadClassFromJsonData<Permissions>(organization.Permissions);
+            */
+            Key = membership.Key;
+            Status = membership.Status;
+            Type = membership.Type;
+            //Identifier = membership.OrganizationIdentifier;
         }
 
-        public string Id { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; }
         public bool UsePolicies { get; set; }
         public bool UseSso { get; set; }
@@ -44,16 +43,16 @@ namespace Bit.Core.Models.Api
         public bool UseApi { get; set; }
         public bool UseBusinessPortal => UsePolicies || UseSso; // TODO add events if needed
         public bool UsersGetPremium { get; set; }
-        public bool SelfHost { get; set; }
+        public bool SelfHost { get; set; }=true;
         public int Seats { get; set; }
         public int MaxCollections { get; set; }
         public short? MaxStorageGb { get; set; }
         public string Key { get; set; }
         public OrganizationUserStatusType Status { get; set; }
         public OrganizationUserType Type { get; set; }
-        public bool Enabled { get; set; }
+        public bool Enabled { get; set; }=true;
         public bool SsoBound { get; set; }
-        public string Identifier { get; set; }
+        public string Identifier { get; set; } = Guid.Empty.ToString();
         public Permissions Permissions { get; set; }
     }
 }

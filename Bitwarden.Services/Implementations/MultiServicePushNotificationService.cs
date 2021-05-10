@@ -52,19 +52,19 @@ namespace Bit.Core.Services
             _logger = logger;
         }
 
-        public Task PushSyncCipherCreateAsync(Cipher cipher, IEnumerable<Guid> collectionIds)
+        public Task PushSyncCipherCreateAsync(UserCipher cipher)
         {
-            PushToServices((s) => s.PushSyncCipherCreateAsync(cipher, collectionIds));
+            PushToServices((s) => s.PushSyncCipherCreateAsync(cipher));
             return Task.FromResult(0);
         }
 
-        public Task PushSyncCipherUpdateAsync(Cipher cipher, IEnumerable<Guid> collectionIds)
+        public Task PushSyncCipherUpdateAsync(UserCipher cipher)
         {
-            PushToServices((s) => s.PushSyncCipherUpdateAsync(cipher, collectionIds));
+            PushToServices((s) => s.PushSyncCipherUpdateAsync(cipher));
             return Task.FromResult(0);
         }
 
-        public Task PushSyncCipherDeleteAsync(Cipher cipher)
+        public Task PushSyncCipherDeleteAsync(UserCipher cipher)
         {
             PushToServices((s) => s.PushSyncCipherDeleteAsync(cipher));
             return Task.FromResult(0);

@@ -8,7 +8,7 @@ namespace Bit.Core.Entities
 {
     public class Collection : DomainModels.IKey<Guid>, IEntityCreated,IEntityUpdated
     {        
-        public Guid Id { get; set; }
+        public Guid Id { get; set; }= Guid.NewGuid();
         public Guid OrganizationId { get; set; }
         public string Name { get; set; }
         public string ExternalId { get; set; }

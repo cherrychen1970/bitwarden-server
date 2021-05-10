@@ -267,20 +267,8 @@ namespace Bit.Core.IdentityServer
                 (await _userManager.GetValidTwoFactorProvidersAsync(user)).Count > 0;
 
             Organization firstEnabledOrg = null;
-            var orgs = await _organizationUserRepository.GetManyByUserAsync<OrganizationMembership>(user.Id,true);
+            var orgs = await _organizationUserRepository.GetMemberships(user.Id);
                 
-            if (orgs.Any())
-            {
-                var orgAbilities = await _applicationCacheService.GetOrganizationAbilitiesAsync();
-                var twoFactorOrgs = orgs.Where(o => OrgUsing2fa(orgAbilities, o.OrganizationId));
-                if (twoFactorOrgs.Any())
-                {
-                    var userOrgs = await _organizationRepository.GetManyByUserIdAsync(user.Id);
-                    firstEnabledOrg = userOrgs.FirstOrDefault(
-                        o => orgs.Any(om => om.OrganizationId == o.Id) && o.TwoFactorIsEnabled());
-                }
-            }
-
             return new Tuple<bool, Organization>(individualRequired || firstEnabledOrg != null, firstEnabledOrg);
         }
 
@@ -291,34 +279,6 @@ namespace Bit.Core.IdentityServer
                 // Already using SSO to authorize, finish successfully
                 return true;
             }
-
-            // Is user apart of any orgs? Use cache for initial checks.
-            var orgs = await _organizationUserRepository.GetManyByUserAsync<OrganizationMembership>(user.Id,true);                
-            if (orgs.Any())
-            {
-                // Get all org abilities
-                var orgAbilities = await _applicationCacheService.GetOrganizationAbilitiesAsync();
-                // Parse all user orgs that are enabled and have the ability to use sso
-                var ssoOrgs = orgs.Where(o => OrgCanUseSso(orgAbilities, o.OrganizationId));
-                if (ssoOrgs.Any())
-                {
-                    // Parse users orgs and determine if require sso policy is enabled
-                    var userOrgs = await _organizationUserRepository.GetManyDetailsByUserAsync(user.Id,
-                        OrganizationUserStatusType.Confirmed);
-                    foreach (var userOrg in userOrgs.Where(o => o.Enabled && o.UseSso))
-                    {
-                        var orgPolicy = await _policyRepository.GetByOrganizationIdTypeAsync(userOrg.OrganizationId,
-                            PolicyType.RequireSso);
-                        // Owners and Admins are exempt from this policy
-                        if (orgPolicy != null && orgPolicy.Enabled && 
-                            userOrg.Type != OrganizationUserType.Owner && userOrg.Type != OrganizationUserType.Admin)
-                        {
-                            return false;
-                        }
-                    }
-                }
-            }
-
             // Default - continue validation process
             return true;
         }

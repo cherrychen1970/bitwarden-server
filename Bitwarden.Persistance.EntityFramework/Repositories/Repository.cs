@@ -30,7 +30,10 @@ namespace Bit.Infrastructure.EntityFramework
         {
             return await dbSet.Where(expression).CountAsync();                    
         }
-
+        public virtual async Task<bool> Any(Expression<Func<TEntity,bool>> expression)
+        {
+            return await dbSet.AnyAsync(expression);                
+        }
         public virtual async Task<TEntity> GetOne(Expression<Func<TEntity,bool>> expression)
         {
             return await dbSet.Where(expression).SingleOrDefaultAsync();

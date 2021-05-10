@@ -1,0 +1,46 @@
+@url=http://localhost:4000
+
+# @name login
+POST {{url}}/connect/token
+device-type: 9
+Host: localhost:4000
+Origin: http://localhost:4000
+Referer: http://localhost:4000/
+content-type: application/x-www-form-urlencoded; charset=utf-8
+
+scope=api%20offline_access&client_id=web&grant_type=password&username=cherry%40test.com&password=FXu5H%2BN%2Fxz3aQPwugoQ2YOjOTIgszxlkZvIrYrz%2Fu28%3D&deviceType=9&deviceIdentifier=31e2ecdb-ecfa-4f5b-81a9-ac55cbe43b32&deviceName=chrome
+###
+@token = {{login.response.body.$.access_token}}
+###
+# @name organizations
+GET {{url}}/api/organizations
+authorization: Bearer {{token}}
+###
+@orgId = {{organizations.response.body.$.data[0].id}}
+###
+
+POST {{url}}/api/organizations/{{orgId}}/users/invite
+authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "emails": [
+        "ben@test.com"
+    ],
+    "collections": [],
+    "accessAll": false,
+    "type": 2,
+    "permissions": {
+        "response": null,
+        "accessBusinessPortal": false,
+        "accessEventLogs": false,
+        "accessImportExport": false,
+        "accessReports": false,
+        "manageAllCollections": false,
+        "manageAssignedCollections": false,
+        "manageGroups": false,
+        "manageSso": false,
+        "managePolicies": false,
+        "manageUsers": false
+    }
+}

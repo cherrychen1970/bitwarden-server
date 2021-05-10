@@ -8,12 +8,12 @@ namespace Bit.Core.Services
 {
     public class NoopEventService : IEventService
     {
-        public Task LogCipherEventAsync(Cipher cipher, EventType type, DateTime? date = null)
+        public Task LogCipherEventAsync(OrganizationCipher cipher, EventType type, DateTime? date = null)
         {
             return Task.FromResult(0);
         }
 
-        public Task LogCipherEventsAsync(IEnumerable<Tuple<Cipher, EventType, DateTime?>> events)
+        public Task LogCipherEventsAsync(IEnumerable<Tuple<OrganizationCipher, EventType, DateTime?>> events)
         {
             return Task.FromResult(0);
         }
@@ -38,7 +38,7 @@ namespace Bit.Core.Services
             return Task.FromResult(0);
         }
 
-        public Task LogOrganizationUserEventAsync(OrganizationUser organizationUser, EventType type,
+        public Task LogOrganizationUserEventAsync(OrganizationMembershipProfile organizationUser, EventType type,
             DateTime? date = null)
         {
             return Task.FromResult(0);

@@ -11,7 +11,7 @@ namespace Bit.Core.Entities
     {
         public Guid Id { get; set; }
         public Guid OrganizationId { get; set; }
-        public Guid? UserId { get; set; }
+        public Guid UserId { get; set; }
         public string Email { get; set; }
         public string Key { get; set; }
         public OrganizationUserStatusType Status { get; set; }
@@ -31,9 +31,17 @@ namespace Bit.Core.Entities
     {
         public OrganizationUserProfile()
         {
-            CreateMap<DomainModels.OrganizationUser, OrganizationUser>().ReverseMap();
-            CreateMap<DomainModels.OrganizationUser, DomainModels.Data.OrganizationUserUserDetails>();
-            CreateMap<DomainModels.OrganizationUser, DomainModels.Data.OrganizationUserOrganizationDetails>();
+            CreateMap<DomainModels.OrganizationMembershipProfile, OrganizationUser>();
+
+             CreateMap<OrganizationUser,  DomainModels.OrganizationMembershipProfile>()
+                .ForMember(x=>x.UserName, opt=>opt.MapFrom(s=>s.User.Name))
+                .ForMember(x=>x.OrganizationName, opt=>opt.MapFrom(s=>s.Organization.Name));
+                
+
+            CreateMap<Entities.OrganizationUser, DomainModels.OrganizationMembership>().ReverseMap();
+            
+            CreateMap<DomainModels.OrganizationMembershipProfile, DomainModels.Data.OrganizationUserUserDetails>();
+            //CreateMap<DomainModels.OrganizationUser, DomainModels.Data.OrganizationUserOrganizationDetails>();
         }
     }
 }

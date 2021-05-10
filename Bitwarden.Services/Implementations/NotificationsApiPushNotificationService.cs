@@ -37,46 +37,46 @@ namespace Bit.Core.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task PushSyncCipherCreateAsync(Cipher cipher, IEnumerable<Guid> collectionIds)
+        public async Task PushSyncCipherCreateAsync(UserCipher cipher)
         {
-            await PushCipherAsync(cipher, PushType.SyncCipherCreate, collectionIds);
+            await PushCipherAsync(cipher, PushType.SyncCipherCreate);
         }
 
-        public async Task PushSyncCipherUpdateAsync(Cipher cipher, IEnumerable<Guid> collectionIds)
+        public async Task PushSyncCipherUpdateAsync(UserCipher cipher)
         {
-            await PushCipherAsync(cipher, PushType.SyncCipherUpdate, collectionIds);
+            await PushCipherAsync(cipher, PushType.SyncCipherUpdate);
         }
 
-        public async Task PushSyncCipherDeleteAsync(Cipher cipher)
+        public async Task PushSyncCipherDeleteAsync(UserCipher cipher)
         {
-            await PushCipherAsync(cipher, PushType.SyncLoginDelete, null);
+            await PushCipherAsync(cipher, PushType.SyncLoginDelete);
         }
 
-        private async Task PushCipherAsync(Cipher cipher, PushType type, IEnumerable<Guid> collectionIds)
+        private async Task PushCipherAsync(UserCipher cipher, PushType type)
         {
-            if (cipher.OrganizationId.HasValue)
+            var message = new SyncCipherPushNotification
             {
-                var message = new SyncCipherPushNotification
-                {
-                    Id = cipher.Id,
-                    OrganizationId = cipher.OrganizationId,
-                    RevisionDate = cipher.RevisionDate,
-                    CollectionIds = collectionIds,
-                };
+                Id = cipher.Id,
+                UserId = cipher.UserId,
+                RevisionDate = cipher.RevisionDate,
+            };
 
-                await SendMessageAsync(type, message, true);
-            }
-            else if (cipher.UserId.HasValue)
+            await SendMessageAsync(type, message, true);
+        }
+        private async Task PushCipherAsync(OrganizationCipher cipher, PushType type, IEnumerable<Guid> collectionIds)
+        {
+
+            var message = new SyncCipherPushNotification
             {
-                var message = new SyncCipherPushNotification
-                {
-                    Id = cipher.Id,
-                    UserId = cipher.UserId,
-                    RevisionDate = cipher.RevisionDate,
-                };
+                Id = cipher.Id,
+                OrganizationId = cipher.OrganizationId,
+                RevisionDate = cipher.RevisionDate,
+                CollectionIds = collectionIds,
+            };
 
-                await SendMessageAsync(type, message, true);
-            }
+            await SendMessageAsync(type, message, true);
+
+
         }
 
         public async Task PushSyncFolderCreateAsync(Folder folder)

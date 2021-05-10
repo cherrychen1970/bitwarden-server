@@ -67,13 +67,13 @@ namespace Bit.Api.Controllers
                 throw new BadRequestException("User not found.");
             }
 
-            var organizationUserDetails = await _organizationUserRepository.GetManyDetailsByUserAsync(user.Id,
-                OrganizationUserStatusType.Confirmed);
-            var hasEnabledOrgs = organizationUserDetails.Any(o => o.Enabled);
+            var organizationUsers = await _organizationUserRepository.GetManyByUserAsync(user.Id);
+            var hasEnabledOrgs = organizationUsers.Any();
             var folders = await _folderRepository.GetManyByUserIdAsync(user.Id);
             var ciphers = (await _cipherRepository.GetManyAsync(user.Id)).ToList();
             //var sends = await _sendRepository.GetManyByUserIdAsync(user.Id);
             var sends = new Send[] {};
+            ICollection<OrganizationCipher> orgCiphers = new List<OrganizationCipher>(); 
 
             IEnumerable<Collection> collections = null;
             // FIX THIS
@@ -81,15 +81,14 @@ namespace Bit.Api.Controllers
             IEnumerable<Policy> policies = null;
             if (hasEnabledOrgs)
             {                
-                var orgCiphers = await _orgCipherRepository.GetManyAsync(_currentContext.OrganizationMemberships);
-                ciphers.AddRange(orgCiphers);                
-                collections = await _collectionRepository.GetManyByUserIdAsync(user.Id);
+                orgCiphers = await _orgCipherRepository.GetManyAsync(_currentContext.OrganizationMemberships);              
+                collections = await _collectionRepository.GetManyAsync(_currentContext.OrganizationMemberships);
                 policies = await _policyRepository.GetManyByUserIdAsync(user.Id);
             }
 
             var userTwoFactorEnabled = await _userService.TwoFactorIsEnabledAsync(user);
-            var response = new SyncResponseModel(_globalSettings, user, userTwoFactorEnabled, organizationUserDetails,
-                folders, collections, ciphers, collectionCiphersGroupDict, excludeDomains, policies, sends);
+            var response = new SyncResponseModel(_globalSettings, user, userTwoFactorEnabled, organizationUsers,
+                folders, collections, ciphers, orgCiphers, collectionCiphersGroupDict, excludeDomains, policies, sends);
             return response;
         }
     }

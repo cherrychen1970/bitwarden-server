@@ -65,11 +65,13 @@ namespace Bit.Api.Controllers
         }
 
         [HttpGet("")]
-        public async Task<ListResponseModel<ProfileOrganizationResponseModel>> GetUser()
+        public async Task<ListResponseModel<ProfileOrganizationResponseModel>> Get()
         {            
-            var organizations = await _organizationUserRepository.GetManyDetailsByUserAsync(_currentContext.UserId,
-                OrganizationUserStatusType.Confirmed);
-            var responses = organizations.Select(o => new ProfileOrganizationResponseModel(o));
+            //var organizations = await _organizationUserRepository.GetManyDetailsByUserAsync(_currentContext.UserId,
+              //  OrganizationUserStatusType.Confirmed);
+            var organizationUsers = await _organizationUserRepository.GetManyAsync(_currentContext.OrganizationMemberships);
+            var responses = organizationUsers
+                .Select(o => new ProfileOrganizationResponseModel(o));
             return new ListResponseModel<ProfileOrganizationResponseModel>(responses);
         }
 
@@ -117,23 +119,19 @@ namespace Bit.Api.Controllers
                 throw new NotFoundException();
             }
 
-            var updatebilling = !_globalSettings.SelfHosted && (model.BusinessName != organization.BusinessName ||
-                model.BillingEmail != organization.BillingEmail);
-
-            await _organizationService.UpdateAsync(model.ToOrganization(organization, _globalSettings), updatebilling);
+            await _organizationService.UpdateAsync(model.ToOrganization(organization, _globalSettings));
             return new OrganizationResponseModel(organization);
         }
 
         [HttpPost("{id}/leave")]
-        public async Task Leave(string id)
+        public async Task Leave(Guid id)
         {
-            var orgGuidId = new Guid(id);
-            if (!_currentContext.IsOrganizationMember(orgGuidId))
+            if (!_currentContext.IsOrganizationMember(id))
             {
                 throw new NotFoundException();
             }
-
-            await _organizationService.DeleteUserAsync(orgGuidId, _currentContext.UserId);
+            var ou = await _organizationUserRepository.GetOneAsync(_currentContext.GetMembership(id));
+            await _organizationService.DeleteUserAsync(ou);
         }
 
         [HttpDelete("{id}")]
@@ -167,30 +165,6 @@ namespace Bit.Api.Controllers
             {
                 await _organizationService.DeleteAsync(organization);
             }
-        }
-
-        [HttpPost("{id}/import")]
-        public async Task Import(string id, [FromBody]ImportOrganizationUsersRequestModel model)
-        {
-            if (!_globalSettings.SelfHosted &&
-                (model.Groups.Count() > 2000 || model.Users.Count(u => !u.Deleted) > 2000))
-            {
-                throw new BadRequestException("You cannot import this much data at once.");
-            }
-
-            var orgIdGuid = new Guid(id);
-            if (!_currentContext.HasOrganizationAdminAccess(orgIdGuid))
-            {
-                throw new NotFoundException();
-            }
-            
-            await _organizationService.ImportAsync(
-                orgIdGuid,
-                _currentContext.UserId,
-                model.Groups.Select(g => g.ToImportedGroup(orgIdGuid)),
-                model.Users.Where(u => !u.Deleted).Select(u => u.ToImportedOrganizationUser()),
-                model.Users.Where(u => u.Deleted).Select(u => u.ExternalId),
-                model.OverwriteExisting);
         }
 
         [HttpPost("{id}/api-key")]

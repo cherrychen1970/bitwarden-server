@@ -1,9 +1,10 @@
 ﻿using Bit.Core.Models.Data;
-using Bit.Core.Models;
+using Bit.Core.Models.Business;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text.Json;
+//using AutoMapper;
 
 namespace Bit.Core.Models.Api
 {
@@ -15,7 +16,7 @@ namespace Bit.Core.Models.Api
         public Enums.OrganizationUserType? Type { get; set; }
         public bool AccessAll { get; set; }
         public Permissions Permissions { get; set; }
-        public IEnumerable<SelectionReadOnlyRequestModel> Collections { get; set; }
+        public IEnumerable<CollectionUserRequestModel> Collections { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
@@ -65,9 +66,9 @@ namespace Bit.Core.Models.Api
         public Enums.OrganizationUserType? Type { get; set; }
         public bool AccessAll { get; set; }
         public Permissions Permissions { get; set; }
-        public IEnumerable<SelectionReadOnlyRequestModel> Collections { get; set; }
+        public IEnumerable<CollectionUserRequestModel> Collections { get; set; }
 
-        public OrganizationUser ToOrganizationUser(OrganizationUser existingUser)
+        public OrganizationMembershipProfile ToOrganizationUser(OrganizationMembershipProfile existingUser)
         {
             existingUser.Type = Type.Value;
             existingUser.Permissions = JsonSerializer.Serialize(Permissions, new JsonSerializerOptions
@@ -76,6 +77,15 @@ namespace Bit.Core.Models.Api
             });
             existingUser.AccessAll = AccessAll;
             return existingUser;
+        }
+    }
+
+    public class MappingProfile : AutoMapper.Profile
+    {
+        public MappingProfile()
+        {
+            CreateMap<OrganizationUserInviteRequestModel, OrganizationUserInvite>().ReverseMap();
+            ;
         }
     }
 

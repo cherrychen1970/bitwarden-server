@@ -168,7 +168,7 @@ namespace Bit.Core.Services
             await _mailDeliveryService.SendEmailAsync(message);
         }
 
-        public async Task SendOrganizationInviteEmailAsync(string organizationName, OrganizationUser orgUser, string token)
+        public async Task SendOrganizationInviteEmailAsync(string organizationName, OrganizationMembershipProfile orgUser, string token)
         {
             var message = CreateDefaultMessage($"Join {organizationName}", orgUser.Email);
             var model = new OrganizationUserInvitedViewModel

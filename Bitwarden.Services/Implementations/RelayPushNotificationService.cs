@@ -36,44 +36,31 @@ namespace Bit.Core.Services
             _logger = logger;
         }
 
-        public async Task PushSyncCipherCreateAsync(Cipher cipher, IEnumerable<Guid> collectionIds)
+        public async Task PushSyncCipherCreateAsync(UserCipher cipher)
         {
-            await PushCipherAsync(cipher, PushType.SyncCipherCreate, collectionIds);
+            await PushCipherAsync(cipher, PushType.SyncCipherCreate);
         }
 
-        public async Task PushSyncCipherUpdateAsync(Cipher cipher, IEnumerable<Guid> collectionIds)
+        public async Task PushSyncCipherUpdateAsync(UserCipher cipher)
         {
-            await PushCipherAsync(cipher, PushType.SyncCipherUpdate, collectionIds);
+            await PushCipherAsync(cipher, PushType.SyncCipherUpdate);
         }
 
-        public async Task PushSyncCipherDeleteAsync(Cipher cipher)
+        public async Task PushSyncCipherDeleteAsync(UserCipher cipher)
         {
-            await PushCipherAsync(cipher, PushType.SyncLoginDelete, null);
+            await PushCipherAsync(cipher, PushType.SyncLoginDelete);
         }
 
-        private async Task PushCipherAsync(Cipher cipher, PushType type, IEnumerable<Guid> collectionIds)
+        private async Task PushCipherAsync(UserCipher cipher, PushType type)
         {
-            if (cipher.OrganizationId.HasValue)
+            var message = new SyncCipherPushNotification
             {
-                // We cannot send org pushes since access logic is much more complicated than just the fact that they belong
-                // to the organization. Potentially we could blindly send to just users that have the access all permission
-                // device registration needs to be more granular to handle that appropriately. A more brute force approach could
-                // me to send "full sync" push to all org users, but that has the potential to DDOS the API in bursts.
+                Id = cipher.Id,
+                UserId = cipher.UserId,
+                RevisionDate = cipher.RevisionDate,
+            };
 
-                // await SendPayloadToOrganizationAsync(cipher.OrganizationId.Value, type, message, true);
-            }
-            else if (cipher.UserId.HasValue)
-            {
-                var message = new SyncCipherPushNotification
-                {
-                    Id = cipher.Id,
-                    UserId = cipher.UserId,
-                    OrganizationId = cipher.OrganizationId,
-                    RevisionDate = cipher.RevisionDate,
-                };
-
-                await SendPayloadToUserAsync(cipher.UserId.Value, type, message, true);
-            }
+            await SendPayloadToUserAsync(cipher.UserId, type, message, true);
         }
 
         public async Task PushSyncFolderCreateAsync(Folder folder)

@@ -18,7 +18,7 @@ namespace Bit.Core.IdentityServer
     {
         private readonly IUserService _userService;
         private readonly IOrganizationUserRepository _organizationUserRepository;
-        
+
         //private readonly CurrentContext _currentContext;
         private Guid _userId;
 
@@ -29,8 +29,8 @@ namespace Bit.Core.IdentityServer
             )
         {
             _userService = userService;
-            _organizationUserRepository = organizationUserRepository;            
-            
+            _organizationUserRepository = organizationUserRepository;
+
             //_currentContext = currentContext;
         }
 
@@ -38,13 +38,13 @@ namespace Bit.Core.IdentityServer
         {
             var existingClaims = context.Subject.Claims;
             var newClaims = new List<Claim>();
-            var userId = new Guid(context.Subject.FindFirstValue("sub"));            
+            var userId = new Guid(context.Subject.FindFirstValue("sub"));
 
             var user = await _userService.GetUserByIdAsync(userId);
             if (user != null)
             {
                 var isPremium = true;//await _licensingService.ValidateUserPremiumAsync(user);
-                var orgs = await OrganizationMembershipAsync(_organizationUserRepository, user.Id);
+                var orgs = await _organizationUserRepository.GetMemberships(user.Id);
                 foreach (var claim in IdentityHelper.BuildIdentityClaims(user, orgs, isPremium))
                 {
                     var upperValue = claim.Value.ToUpperInvariant();
@@ -69,18 +69,10 @@ namespace Bit.Core.IdentityServer
             }
         }
 
-        public async Task<ICollection<OrganizationMembership>> OrganizationMembershipAsync(
-            IOrganizationUserRepository organizationUserRepository, Guid userId)
-        {
-                var memberships= await organizationUserRepository.GetManyByUserAsync(userId);
-                return memberships.Where(ou => ou.Status == OrganizationUserStatusType.Confirmed)
-                    .Select(x=> new OrganizationMembership(x.OrganizationId,userId, x.Type)).ToArray() ;                             
-        }        
-
         public async Task IsActiveAsync(IsActiveContext context)
         {
             var securityTokenClaim = context.Subject?.Claims.FirstOrDefault(c => c.Type == "sstamp");
-            var userId = new Guid(context.Subject.FindFirstValue("sub"));            
+            var userId = new Guid(context.Subject.FindFirstValue("sub"));
             var user = await _userService.GetUserByIdAsync(userId);
 
             if (user != null && securityTokenClaim != null)

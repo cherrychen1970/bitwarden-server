@@ -1,27 +1,105 @@
 @url=http://localhost:4000
-@token=eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE2MjAxMDY3MzQsImV4cCI6MTYyMDExMDMzNCwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdCIsImNsaWVudF9pZCI6IndlYiIsInN1YiI6ImFlZTUxNzVhLTQ0ZDctNDE5ZC1mOGUyLTA4ZDhmNDEwMmU4ZSIsImF1dGhfdGltZSI6MTYyMDEwMjcwNywiaWRwIjoic3NvIiwicHJlbWl1bSI6dHJ1ZSwiZW1haWwiOiJjaHVuMW1pakBwb2xpY2UubnN3Lmdvdi5hdSIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJzc3RhbXAiOiJWSUE2QkpRMldGN1gzVkQ3RExGSjZKVDRKNkhQU0NKNSIsIm5hbWUiOiJDaHVuLE1panVuZyIsIm9yZ293bmVyIjoiZTExYTZkNWEtZWNhNC00ZGQyLWJkMjgtYWNmYzAwNzA4ZGU4IiwiZGV2aWNlIjoiMjhmYzNlMzAtMmQwYi00MWNiLWI0YzMtNWIxMzMxOTYzNDQzIiwianRpIjoiQUUwQUY1RDFEMkI2N0NGMjIwQ0ExNEI5MzJCMkE4QUEiLCJpYXQiOjE2MjAxMDY3MzQsInNjb3BlIjpbImFwaSIsIm9mZmxpbmVfYWNjZXNzIl0sImFtciI6WyJleHRlcm5hbCJdfQ.mC2bjQ4tFRGAGDwJssrGicBMxV9QSviWWVK2RgnK-ohFm-OMjpzo7oTtJPIJP1Hnsi-zWEzzmP98lXymUgl95EA9x0obRlXfiChCtx4el9gZUldGL3ZoeHlSEHkls4nv3FrESmN4LAy6yzYFGqjbazN_qnuCngyv9WM_uKpKj99c-GTUMm4k0g3cULsg497_4lugPsIHW_qdrPsGS78HnNhy_Kh7FJpV9zfO12NMsjQD7Hx8AHShlKSQAkdpxELkDewoBe04nq2LY6YuAXWb-huusp47XZ48kyuyIW1_OfdcxEiblaALfxZcHQ78udw_rcuScThIMAbmlpb-NsUAiQ
+//@token=eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE2MjA0NDgwNDksImV4cCI6MTYyMDQ1MTY0OSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdCIsImNsaWVudF9pZCI6IndlYiIsInN1YiI6ImEyOTdkYTdjLTc2NDUtNDAyOC04MzBlLTA5NjMzNWUyZWZmMCIsImF1dGhfdGltZSI6MTYyMDQ0ODA0OSwiaWRwIjoiYml0d2FyZGVuIiwicHJlbWl1bSI6dHJ1ZSwiZW1haWwiOiJjaGVycnlAdGVzdC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwic3N0YW1wIjoiTjdFUjdDTUw0NkVYQ1lBTEJNVDRBQk9JTkpGRlJXSkYiLCJuYW1lIjoiY2hlcnJ5IiwiZGV2aWNlIjoiMzFlMmVjZGItZWNmYS00ZjViLTgxYTktYWM1NWNiZTQzYjMyIiwianRpIjoiRDM0OTA5Q0JCMDlEQkZFMEM0MDQxRjhCRDk3Qjg5Q0EiLCJpYXQiOjE2MjA0NDgwNDksInNjb3BlIjpbImFwaSIsIm9mZmxpbmVfYWNjZXNzIl0sImFtciI6WyJBcHBsaWNhdGlvbiJdfQ.B5Pmwq7QnC1zYSxUqmr4tFCqfBddI6fDKOZS6i-sLBJ9CERaL_z_0MQP3glTRnTaevXEXj1M-95FObqY3Pu31m9VHyMblfto9Me1bH83tt6lqUf_dv8rkv92T3zUJTh8QMzfipCCIbIJu-q5NVs6AvWvjxCmMJQDTSQ3MleTgG-T5hnHn6_HgFBiThCQ-njuT0SD_KvvshwZRA7bIiTkV8HH0V7xx2OVIBk0Cmfnwn1h_5y1ZDEI_gdGDEXBeQa-xtdE-oUk8vKLqiXyJ0WpK6pxrtk6MgvwPXdF-ZdeNmuLYULxxI5vXe2I1stXoxIBm92TFUdxdz5Owjb5eFOOZQ
 
+# @name login
+POST {{url}}/connect/token
+device-type: 9
+Host: localhost:4000
+Origin: http://localhost:4000
+Referer: http://localhost:4000/
+content-type: application/x-www-form-urlencoded; charset=utf-8
 
-http://localhost:4000/sync?excludeDomains=true
+scope=api%20offline_access&client_id=web&grant_type=password&username=cherry%40test.com&password=FXu5H%2BN%2Fxz3aQPwugoQ2YOjOTIgszxlkZvIrYrz%2Fu28%3D&deviceType=9&deviceIdentifier=31e2ecdb-ecfa-4f5b-81a9-ac55cbe43b32&deviceName=chrome
+###
+@token = {{login.response.body.$.access_token}}
+GET {{url}}/account/login?returnUrl=abc
+###
+GET {{url}}/account/testLogin?name=cherry&email=cherry@test.com&returnUrl=/account/debug
+###
+###
+GET {{url}}/account/debug
+##################################################################3
+
+GET {{url}}/api/accounts/test
 authorization: Bearer {{token}}
 ###
-{{url}}/api/accounts/debug
+GET {{url}}/api/sync?excludeDomains=true
 authorization: Bearer {{token}}
-
 ###
-{{url}}/ciphers/organization-details?organizationId=3c862b74-e723-484a-ac49-acc30042f1c4
-authorization: Bearer {{token}}
 
-###
-POST http://localhost:33656/connect/token
 
 
 ###
-http://localhost:4000/api/organizations
+# @name organizations
+GET {{url}}/api/organizations
 authorization: Bearer {{token}}
 ###
-http://localhost:4000/api/organizations/e11a6d5a-eca4-4dd2-bd28-acfc00708de8/collections
+@orgId = {{organizations.response.body.$.data[0].id}}
+###
+{{url}}/api/ciphers/organization-details?organizationId={{orgId}}
 authorization: Bearer {{token}}
 ###
-http://localhost:4000/organizations/e11a6d5a-eca4-4dd2-bd28-acfc00708de8/users
+GET {{url}}/api/organizations/{{orgId}}/collections
 authorization: Bearer {{token}}
+###
+GET {{url}}/api/organizations/{{orgId}}/users
+authorization: Bearer {{token}}
+
+###
+POST {{url}}/api/ciphers/admin
+authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "cipher": {
+        "type": 1,
+        "folderId": null,
+        "organizationId": "fb8b8e66-d337-439b-9fe8-ad22007eefc1",
+        "name": "2.9VGd8MsEafAMsddAIu95Lg==|RzeG5zp1v1BUvqk7b/Sseg==|ykC1pTHKJRzlwPq9S+yVdT/slpfIniQF5XANc31KqII=",
+        "notes": null,
+        "favorite": false,
+        "lastKnownRevisionDate": null,
+        "login": {
+            "response": null,
+            "uris": null,
+            "username": "2.z3QRRBkVL+i17iodsM4WWA==|tnzDerDs3ScGZnOWcgFCTQ==|h+rwOyEIo2yVxfwdjZbFdYc9sxE4gyjyx+OGJaGdxkc=",
+            "password": "2.+cjdFzjViwhczsfIOY57qA==|9reglRb9LOJqyL6O0EJCXw==|6+hNHeatg+EgKgoLL3pyLN06p4//DsqjVqaOE6DRX6A=",
+            "passwordRevisionDate": null,
+            "totp": null
+        }
+    },
+    "collectionIds": []
+}
+###
+
+PUT {{url}}/api/ciphers/8813b62c-b05d-4f98-bf3d-983306d5f6d8/admin
+authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "type": 1,
+    "folderId": null,
+    "organizationId": "fb8b8e66-d337-439b-9fe8-ad22007eefc1",
+    "name": "2.ezHZTNJ7vUfoezTVnK5teg==|DmQwRJTEUJvhe0AXciOJpQ==|vbuSKvvAV/yu1mA5Tb8ocgxGivbDXN/S6V1AibQeRmY=",
+    "notes": null,
+    "favorite": false,
+    "lastKnownRevisionDate": "2021-05-07T22:16:44.453Z",
+    "login": {
+        "response": null,
+        "uris": null,
+        "username": "2.Weq6Tfb1C7eY/b1ZqNW7jA==|QKZUe05AMDn0tkf+91ajoA==|NelsfJyPF2XgzIM5jTPYi2dFpLMfkFQ+LvQYjjCDBE0=",
+        "password": "2.VyUXasN0SQunkmnhLMfgpg==|userjBqJ3Z0vq98FmN8DxA==|JHwdZ0edWPLMJEMHN1J6e3L0ZuAzf9ZC5FdGxp9jKV8=",
+        "passwordRevisionDate": null,
+        "totp": null
+    }
+}
+
+###
+POST {{url}}/api/organizations/{{orgId}}/collections
+Content-Type: application/json
+authorization: Bearer {{token}}
+
+{
+    "groups": [],
+    "name": "2.48KiqXshMKnPdP3fOcgVqQ==|2Mt3HAXA+V3xAZiMbwp+8g==|Cvv461F3UOkMXFOQpiigwiuSlG+lLx8GQsqV9G1y394="
+}

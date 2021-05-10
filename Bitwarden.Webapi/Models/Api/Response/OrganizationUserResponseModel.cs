@@ -9,7 +9,7 @@ namespace Bit.Core.Models.Api
 {
     public class OrganizationUserResponseModel : ResponseModel
     {
-        public OrganizationUserResponseModel(OrganizationUser organizationUser, string obj = "organizationUser")
+        public OrganizationUserResponseModel(OrganizationMembershipProfile organizationUser, string obj = "organizationUser")
             : base(obj)
         {
             if (organizationUser == null)
@@ -17,70 +17,28 @@ namespace Bit.Core.Models.Api
                 throw new ArgumentNullException(nameof(organizationUser));
             }
 
-            Id = organizationUser.Id.ToString();
-            UserId = organizationUser.UserId?.ToString();
+            Id = organizationUser.Id;
+            UserId = organizationUser.UserId;
+            Name = organizationUser.UserName;
             Type = organizationUser.Type;
             Status = organizationUser.Status;
             AccessAll = organizationUser.AccessAll;
-            Permissions = CoreHelpers.LoadClassFromJsonData<Permissions>(organizationUser.Permissions);
+            //Permissions = CoreHelpers.LoadClassFromJsonData<Permissions>(organizationUser.Permissions);
         }
 
-        public OrganizationUserResponseModel(OrganizationUserUserDetails organizationUser, string obj = "organizationUser")
-            : base(obj)
+        public OrganizationUserResponseModel(OrganizationMembershipProfile organizationUser,
+            IEnumerable<CollectionAssigned> collections)
+            : this(organizationUser, "organizationUserDetails")
         {
-            if (organizationUser == null)
-            {
-                throw new ArgumentNullException(nameof(organizationUser));
-            }
-
-            Id = organizationUser.Id.ToString();
-            UserId = organizationUser.UserId?.ToString();
-            Type = organizationUser.Type;
-            Status = organizationUser.Status;
-            AccessAll = organizationUser.AccessAll;
-            Permissions = CoreHelpers.LoadClassFromJsonData<Permissions>(organizationUser.Permissions);
+            Collections = collections.Select(c => new CollectionUserResponseModel(c));
         }
-
-        public string Id { get; set; }
-        public string UserId { get; set; }
+        public Guid Id { get; set; }
+        public Guid UserId { get; set; }
+        public string Name {get;set;}
         public OrganizationUserType Type { get; set; }
         public OrganizationUserStatusType Status { get; set; }
         public bool AccessAll { get; set; }
         public Permissions Permissions { get; set; }
-    }
-
-    public class OrganizationUserDetailsResponseModel : OrganizationUserResponseModel
-    {
-        public OrganizationUserDetailsResponseModel(OrganizationUser organizationUser,
-            IEnumerable<SelectionReadOnly> collections)
-            : base(organizationUser, "organizationUserDetails")
-        {
-            Collections = collections.Select(c => new SelectionReadOnlyResponseModel(c));
-        }
-
-        public IEnumerable<SelectionReadOnlyResponseModel> Collections { get; set; }
-    }
-
-    public class OrganizationUserUserDetailsResponseModel : OrganizationUserResponseModel
-    {
-        public OrganizationUserUserDetailsResponseModel(OrganizationUserUserDetails organizationUser,
-            bool twoFactorEnabled, string obj = "organizationUserUserDetails")
-            : base(organizationUser, obj)
-        {
-            if (organizationUser == null)
-            {
-                throw new ArgumentNullException(nameof(organizationUser));
-            }
-
-            Name = organizationUser.Name;
-            Email = organizationUser.Email;
-            TwoFactorEnabled = twoFactorEnabled;
-            SsoBound = !string.IsNullOrWhiteSpace(organizationUser.SsoExternalId);
-        }
-
-        public string Name { get; set; }
-        public string Email { get; set; }
-        public bool TwoFactorEnabled { get; set; }
-        public bool SsoBound { get; set; }
+        public IEnumerable<CollectionUserResponseModel> Collections { get; set; }
     }
 }

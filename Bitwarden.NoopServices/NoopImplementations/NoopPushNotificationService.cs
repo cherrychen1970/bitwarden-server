@@ -8,12 +8,12 @@ namespace Bit.Core.Services
 {
     public class NoopPushNotificationService : IPushNotificationService
     {
-        public Task PushSyncCipherCreateAsync(Cipher cipher, IEnumerable<Guid> collectionIds)
+        public Task PushSyncCipherCreateAsync(UserCipher cipher)
         {
             return Task.FromResult(0);
         }
 
-        public Task PushSyncCipherDeleteAsync(Cipher cipher)
+        public Task PushSyncCipherDeleteAsync(UserCipher cipher)
         {
             return Task.FromResult(0);
         }
@@ -23,7 +23,7 @@ namespace Bit.Core.Services
             return Task.FromResult(0);
         }
 
-        public Task PushSyncCipherUpdateAsync(Cipher cipher, IEnumerable<Guid> collectionIds)
+        public Task PushSyncCipherUpdateAsync(UserCipher cipher)
         {
             return Task.FromResult(0);
         }

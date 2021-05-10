@@ -8,9 +8,12 @@ namespace Bit.Core.Services
 {
     public interface IPushNotificationService
     {
-        Task PushSyncCipherCreateAsync(Cipher cipher, IEnumerable<Guid> collectionIds);
-        Task PushSyncCipherUpdateAsync(Cipher cipher, IEnumerable<Guid> collectionIds);
-        Task PushSyncCipherDeleteAsync(Cipher cipher);
+        Task PushSyncCipherCreateAsync(UserCipher cipher);
+        Task PushSyncCipherUpdateAsync(UserCipher cipher);
+        Task PushSyncCipherDeleteAsync(UserCipher cipher);
+        //Task PushSyncCipherCreateAsync(OrganizationCipher cipher);
+        //Task PushSyncCipherUpdateAsync(OrganizationCipher cipher);
+        //Task PushSyncCipherDeleteAsync(OrganizationCipher cipher);
         Task PushSyncFolderCreateAsync(Folder folder);
         Task PushSyncFolderUpdateAsync(Folder folder);
         Task PushSyncFolderDeleteAsync(Folder folder);

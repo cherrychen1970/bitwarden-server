@@ -19,7 +19,7 @@ namespace Bit.Core.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.Cipher", b =>
+            modelBuilder.Entity("Bit.Core.Entities.Cipher", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -27,6 +27,9 @@ namespace Bit.Core.Migrations
 
                     b.Property<string>("Attachments")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("CollectionId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("datetime2");
@@ -37,11 +40,11 @@ namespace Bit.Core.Migrations
                     b.Property<DateTime?>("DeletedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Favorites")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<bool>("Favorite")
+                        .HasColumnType("bit");
 
-                    b.Property<string>("Folders")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<Guid?>("FolderId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
@@ -57,6 +60,8 @@ namespace Bit.Core.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CollectionId");
+
                     b.HasIndex("OrganizationId");
 
                     b.HasIndex("UserId");
@@ -64,7 +69,7 @@ namespace Bit.Core.Migrations
                     b.ToTable("Cipher");
                 });
 
-            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.Collection", b =>
+            modelBuilder.Entity("Bit.Core.Entities.Collection", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -92,7 +97,7 @@ namespace Bit.Core.Migrations
                     b.ToTable("Collection");
                 });
 
-            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.CollectionCipher", b =>
+            modelBuilder.Entity("Bit.Core.Entities.CollectionCipher", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -102,9 +107,6 @@ namespace Bit.Core.Migrations
                     b.Property<Guid>("CipherId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CipherId1")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("CollectionId")
                         .HasColumnType("uniqueidentifier");
 
@@ -112,14 +114,12 @@ namespace Bit.Core.Migrations
 
                     b.HasIndex("CipherId");
 
-                    b.HasIndex("CipherId1");
-
                     b.HasIndex("CollectionId");
 
                     b.ToTable("CollectionCipher");
                 });
 
-            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.CollectionUser", b =>
+            modelBuilder.Entity("Bit.Core.Entities.CollectionUser", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -147,34 +147,13 @@ namespace Bit.Core.Migrations
                     b.ToTable("CollectionUser");
                 });
 
-            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.Organization", b =>
+            modelBuilder.Entity("Bit.Core.Entities.Organization", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ApiKey")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BillingEmail")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BusinessAddress1")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BusinessAddress2")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BusinessAddress3")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BusinessCountry")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BusinessName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BusinessTaxNumber")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreationDate")
@@ -186,87 +165,21 @@ namespace Bit.Core.Migrations
                     b.Property<DateTime?>("ExpirationDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<byte?>("Gateway")
-                        .HasColumnType("tinyint");
-
-                    b.Property<string>("GatewayCustomerId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("GatewaySubscriptionId")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Identifier")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LicenseKey")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<short?>("MaxCollections")
-                        .HasColumnType("smallint");
-
-                    b.Property<short?>("MaxStorageGb")
-                        .HasColumnType("smallint");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Plan")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte>("PlanType")
-                        .HasColumnType("tinyint");
-
-                    b.Property<string>("ReferenceData")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("RevisionDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<short?>("Seats")
-                        .HasColumnType("smallint");
-
-                    b.Property<bool>("SelfHost")
-                        .HasColumnType("bit");
-
-                    b.Property<long?>("Storage")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("TwoFactorProviders")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Use2fa")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("UseApi")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("UseDirectory")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("UseEvents")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("UseGroups")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("UsePolicies")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("UseSso")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("UseTotp")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("UsersGetPremium")
-                        .HasColumnType("bit");
 
                     b.HasKey("Id");
 
                     b.ToTable("Organization");
                 });
 
-            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.OrganizationUser", b =>
+            modelBuilder.Entity("Bit.Core.Entities.OrganizationUser", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -314,7 +227,7 @@ namespace Bit.Core.Migrations
                     b.ToTable("OrganizationUser");
                 });
 
-            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.User", b =>
+            modelBuilder.Entity("Bit.Core.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -484,69 +397,69 @@ namespace Bit.Core.Migrations
                     b.ToTable("Grant");
                 });
 
-            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.Cipher", b =>
+            modelBuilder.Entity("Bit.Core.Entities.Cipher", b =>
                 {
-                    b.HasOne("Bit.Infrastructure.EntityFramework.Models.Organization", "Organization")
+                    b.HasOne("Bit.Core.Entities.Collection", "Collection")
+                        .WithMany()
+                        .HasForeignKey("CollectionId");
+
+                    b.HasOne("Bit.Core.Entities.Organization", "Organization")
                         .WithMany("Ciphers")
                         .HasForeignKey("OrganizationId");
 
-                    b.HasOne("Bit.Infrastructure.EntityFramework.Models.User", "User")
+                    b.HasOne("Bit.Core.Entities.User", "User")
                         .WithMany("Ciphers")
                         .HasForeignKey("UserId");
                 });
 
-            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.Collection", b =>
+            modelBuilder.Entity("Bit.Core.Entities.Collection", b =>
                 {
-                    b.HasOne("Bit.Infrastructure.EntityFramework.Models.Organization", "Organization")
+                    b.HasOne("Bit.Core.Entities.Organization", "Organization")
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.CollectionCipher", b =>
+            modelBuilder.Entity("Bit.Core.Entities.CollectionCipher", b =>
                 {
-                    b.HasOne("Bit.Infrastructure.EntityFramework.Models.Cipher", "Cipher")
+                    b.HasOne("Bit.Core.Entities.Cipher", "Cipher")
                         .WithMany()
                         .HasForeignKey("CipherId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
-                    b.HasOne("Bit.Infrastructure.EntityFramework.Models.Cipher", null)
-                        .WithMany("CollectionCiphers")
-                        .HasForeignKey("CipherId1");
-
-                    b.HasOne("Bit.Infrastructure.EntityFramework.Models.Collection", "Collection")
+                    b.HasOne("Bit.Core.Entities.Collection", "Collection")
                         .WithMany()
                         .HasForeignKey("CollectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.CollectionUser", b =>
+            modelBuilder.Entity("Bit.Core.Entities.CollectionUser", b =>
                 {
-                    b.HasOne("Bit.Infrastructure.EntityFramework.Models.Collection", "Collection")
+                    b.HasOne("Bit.Core.Entities.Collection", "Collection")
                         .WithMany()
                         .HasForeignKey("CollectionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Bit.Infrastructure.EntityFramework.Models.OrganizationUser", "OrganizationUser")
+                    b.HasOne("Bit.Core.Entities.OrganizationUser", "OrganizationUser")
                         .WithMany()
                         .HasForeignKey("OrganizationUserId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Bit.Infrastructure.EntityFramework.Models.OrganizationUser", b =>
+            modelBuilder.Entity("Bit.Core.Entities.OrganizationUser", b =>
                 {
-                    b.HasOne("Bit.Infrastructure.EntityFramework.Models.Organization", "Organization")
+                    b.HasOne("Bit.Core.Entities.Organization", "Organization")
                         .WithMany()
                         .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Bit.Infrastructure.EntityFramework.Models.User", "User")
+                    b.HasOne("Bit.Core.Entities.User", "User")
                         .WithMany()
                         .HasForeignKey("UserId");
                 });

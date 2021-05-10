@@ -8,7 +8,6 @@ using Newtonsoft.Json;
 using AutoMapper;
 using AutoMapper.QueryableExtensions;
 
-using DomainModel = Bit.Core.Models;
 using Bit.Core.Repositories;
 using Bit.Core.Models;
 using Bit.Core.Enums;
@@ -20,15 +19,15 @@ using EFModel = Bit.Core.Entities;
 
 namespace Bit.Infrastructure.EntityFramework
 {
-    public class OrganizationCipherRepository : Repository<DomainModel.Cipher, EFModel.Cipher, Guid>, IOrganizationCipherRepository
+    public class OrganizationCipherRepository : Repository<OrganizationCipher, EFModel.Cipher, Guid>, IOrganizationCipherRepository
     {
         public OrganizationCipherRepository(IMapper mapper, DatabaseContext context)
             : base(context, mapper)
         { }
 
-        public async Task<DomainModel.Cipher> GetByIdAsync(Guid id, OrganizationMembership membership)
+        public async Task<OrganizationCipher> GetByIdAsync(Guid id, OrganizationMembership membership)
         {
-            return await Filter(membership).OfKey(id).ProjectTo<DomainModel.Cipher>(MapperProvider).SingleOrDefaultAsync();            
+            return await Filter(membership).OfKey(id).ProjectTo<OrganizationCipher>(MapperProvider).SingleOrDefaultAsync();            
         }
 
         public async Task<EFModel.Cipher> GetEntityAsync(Guid id, OrganizationMembership membership)
@@ -36,23 +35,22 @@ namespace Bit.Infrastructure.EntityFramework
             return await Filter(membership).OfKey(id).SingleOrDefaultAsync();            
         }
 
-        public async Task<ICollection<DomainModel.Cipher>> GetManyAsync(OrganizationMembership membership)
+        public async Task<ICollection<OrganizationCipher>> GetManyAsync(OrganizationMembership membership)
         {
-             return await Filter(membership).ProjectTo<DomainModel.Cipher>(MapperProvider).ToListAsync();            
+             return await Filter(membership).ProjectTo<OrganizationCipher>(MapperProvider).ToListAsync();            
         }
 
-        public async Task<ICollection<DomainModel.Cipher>> GetManyAsync(IEnumerable<OrganizationMembership> memberships)
+        public async Task<ICollection<OrganizationCipher>> GetManyAsync(IEnumerable<OrganizationMembership> memberships)
         {
-            var list = new List<DomainModel.Cipher>();
+            var list = new List<OrganizationCipher>();
             foreach (var membership in memberships)
             {
                 list.AddRange(await GetManyAsync(membership));                
             }
             return list;
         }
-        public async Task CreateAsync(DomainModel.Cipher cipher)
+        public async Task CreateAsync(OrganizationCipher cipher)
         {
-            cipher.SetNewId();
             var entity = Mapper.Map<EFModel.Cipher>(cipher);
             dbSet.Add(entity);
             await SaveChangesAsync();
@@ -89,7 +87,7 @@ namespace Bit.Infrastructure.EntityFramework
             await dbContext.SaveChangesAsync();
         }
 
-        public async Task CreateAsync(IEnumerable<DomainModel.Cipher> ciphers)
+        public async Task CreateAsync(IEnumerable<OrganizationCipher> ciphers)
         {
             if (!ciphers.Any())
                 return;

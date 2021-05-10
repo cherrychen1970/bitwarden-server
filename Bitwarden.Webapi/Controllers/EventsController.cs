@@ -50,24 +50,16 @@ namespace Bit.Api.Controllers
         }
 
         [HttpGet("~/ciphers/{id}/events")]
-        public async Task<ListResponseModel<EventResponseModel>> GetCipher(string id,
+        public async Task<ListResponseModel<EventResponseModel>> GetCipher(Guid id,
             [FromQuery]DateTime? start = null, [FromQuery]DateTime? end = null, [FromQuery]string continuationToken = null)
         {
-            var cipher = await _cipherRepository.GetByIdAsync(new Guid(id));
+            var cipher = await _cipherRepository.GetByIdAsync(id);
             if (cipher == null)
             {
                 throw new NotFoundException();
             }
 
             var canView = false;
-            if (cipher.OrganizationId.HasValue)
-            {
-                canView = _currentContext.AccessEventLogs(cipher.OrganizationId.Value);
-            }
-            else if (cipher.UserId.HasValue)
-            {             
-                canView = userId == cipher.UserId.Value;
-            }
 
             if (!canView)
             {
@@ -103,7 +95,7 @@ namespace Bit.Api.Controllers
             [FromQuery]DateTime? start = null, [FromQuery]DateTime? end = null, [FromQuery]string continuationToken = null)
         {
             var organizationUser = await _organizationUserRepository.GetByIdAsync(new Guid(id));
-            if (organizationUser == null || !organizationUser.UserId.HasValue ||
+            if (organizationUser == null ||
                 !_currentContext.AccessEventLogs(organizationUser.OrganizationId))
             {
                 throw new NotFoundException();
@@ -111,7 +103,7 @@ namespace Bit.Api.Controllers
 
             var dateRange = GetDateRange(start, end);
             var result = await _eventRepository.GetManyByOrganizationActingUserAsync(organizationUser.OrganizationId,
-                organizationUser.UserId.Value, dateRange.Item1, dateRange.Item2,
+                organizationUser.UserId, dateRange.Item1, dateRange.Item2,
                 new PageOptions { ContinuationToken = continuationToken });
             var responses = result.Data.Select(e => new EventResponseModel(e));
             return new ListResponseModel<EventResponseModel>(responses, result.ContinuationToken);

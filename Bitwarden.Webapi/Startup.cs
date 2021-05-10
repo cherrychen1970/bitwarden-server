@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json.Serialization;
+using AutoMapper;
 
 using Bit.Notifications;
 using Bit.Core;
@@ -46,6 +47,7 @@ namespace Bit.Api
             // Repositories
             //services.AddSqlServerRepositories(globalSettings);
             services.AddSqlServerRepositories(globalSettings);
+            services.AddAutoMapper(typeof(Startup));
 
             // Context            
 

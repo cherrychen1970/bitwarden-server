@@ -42,7 +42,7 @@ namespace Bit.Core.Services
             return Task.FromResult(0);
         }
 
-        public Task SendOrganizationInviteEmailAsync(string organizationName, OrganizationUser orgUser, string token)
+        public Task SendOrganizationInviteEmailAsync(string organizationName, OrganizationMembershipProfile orgUser, string token)
         {
             return Task.FromResult(0);
         }

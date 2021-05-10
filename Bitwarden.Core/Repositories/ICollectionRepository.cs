@@ -8,14 +8,13 @@ namespace Bit.Core.Repositories
 {
     public interface ICollectionRepository : IRepository<Collection, Guid>
     {
-        Task<int> GetCountByOrganizationIdAsync(Guid organizationId);
-        Task<Tuple<Collection, ICollection<SelectionReadOnly>>> GetByIdWithGroupsAsync(Guid id);
-        Task<Tuple<Collection, ICollection<SelectionReadOnly>>> GetByIdWithGroupsAsync(Guid id, Guid userId);
-        Task<ICollection<Collection>> GetManyByOrganizationIdAsync(Guid organizationId);
+        Task<ICollection<CollectionAssigned>> GetAssignments(OrganizationMembership membership);
+        Task<ICollection<CollectionAssigned>> GetAssignments(Guid id);
         Task<Collection> GetByIdAsync(Guid id, Guid userId);
-        Task<ICollection<Collection>> GetManyByUserIdAsync(Guid userId);
-        Task DeleteUserAsync(Guid collectionId, Guid organizationUserId);
-        Task UpdateUsersAsync(Guid id, IEnumerable<SelectionReadOnly> users);
-        Task<ICollection<SelectionReadOnly>> GetManyUsersByIdAsync(Guid id);
+        Task<ICollection<Collection>> GetManyAsync(OrganizationMembership membership);
+        Task<ICollection<Collection>> GetManyAsync(IEnumerable<OrganizationMembership> memberships);
+        //Task DeleteUserAsync(CollectionAssigned assigned);
+        Task DeleteUserAsync(Guid id, OrganizationMembership user);
+        Task UpdateUsersAsync(IEnumerable<CollectionAssigned> users);
     }
 }

@@ -20,41 +20,36 @@ namespace Bit.Infrastructure.EntityFramework
             : base(context, mapper)
         { }
 
-        public async Task<int> GetCountByOrganizationIdAsync(Guid organizationId)
-        {
-            return await GetCountAsync(x => x.OrganizationId == organizationId);
-        }
-
         public override async Task CreateAsync(Collection obj)
         {
             var entity = Mapper.Map<EFModel.Collection>(obj);
-            dbContext.Add(entity);            
+            dbContext.Add(entity);
             //return await Task.CompletedTask;
-        }        
-
-        public async Task<Tuple<Collection, ICollection<SelectionReadOnly>>> GetByIdWithGroupsAsync(Guid id)
+        }
+        public async Task<ICollection<CollectionAssigned>> GetAssignments(OrganizationMembership membership)
         {
-            var item = await GetOne<Collection>(x=>x.Id==id);
-            return new Tuple<Collection, ICollection<SelectionReadOnly>>(item,new SelectionReadOnly[]{});            
+            return await dbContext.CollectionUsers
+                .Where(x=>x.OrganizationUser.UserId==membership.UserId)
+                .Where(x=>x.OrganizationUser.OrganizationId==membership.OrganizationId)
+                .ProjectTo<CollectionAssigned>(MapperProvider).ToListAsync();
+        }
+        public async Task<ICollection<CollectionAssigned>> GetAssignments(Guid id)
+        {
+            return await dbContext.CollectionUsers
+                .Where(x=>x.CollectionId==id)
+                .ProjectTo<CollectionAssigned>(MapperProvider).ToListAsync();
         }
 
-        public async Task<Tuple<Collection, ICollection<SelectionReadOnly>>> GetByIdWithGroupsAsync(Guid id, Guid userId)
+        public async Task<ICollection<Collection>> GetManyAsync(OrganizationMembership membership)
         {
-            var query = dbContext.CollectionUsers.Where(x => x.OrganizationUser.UserId == userId && x.CollectionId==id);
-            if (!query.Any()) return null;
-
-            var permission = await query.ProjectTo<CollectionUser>(MapperProvider).SingleAsync();
-            var collection = query.Select(x=>x.Collection).ProjectTo<Collection>(MapperProvider).Single();
-            collection.HidePasswords = permission.HidePasswords;
-            collection.ReadOnly = permission.ReadOnly;            
-            return new Tuple<Collection, ICollection<SelectionReadOnly>>(collection,new SelectionReadOnly[]{});
+            //return await GetMany<Collection>(x=>true);
+            return await GetMany<Collection>(x => x.OrganizationId == membership.OrganizationId);
         }
-
-        public async Task<ICollection<Collection>> GetManyByOrganizationIdAsync(Guid organizationId)
+        public async Task<ICollection<Collection>> GetManyAsync(IEnumerable<OrganizationMembership> memberships)
         {
-            return await GetMany<Collection>(x => x.OrganizationId == organizationId);
+            var orgIds = memberships.Select(x => x.OrganizationId).ToList();
+            return await GetMany<Collection>(x => orgIds.Contains(x.OrganizationId));
         }
-
         public async Task<Collection> GetByIdAsync(Guid id, Guid userId)
         {
             var cu = dbContext.CollectionUsers.SingleOrDefault(x => x.CollectionId == id && x.OrganizationUser.UserId == userId);
@@ -62,7 +57,6 @@ namespace Bit.Infrastructure.EntityFramework
             var item = await GetByIdAsync<Collection>(id);
             item.HidePasswords = cu.HidePasswords;
             item.ReadOnly = cu.ReadOnly;
-
             return item;
         }
 
@@ -81,15 +75,21 @@ namespace Bit.Infrastructure.EntityFramework
             await SaveChangesAsync();
         }
 
-        public async Task DeleteUserAsync(Guid collectionId, Guid organizationUserId)
+        public async Task DeleteUserAsync(Guid collectionId, OrganizationMembership membership)
         {
-            var item = dbContext.CollectionUsers.Single(x => x.CollectionId == collectionId && x.OrganizationUserId == organizationUserId);
+            var item = dbContext.CollectionUsers
+                .Where(x => x.CollectionId == collectionId)
+                .Where(x=>x.OrganizationUser.OrganizationId==membership.OrganizationId)
+                .Where(x=> x.OrganizationUser.UserId == membership.UserId).SingleOrDefault();
             dbContext.CollectionUsers.Remove(item);
             await SaveChangesAsync();
         }
 
-        public async Task UpdateUsersAsync(Guid id, IEnumerable<SelectionReadOnly> users)
+        public async Task UpdateUsersAsync(IEnumerable<CollectionAssigned> users)
         {
+            throw new NotImplementedException();
+            /*
+            var ids = users.Select(x=>x.Id);
             var collectionUsers = dbContext.CollectionUsers.Where(x => x.CollectionId == id).ToList();
             foreach (var user in users)
             {
@@ -103,12 +103,7 @@ namespace Bit.Infrastructure.EntityFramework
                 collectionUser.HidePasswords = user.HidePasswords;
             }
             await dbContext.SaveChangesAsync();
-        }
-
-        public async Task<ICollection<SelectionReadOnly>> GetManyUsersByIdAsync(Guid id)
-        {
-            return await dbContext.CollectionUsers.Where(x => x.CollectionId == id)
-                .ProjectTo<SelectionReadOnly>(MapperProvider).ToArrayAsync();
+            */
         }
     }
 }

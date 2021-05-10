@@ -137,8 +137,9 @@ namespace Bit.Core.Services
 
         public override async Task<IdentityResult> DeleteAsync(User user)
         {
+            /*
             // Check if user is the only owner of any organizations.
-            var onlyOwnerCount = await _organizationUserRepository.GetCountByOnlyOwnerAsync(user.Id);
+            var onlyOwnerCount = await _organizationUserRepository.GetCountAsync(x=>x.UserId==user.Id && x.Type==OrganizationUserType.Owner);
             if (onlyOwnerCount > 0)
             {
                 var deletedOrg = false;
@@ -172,6 +173,8 @@ namespace Bit.Core.Services
                 new ReferenceEvent(ReferenceEventType.DeleteAccount, user));
             await _pushService.PushLogOutAsync(user.Id);
             return IdentityResult.Success;
+            */
+            throw new NotImplementedException();
         }
 
         public async Task<IdentityResult> DeleteAsync(User user, string token)
@@ -553,7 +556,7 @@ namespace Bit.Core.Services
             {
                 if (orgUser.Status == OrganizationUserStatusType.Invited)
                 {
-                    await _organizationService.AcceptUserAsync(orgUser.OrganizationId, user, this);
+                    await _organizationService.AcceptUserAsync(orgUser);
                 }               
             }            
             return IdentityResult.Success;
@@ -588,7 +591,7 @@ namespace Bit.Core.Services
         }
 
         public async Task<IdentityResult> UpdateKeyAsync(User user, string masterPassword, string key, string privateKey,
-            IEnumerable<Cipher> ciphers, IEnumerable<Folder> folders)
+            IEnumerable<UserCipher> ciphers, IEnumerable<Folder> folders)
         {
             if (user == null)
             {
@@ -755,7 +758,7 @@ namespace Bit.Core.Services
             {
                 return true;
             }
-            var orgs = await _organizationUserRepository.GetManyByUserAsync<OrganizationMembership>(userId.Value,true);            
+            var orgs = await _organizationUserRepository.GetMemberships(userId.Value);            
             if (!orgs.Any())
             {
                 return false;
@@ -884,24 +887,7 @@ namespace Bit.Core.Services
 
         private async Task CheckPoliciesOnTwoFactorRemovalAsync(User user, IOrganizationService organizationService)
         {
-            var policies = await _policyRepository.GetManyByUserIdAsync(user.Id);
-            var twoFactorPolicies = policies.Where(p => p.Type == PolicyType.TwoFactorAuthentication && p.Enabled);
-            if (twoFactorPolicies.Any())
-            {
-                var userOrgs = await _organizationUserRepository.GetManyByUserAsync(user.Id);
-                var ownerOrgs = userOrgs.Where(o => o.Type == OrganizationUserType.Owner)
-                    .Select(o => o.OrganizationId).ToHashSet();
-                foreach (var policy in twoFactorPolicies)
-                {
-                    if (!ownerOrgs.Contains(policy.OrganizationId))
-                    {
-                        await organizationService.DeleteUserAsync(policy.OrganizationId, user.Id);
-                        var organization = await _organizationRepository.GetByIdAsync(policy.OrganizationId);
-                        await _mailService.SendOrganizationUserRemovedForPolicyTwoStepEmailAsync(
-                            organization.Name, user.Email);
-                    }
-                }
-            }
+            throw new NotImplementedException();
         }
 
         public override async Task<IdentityResult> ConfirmEmailAsync(User user, string token)

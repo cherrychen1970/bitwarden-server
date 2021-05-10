@@ -8,6 +8,20 @@ namespace Bit.Core.Models.Api
 {
     public class CipherResponseModel : ResponseModel
     {
+        public CipherResponseModel(UserCipher cipher, string obj = "cipher")
+            : this((Cipher)cipher, obj)
+        {
+            FolderId = cipher.FolderId;
+        }
+        public CipherResponseModel(OrganizationCipher cipher, string obj = "cipher")
+            : this((Cipher)cipher, obj)
+        {
+            OrganizationId = cipher.OrganizationId;
+            Edit = cipher.Edit;
+            ViewPassword = cipher.ViewPassword;
+            if (cipher.CollectionId.HasValue)
+                CollectionIds = new Guid[] { cipher.CollectionId.Value };
+        }
         public CipherResponseModel(Cipher cipher, string obj = "cipher")
             : base(obj)
         {
@@ -28,17 +42,13 @@ namespace Bit.Core.Models.Api
             Fields = cipherData.Fields?.Select(f => new CipherFieldModel(f));
             PasswordHistory = cipherData.PasswordHistory?.Select(ph => new CipherPasswordHistoryModel(ph));
             RevisionDate = cipher.RevisionDate;
-            OrganizationId = cipher.OrganizationId?.ToString();            
             DeletedDate = cipher.DeletedDate;
-
-            FolderId = cipher.FolderId?.ToString();
             Favorite = cipher.Favorite;
-            Edit = cipher.Edit;
-            ViewPassword = cipher.ViewPassword;
+
         }
 
         public string Id { get; set; }
-        public string OrganizationId { get; set; }
+        public Guid OrganizationId { get; set; }
         public Enums.CipherType Type { get; set; }
         //public dynamic Data { get; set; }
         public string Name { get; set; }
@@ -46,28 +56,25 @@ namespace Bit.Core.Models.Api
         public CipherLoginModel Login { get; set; }
         public IEnumerable<CipherFieldModel> Fields { get; set; }
         public IEnumerable<CipherPasswordHistoryModel> PasswordHistory { get; set; }
-        public IEnumerable<AttachmentResponseModel> Attachments { get; set; }
         public DateTime RevisionDate { get; set; }
         public DateTime? DeletedDate { get; set; }
 
-        public string FolderId { get; set; }
+        public Guid? FolderId { get; set; }
         public bool Favorite { get; set; }
         public bool Edit { get; set; }
         public bool ViewPassword { get; set; }
-
+public IEnumerable<Guid> CollectionIds { get; set; }
         public CipherLoginData ToCipherLoginData(string data)
             => JsonConvert.DeserializeObject<CipherLoginData>(data);
     }
 
     public class CipherDetailsResponseModel : CipherResponseModel
     {
-        public CipherDetailsResponseModel(Cipher cipher, string obj = "cipherDetails")
-            : base(cipher,obj)
-        {
-            if (cipher.CollectionId.HasValue)
-                CollectionIds = new Guid[] { cipher.CollectionId.Value };
-        }
-
-        public IEnumerable<Guid> CollectionIds { get; set; }
+        public CipherDetailsResponseModel(UserCipher cipher, string obj = "cipherDetails")
+            : base(cipher, obj)
+        {}
+        public CipherDetailsResponseModel(OrganizationCipher cipher, string obj = "cipherDetails")
+            : base(cipher, obj)
+        {}
     }
 }

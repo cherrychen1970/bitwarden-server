@@ -292,7 +292,7 @@ namespace Bit.Api.Controllers
 
             var existingCiphers = await _cipherRepository.GetManyAsync(user.Id);
             var ciphersDict = model.Ciphers?.ToDictionary(c => c.Id.Value);
-            var ciphers = new List<Cipher>();
+            var ciphers = new List<UserCipher>();
             if (existingCiphers.Any() && ciphersDict != null)
             {
                 foreach (var cipher in existingCiphers.Where(c => ciphersDict.ContainsKey(c.Id)))
@@ -367,9 +367,8 @@ namespace Bit.Api.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var organizationUserDetails = await _organizationUserRepository.GetManyDetailsByUserAsync(user.Id,
-                OrganizationUserStatusType.Confirmed);
-            var response = new ProfileResponseModel(user, organizationUserDetails,
+            var organizationMembershipProfiles = await _organizationUserRepository.GetManyAsync(_currentContext.OrganizationMemberships);
+            var response = new ProfileResponseModel(user, organizationMembershipProfiles,
                 await _userService.TwoFactorIsEnabledAsync(user));
             return response;
         }
@@ -377,10 +376,13 @@ namespace Bit.Api.Controllers
         [HttpGet("organizations")]
         public async Task<ListResponseModel<ProfileOrganizationResponseModel>> GetOrganizations()
         {
+            throw new NotImplementedException();
+            /*
             var organizationUserDetails = await _organizationUserRepository.GetManyDetailsByUserAsync(_currentContext.UserId,
                 OrganizationUserStatusType.Confirmed);
             var responseData = organizationUserDetails.Select(o => new ProfileOrganizationResponseModel(o));
             return new ListResponseModel<ProfileOrganizationResponseModel>(responseData);
+            */
         }
 
         [HttpPut("profile")]
@@ -514,20 +516,6 @@ namespace Bit.Api.Controllers
             return token;
         }
 
-        [HttpDelete("sso/{organizationId}")]
-        public async Task DeleteSsoUser(string organizationId)
-        {
-            await _organizationService.DeleteSsoUserAsync(_currentContext.UserId, new Guid(organizationId));
-        }
-
-        [HttpGet("sso/user-identifier")]
-        public async Task<string> GetSsoUserIdentifier()
-        {
-            var user = await _userService.GetUserByIdAsync(_currentContext.UserId);
-            var token = await _userService.GenerateSignInTokenAsync(user, TokenPurposes.LinkSso);
-            var userIdentifier = $"{user.Id},{token}";
-            return userIdentifier;
-        }
 
         [HttpPost("api-key")]
         public async Task<ApiKeyResponseModel> ApiKey([FromBody] ApiKeyRequestModel model)

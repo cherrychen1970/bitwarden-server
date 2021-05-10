@@ -37,7 +37,6 @@ namespace Bit.Core
             services.AddSingleton<IMetaDataRepository, NoopRepos.MetaDataRepository>();
             services.AddSingleton<IFolderRepository, NoopRepos.FolderRepository>();
             services.AddSingleton<IU2fRepository, NoopRepos.U2fRepository>();
-            services.AddSingleton<IGroupRepository, NoopRepos.GroupRepository>();
             services.AddSingleton<IInstallationRepository, NoopRepos.InstallationRepository>();
             services.AddSingleton<ISsoConfigRepository, NoopRepos.SsoConfigRepository>();
             services.AddSingleton<ISsoUserRepository, NoopRepos.SsoUserRepository>();

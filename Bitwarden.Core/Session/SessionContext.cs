@@ -15,8 +15,8 @@ namespace Bit.Core
         Guid? InstallationId { get; set; }
         //Guid? OrganizationId { get; set; }
         List<OrganizationMembership> OrganizationMemberships { get; set; }
-        OrganizationMembership GetMembership(Guid organizationId) 
-            => OrganizationMemberships.SingleOrDefault(x=>x.OrganizationId==organizationId);
+        OrganizationMembership GetMembership(Guid organizationId)
+            => OrganizationMemberships.SingleOrDefault(x => x.OrganizationId == organizationId);
 
         bool HasOrganizations();
         bool ManageAllCollections(Guid orgId);
@@ -41,6 +41,7 @@ namespace Bit.Core
     {
         public SessionContext(IHttpContextAccessor httpContextAccessor, GlobalSettings settings)
         {
+            /*
             if (httpContextAccessor.HttpContext == null)
             {
                 Serilog.Log.Warning("sessionContext creation failed");
@@ -54,6 +55,13 @@ namespace Bit.Core
             }
             if (!httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
                 throw new Exception("SessionContext can't get called before authentication. clean up wrong dependency");
+            */
+            if (httpContextAccessor.HttpContext == null)
+                return;
+            if (httpContextAccessor.HttpContext.User == null)
+                return;
+            if (!httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+                return;
 
             Build(httpContextAccessor.HttpContext, settings);
         }
@@ -104,7 +112,7 @@ namespace Bit.Core
             var clientId = GetClaimValue(claims, "client_id");
             var clientSubject = GetClaimValue(claims, "client_sub");
             var orgApi = false;
-            Guid? OrganizationId=null;
+            Guid? OrganizationId = null;
             if (clientSubject != null)
             {
                 if (clientId?.StartsWith("installation.") ?? false)
@@ -129,26 +137,26 @@ namespace Bit.Core
             OrganizationMemberships = new List<OrganizationMembership>();
             if (claims.ContainsKey("orgowner"))
             {
-                OrganizationMemberships.AddRange(claims["orgowner"].Select(c =>new OrganizationMembership(new Guid(c),UserId,OrganizationUserType.Owner)));
+                OrganizationMemberships.AddRange(claims["orgowner"].Select(c => new OrganizationMembership(new Guid(c), UserId, OrganizationUserType.Owner)));
             }
             else if (orgApi && OrganizationId.HasValue)
             {
-                OrganizationMemberships.AddRange(claims["orgowner"].Select(c =>new OrganizationMembership(new Guid(c),UserId,OrganizationUserType.Owner)));
+                OrganizationMemberships.AddRange(claims["orgowner"].Select(c => new OrganizationMembership(new Guid(c), UserId, OrganizationUserType.Owner)));
             }
 
             if (claims.ContainsKey("orgadmin"))
             {
-                OrganizationMemberships.AddRange(claims["orgadmin"].Select(c =>new OrganizationMembership(new Guid(c),UserId,OrganizationUserType.Admin)));
+                OrganizationMemberships.AddRange(claims["orgadmin"].Select(c => new OrganizationMembership(new Guid(c), UserId, OrganizationUserType.Admin)));
             }
 
             if (claims.ContainsKey("orguser"))
             {
-                OrganizationMemberships.AddRange(claims["orguser"].Select(c =>new OrganizationMembership(new Guid(c),UserId,OrganizationUserType.User)));
+                OrganizationMemberships.AddRange(claims["orguser"].Select(c => new OrganizationMembership(new Guid(c), UserId, OrganizationUserType.User)));
             }
 
             if (claims.ContainsKey("orgmanager"))
             {
-                OrganizationMemberships.AddRange(claims["orgmanager"].Select(c =>new OrganizationMembership(new Guid(c),UserId,OrganizationUserType.Manager)));
+                OrganizationMemberships.AddRange(claims["orgmanager"].Select(c => new OrganizationMembership(new Guid(c), UserId, OrganizationUserType.Manager)));
             }
         }
 
@@ -192,7 +200,7 @@ namespace Bit.Core
 
         public bool AccessImportExport(Guid orgId)
         {
-            return HasOrganizationAdminAccess(orgId) ;
+            return HasOrganizationAdminAccess(orgId);
         }
 
         public bool AccessReports(Guid orgId)
@@ -207,7 +215,7 @@ namespace Bit.Core
 
         public bool ManageAssignedCollections(Guid orgId)
         {
-            return CanManageOrganization(orgId) ;
+            return CanManageOrganization(orgId);
         }
 
         public bool ManageGroups(Guid orgId)
@@ -217,7 +225,7 @@ namespace Bit.Core
 
         public bool ManagePolicies(Guid orgId)
         {
-            return HasOrganizationAdminAccess(orgId) ;
+            return HasOrganizationAdminAccess(orgId);
         }
 
         public bool ManageSso(Guid orgId)
@@ -227,7 +235,7 @@ namespace Bit.Core
 
         public bool ManageUsers(Guid orgId)
         {
-            return HasOrganizationAdminAccess(orgId) ;
+            return HasOrganizationAdminAccess(orgId);
         }
 
         private string GetClaimValue(Dictionary<string, IEnumerable<string>> claims, string type)

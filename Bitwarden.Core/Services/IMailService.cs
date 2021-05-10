@@ -15,7 +15,7 @@ namespace Bit.Core.Services
         Task SendTwoFactorEmailAsync(string email, string token);
         Task SendNoMasterPasswordHintEmailAsync(string email);
         Task SendMasterPasswordHintEmailAsync(string email, string hint);
-        Task SendOrganizationInviteEmailAsync(string organizationName, OrganizationUser orgUser, string token);
+        Task SendOrganizationInviteEmailAsync(string organizationName, OrganizationMembershipProfile orgUser, string token);
         Task SendOrganizationAcceptedEmailAsync(string organizationName, string userEmail,
             IEnumerable<string> adminEmails);
         Task SendOrganizationConfirmedEmailAsync(string organizationName, string email);

@@ -5,14 +5,14 @@ using Bit.Core.Models;
 
 namespace Bit.Core.Repositories
 {
-    public interface IOrganizationCipherRepository : IRepository<Cipher, Guid>
+    public interface IOrganizationCipherRepository : IRepository<OrganizationCipher, Guid>
     {        
         //Task SetOrganizationFilter(Guid organizationId);
-        Task<Cipher> GetByIdAsync(Guid id, OrganizationMembership membership);
+        Task<OrganizationCipher> GetByIdAsync(Guid id, OrganizationMembership membership);
         Task<Entities.Cipher> GetEntityAsync(Guid id, OrganizationMembership membership);
-        Task<ICollection<Cipher>> GetManyAsync(OrganizationMembership membership);
-        Task<ICollection<Cipher>> GetManyAsync(IEnumerable<OrganizationMembership> memberships);             
-        Task CreateAsync(IEnumerable<Cipher> ciphers);        
+        Task<ICollection<OrganizationCipher>> GetManyAsync(OrganizationMembership membership);
+        Task<ICollection<OrganizationCipher>> GetManyAsync(IEnumerable<OrganizationMembership> memberships);             
+        Task CreateAsync(IEnumerable<OrganizationCipher> OrganizationCiphers);        
         Task DeleteManyAsync(IEnumerable<Guid> ids,OrganizationMembership membership);
         Task PurgeAsync(OrganizationMembership membership);
         Task DeleteAsync(Guid id,OrganizationMembership membership);        

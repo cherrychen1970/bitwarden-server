@@ -133,7 +133,7 @@ namespace Bit.Core.IdentityServer
                             new ClientClaim(JwtClaimTypes.AuthenticationMethod, "Application", "external")
                         }; 
                         //var orgs = await _currentContext.OrganizationMembershipAsync(_organizationUserRepository, user.Id);
-                        var orgs = await _organizationUserRepository.GetManyByUserAsync<OrganizationMembership>(user.Id,true);
+                        var orgs = await _organizationUserRepository.GetMemberships(user.Id);
                         
                         foreach (var claim in IdentityHelper.BuildIdentityClaims(user, orgs, isPremium:false))
                         {

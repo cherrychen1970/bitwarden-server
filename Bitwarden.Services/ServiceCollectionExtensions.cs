@@ -55,7 +55,6 @@ namespace Bit.Core
             services.AddScoped<IPushRegistrationService, NoopPushRegistrationService>();
             services.AddScoped<IAttachmentStorageService, NoopAttachmentStorageService>();            
             services.AddScoped<IEventWriteService, NoopEventWriteService>();
-            services.AddScoped<IGroupService, NoopGroupService>();
             services.AddScoped<IEmergencyAccessService, NoopEmergencyAccessService>();
             services.AddScoped<IPolicyService, NoopPolicyService>();            
         }          

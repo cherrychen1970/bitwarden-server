@@ -13,7 +13,7 @@ namespace Bit.Core.Models.Api
 {
     public class CipherRequestModel
     {
-        public CipherType Type { get; set; }        
+        public CipherType Type { get; set; }
         public Guid? OrganizationId { get; set; }
         public Guid? FolderId { get; set; }
         public bool Favorite { get; set; }
@@ -29,29 +29,39 @@ namespace Bit.Core.Models.Api
         public CipherLoginModel Login { get; set; }
         public DateTime? LastKnownRevisionDate { get; set; } = null;
 
-        public Cipher ToCipherDetails(Guid? userId=null)
-        {            
-            var cipher = new Cipher
+        public OrganizationCipher ToOrganizationCipher()
+        {
+            var cipher = new OrganizationCipher
             {
                 Type = Type,
-                UserId = userId,
-                OrganizationId = OrganizationId,
+                OrganizationId = OrganizationId.Value,
                 Edit = true,
                 ViewPassword = true,
             };
-            ToCipher(cipher);
-            return cipher;
+            return (OrganizationCipher)ToCipher((Cipher)cipher);
         }
-
-        public Cipher ToCipher(Cipher existingCipher)
+        public UserCipher ToCipher(Guid userId)
+        {
+            var cipher = new UserCipher
+            {
+                UserId = userId,
+                Type = Type,
+            };
+            return (UserCipher)ToCipher((Cipher)cipher);
+        }
+        public UserCipher ToCipher(UserCipher existingCipher)
         {
             existingCipher.FolderId = FolderId;
+            return (UserCipher)ToCipher((Cipher)existingCipher);
+        }
+        public Cipher ToCipher(Cipher existingCipher)
+        {
             existingCipher.Favorite = Favorite;
 
             switch (existingCipher.Type)
             {
                 case CipherType.Login:
-                    existingCipher.Data= this.Login.ToCipherLoginData(Name);
+                    existingCipher.Data = this.Login.ToCipherLoginData(Name);
                     break;
                 default:
                     throw new ArgumentException("Unsupported type: " + nameof(Type) + ".");

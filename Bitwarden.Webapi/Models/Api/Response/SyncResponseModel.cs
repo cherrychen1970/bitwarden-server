@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Bit.Core.Models.Data;
 using Bit.Core.Models;
-using Bit.Core.Models.Data;
 
 namespace Bit.Core.Models.Api
 {
@@ -13,19 +12,23 @@ namespace Bit.Core.Models.Api
             GlobalSettings globalSettings,
             User user,
             bool userTwoFactorEnabled,
-            IEnumerable<OrganizationUserOrganizationDetails> organizationUserDetails,
+            IEnumerable<OrganizationMembershipProfile> organizationUsers,
             IEnumerable<Folder> folders,
             IEnumerable<Collection> collections,
-            IEnumerable<Cipher> ciphers,
+            IEnumerable<UserCipher> ciphers,
+            IEnumerable<OrganizationCipher> orgCiphers,
             IDictionary<Guid, IGrouping<Guid, CollectionCipher>> collectionCiphersDict,
             bool excludeDomains,
             IEnumerable<Policy> policies,
             IEnumerable<Send> sends)
             : base("sync")
         {
-            Profile = new ProfileResponseModel(user, organizationUserDetails, userTwoFactorEnabled);
+            Profile = new ProfileResponseModel(user, organizationUsers, userTwoFactorEnabled);
             Folders = folders.Select(f => new FolderResponseModel(f));
-            Ciphers = ciphers.Select(c => new CipherDetailsResponseModel(c));
+            var list = new List<CipherDetailsResponseModel>();
+            list.AddRange(ciphers.Select(c => new CipherDetailsResponseModel(c)));
+            list.AddRange(orgCiphers.Select(c => new CipherDetailsResponseModel(c)));
+            Ciphers = list.ToArray();
             Collections = collections?.Select(
                 c => new CollectionDetailsResponseModel(c)) ?? new List<CollectionDetailsResponseModel>();
             Domains = excludeDomains ? null : new DomainsResponseModel(user, false);

@@ -22,11 +22,10 @@ namespace Bit.Api.Controllers
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IOrganizationService _organizationService;
         private readonly ICollectionRepository _collectionRepository;
-        private readonly IGroupRepository _groupRepository;
         private readonly IUserService _userService;
         private readonly ISessionContext _currentContext;
         private readonly IMapper _mapper;
-        private IConfigurationProvider _mapperProvider=>_mapper.ConfigurationProvider;
+        private IConfigurationProvider _mapperProvider => _mapper.ConfigurationProvider;
 
         public OrganizationUsersController(
             IMapper mapper,
@@ -34,7 +33,6 @@ namespace Bit.Api.Controllers
             IOrganizationUserRepository organizationUserRepository,
             IOrganizationService organizationService,
             ICollectionRepository collectionRepository,
-            IGroupRepository groupRepository,
             IUserService userService,
             ISessionContext currentContext)
         {
@@ -42,152 +40,125 @@ namespace Bit.Api.Controllers
             _organizationUserRepository = organizationUserRepository;
             _organizationService = organizationService;
             _collectionRepository = collectionRepository;
-            _groupRepository = groupRepository;
             _userService = userService;
             _currentContext = currentContext;
             _mapper = mapper;
         }
 
         [HttpGet("{id}")]
-        public async Task<OrganizationUserDetailsResponseModel> Get(string orgId, string id)
+        public async Task<OrganizationUserResponseModel> Get(Guid orgId, Guid id)
         {
-            var organizationUser = await _organizationUserRepository.GetByIdWithCollectionsAsync(new Guid(id));
-            if (organizationUser == null || !_currentContext.ManageUsers(organizationUser.Item1.OrganizationId))
+            var organizationUser = await _organizationUserRepository.GetByIdAsync(id);
+            if (organizationUser == null || !_currentContext.ManageUsers(organizationUser.OrganizationId))
             {
                 throw new NotFoundException();
             }
+            var collections = await _collectionRepository.GetAssignments(_currentContext.GetMembership(orgId));
 
-            return new OrganizationUserDetailsResponseModel(organizationUser.Item1, organizationUser.Item2);
+            return new OrganizationUserResponseModel(organizationUser, collections);
         }
 
         [HttpGet("")]
-        public async Task<ListResponseModel<OrganizationUserUserDetailsResponseModel>> Get(string orgId)
+        public async Task<ListResponseModel<OrganizationUserResponseModel>> GetUsers(Guid orgId)
         {
-            var orgGuidId = new Guid(orgId);
-            var ou = await _organizationUserRepository.GetByOrganizationAsync(orgGuidId,_currentContext.UserId);
-            //if (!_currentContext.ManageAssignedCollections(orgGuidId) && !_currentContext.ManageGroups(orgGuidId))
-            if (ou.Type!=Core.Enums.OrganizationUserType.Admin && ou.Type!=Core.Enums.OrganizationUserType.Owner)
-            {
-                throw new Exception(ou.Type.ToString());
-            }
+            if (!_currentContext.ManageUsers(orgId))
+                throw new UnauthorizedAccessException();
 
-            var organizationUsers = await _organizationUserRepository.GetManyDetailsByOrganizationAsync(orgGuidId);
-            var responseTasks = organizationUsers.Select(async o => new OrganizationUserUserDetailsResponseModel(o,
-                await _userService.TwoFactorIsEnabledAsync(o)));
-            var responses = await Task.WhenAll(responseTasks);
-            return new ListResponseModel<OrganizationUserUserDetailsResponseModel>(responses);
-        }
-
-        [HttpGet("{id}/groups")]
-        public async Task<IEnumerable<string>> GetGroups(string orgId, string id)
-        {
-            var organizationUser = await _organizationUserRepository.GetByIdAsync(new Guid(id));
-            if (organizationUser == null || !_currentContext.ManageGroups(organizationUser.OrganizationId))
-            {
-                throw new NotFoundException();
-            }
-
-            var groupIds = await _groupRepository.GetManyIdsByUserIdAsync(organizationUser.Id);
-            var responses = groupIds.Select(g => g.ToString());
-            return responses;
+            var organizationUsers = await _organizationUserRepository.GetManyByOrganizationAsync(orgId);
+            var responses = organizationUsers.Select(o => new OrganizationUserResponseModel(o));
+            return new ListResponseModel<OrganizationUserResponseModel>(responses);
         }
 
         [HttpPost("invite")]
-        public async Task Invite(string orgId, [FromBody]OrganizationUserInviteRequestModel model)
+        public async Task Invite(Guid orgId, [FromBody] OrganizationUserInviteRequestModel model)
         {
-            var orgGuidId = new Guid(orgId);
-            if (!_currentContext.ManageUsers(orgGuidId))
+            if (!_currentContext.ManageUsers(orgId))
             {
                 throw new NotFoundException();
             }
 
             // TODO : cherry test this mapping
             var invite = _mapper.Map<OrganizationUserInvite>(model);
-           
-            var result = await _organizationService.InviteUserAsync(orgGuidId, _currentContext.UserId, null, invite);
+            var result = await _organizationService.InviteUserAsync(orgId, invite);
         }
 
         [HttpPost("{id}/reinvite")]
         public async Task Reinvite(Guid orgId, Guid id)
-        {            
+        {
+            if (!_currentContext.ManageUsers(orgId))
+                throw new NotFoundException();
+
+            var ou = await _organizationUserRepository.GetByIdAsync(id);
+            if (ou == null)
+                throw new NotFoundException();
+
+            await _organizationService.ResendInviteAsync(ou);
+        }
+
+        [HttpPost("{id}/accept")]
+        public async Task Accept(Guid orgId, Guid id, [FromBody] OrganizationUserAcceptRequestModel model)
+        {
+            var ou = await _organizationUserRepository.GetByIdAsync(id);
+            if (ou == null)
+                throw new NotFoundException();
+            var result = await _organizationService.AcceptUserAsync(ou, model.Token);
+        }
+
+        [HttpPost("{id}/confirm")]
+        public async Task Confirm(Guid orgId, Guid id, [FromBody] OrganizationUserConfirmRequestModel model)
+        {
             if (!_currentContext.ManageUsers(orgId))
             {
                 throw new NotFoundException();
             }
-            
-            await _organizationService.ResendInviteAsync(orgId, _currentContext.UserId, id);
-        }
 
-        [HttpPost("{id}/accept")]
-        public async Task Accept(string orgId, string id, [FromBody]OrganizationUserAcceptRequestModel model)
-        {
-            var user = await _userService.GetUserByIdAsync(_currentContext.UserId);
-            var result = await _organizationService.AcceptUserAsync(new Guid(id), user, model.Token, _userService);
-        }
-
-        [HttpPost("{id}/confirm")]
-        public async Task Confirm(string orgId, string id, [FromBody]OrganizationUserConfirmRequestModel model)
-        {
-            var orgGuidId = new Guid(orgId);
-            if (!_currentContext.ManageUsers(orgGuidId))
-            {
+            var ou = await _organizationUserRepository.GetByIdAsync(id);
+            if (ou == null)
                 throw new NotFoundException();
-            }
-            
-            var result = await _organizationService.ConfirmUserAsync(orgGuidId, new Guid(id), model.Key, _currentContext.UserId,
-                _userService);
+
+            var result = await _organizationService.ConfirmUserAsync(ou, model.Key);
         }
 
         [HttpPut("{id}")]
         [HttpPost("{id}")]
-        public async Task Put(string orgId, string id, [FromBody]OrganizationUserUpdateRequestModel model)
+        public async Task Put(Guid orgId, Guid id, [FromBody] OrganizationUserUpdateRequestModel model)
         {
-            var orgGuidId = new Guid(orgId);
-            if (!_currentContext.ManageUsers(orgGuidId))
+            if (!_currentContext.ManageUsers(orgId))
             {
                 throw new NotFoundException();
             }
 
-            var organizationUser = await _organizationUserRepository.GetByIdAsync(new Guid(id));
-            if (organizationUser == null || organizationUser.OrganizationId != orgGuidId)
-            {
-                throw new NotFoundException();
-            }
-            
-            await _organizationService.SaveUserAsync(model.ToOrganizationUser(organizationUser), _currentContext.UserId,
-                model.Collections?.Select(c => c.ToSelectionReadOnly()));
-        }
-
-        [HttpPut("{id}/groups")]
-        [HttpPost("{id}/groups")]
-        public async Task PutGroups(string orgId, string id, [FromBody]OrganizationUserUpdateGroupsRequestModel model)
-        {
-            var orgGuidId = new Guid(orgId);
-            if (!_currentContext.ManageUsers(orgGuidId))
+            var orgUser = await _organizationUserRepository.GetByIdAsync(id);
+            if (orgUser == null || orgUser.OrganizationId != orgId)
             {
                 throw new NotFoundException();
             }
 
-            var organizationUser = await _organizationUserRepository.GetByIdAsync(new Guid(id));
-            if (organizationUser == null || organizationUser.OrganizationId != orgGuidId)
-            {
-                throw new NotFoundException();
-            }
-            
-            await _organizationService.UpdateUserGroupsAsync(organizationUser, model.GroupIds.Select(g => new Guid(g)), _currentContext.UserId);
+            await _organizationService.SaveUserAsync(model.ToOrganizationUser(orgUser));
+            await _collectionRepository.UpdateUsersAsync(model.Collections?.Select(c => c.ToCollectionAssigned(orgUser)));
         }
 
         [HttpDelete("{id}")]
         [HttpPost("{id}/delete")]
-        public async Task Delete(string orgId, string id)
+        public async Task Delete(Guid orgId, Guid id)
         {
-            var orgGuidId = new Guid(orgId);
-            if (!_currentContext.ManageUsers(orgGuidId))
-            {
-                throw new NotFoundException();
-            }
+            VerifyAccess(orgId);
+            var ou = await ValidateFound(id);
 
-            await _organizationService.DeleteUserAsync(orgGuidId, new Guid(id), _currentContext.UserId);
+            await _organizationService.DeleteUserAsync(ou);
+        }
+
+        public void VerifyAccess(Guid orgId)
+        {
+            if (!_currentContext.ManageUsers(orgId))
+                throw new ForbidException();
+        }
+        public async Task<Core.Models.OrganizationMembershipProfile> ValidateFound(Guid id)
+        {
+            var ou = await _organizationUserRepository.GetByIdAsync(id);
+            if (ou == null)
+                throw new NotFoundException();
+            return ou;
         }
     }
 }

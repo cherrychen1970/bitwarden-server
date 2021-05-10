@@ -30,8 +30,8 @@ namespace Bit.Core.Services
         private readonly GlobalSettings _globalSettings;
         private readonly ISessionContext _sessionContext;
         private readonly IMapper _mapper;
-        private IConfigurationProvider _mapperProvider=>_mapper.ConfigurationProvider;
-        private Guid _sessionUserId =>_sessionContext.UserId;
+        private IConfigurationProvider _mapperProvider => _mapper.ConfigurationProvider;
+        private Guid _sessionUserId => _sessionContext.UserId;
 
         public CipherService(
             IMapper mapper,
@@ -68,96 +68,84 @@ namespace Bit.Core.Services
             _sessionContext = sessionContext;
             _globalSettings = globalSettings;
         }
-    
-        public async Task SaveAsync(Models.Cipher cipher)
-        {            
-            if (!(await CanEditAsync(cipher)))
-            {
-                throw new BadRequestException("You do not have permissions to edit this.");
-            }           
 
-            cipher.UserId = _sessionUserId;            
-            if (cipher.Id == default(Guid))
-            {
-                if (cipher.OrganizationId.HasValue)
-                {
-                    await _orgCipherRepository.CreateAsync(cipher);
-                }
-                else
-                {
-                    // Make sure the user can save new ciphers to their personal vault
-                    var userPolicies = await _policyRepository.GetManyByUserIdAsync(_sessionUserId);
-                    if (userPolicies != null)
-                    {
-                        foreach (var policy in userPolicies.Where(p => p.Enabled && p.Type == PolicyType.PersonalOwnership))
-                        {
-                            var org = await _organizationUserRepository.GetDetailsByUserAsync(_sessionUserId, policy.OrganizationId,
-                                OrganizationUserStatusType.Confirmed);
-                            if(org != null && org.Enabled && org.UsePolicies 
-                               && org.Type != OrganizationUserType.Admin && org.Type != OrganizationUserType.Owner)
-                            {
-                                throw new BadRequestException("Due to an Enterprise Policy, you are restricted from saving items to your personal vault.");
-                            }
-                        }
-                    }
-                    await _cipherRepository.CreateAsync(cipher);
-                }
-                await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Created);
-                await _pushService.PushSyncCipherCreateAsync(cipher, null);
-            }
-            else
-            {                           
-                await _cipherRepository.ReplaceAsync(cipher);
-                await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Updated);
-
-                // push
-                await _pushService.PushSyncCipherUpdateAsync(cipher, null);
-            }
-        }
- 
-        public async Task DeleteAsync(Models.Cipher cipher)
+        public async Task SaveAsync(Models.OrganizationCipher cipher)
         {
             if (!(await CanEditAsync(cipher)))
             {
-                throw new BadRequestException("You do not have permissions to delete this.");
+                throw new BadRequestException("You do not have permissions to edit this.");
             }
+            await _orgCipherRepository.CreateAsync(cipher);
+        }
+        public async Task SaveAsync(Models.UserCipher cipher)
+        {
+            cipher.UserId = _sessionUserId;
+            if (cipher.Id == default(Guid))
+            {
+                await _cipherRepository.CreateAsync(cipher);
+                //await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Created);
+                //await _pushService.PushSyncCipherCreateAsync(cipher, null);
+            }
+            else
+            {
+                await _cipherRepository.ReplaceAsync(cipher);
+                //await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Updated);
+                //await _pushService.PushSyncCipherUpdateAsync(cipher, null);
+            }
+        }
+
+        public async Task DeleteAsync(Models.UserCipher cipher)
+        {
+            if (cipher.UserId != _sessionUserId)
+                throw new BadRequestException("You do not have permissions to delete this.");
 
             await _cipherRepository.DeleteAsync(cipher);
-            await _attachmentStorageService.DeleteAttachmentsForCipherAsync(cipher.Id);
-            await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_Deleted);
-
+            //await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_Deleted);
             // push
             await _pushService.PushSyncCipherDeleteAsync(cipher);
         }
 
-        public async Task DeleteManyAsync(IEnumerable<Guid> cipherIds, Guid? organizationId = null)
+        public async Task DeleteAsync(Models.OrganizationCipher cipher)
+        {
+            if (!(await CanEditAsync(cipher)))
+                throw new BadRequestException("You do not have permissions to edit this.");
+
+            await _orgCipherRepository.DeleteAsync(cipher);
+            await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_Deleted);
+            // push
+            //await _pushService.PushSyncCipherDeleteAsync(cipher);
+        }
+        public async Task DeleteManyAsync(IEnumerable<Guid> cipherIds)
+        {
+            await _cipherRepository.DeleteManyAsync(cipherIds, _sessionUserId);
+            /*
+                        var events = deletingCiphers.Select(c =>
+                            new Tuple<Models.Cipher, EventType, DateTime?>(c, EventType.Cipher_Deleted, null));
+                        foreach (var eventsBatch in events.Batch(100))
+                        {
+                            await _eventService.LogCipherEventsAsync(eventsBatch);
+                        }
+            */
+            // push
+            await _pushService.PushSyncCiphersAsync(_sessionUserId);
+        }
+        public async Task DeleteManyAsync(IEnumerable<Guid> cipherIds, Guid organizationId)
         {
             var cipherIdsSet = new HashSet<Guid>(cipherIds);
             var deletingCiphers = new List<Models.Cipher>();
-            
 
-            if (organizationId.HasValue)
-            {
-                var membership = _sessionContext.OrganizationMemberships.SingleOrDefault(x=>x.OrganizationId==organizationId);
-                if (membership==null) throw new ForbidException();
-                var ciphers = await _orgCipherRepository.GetManyAsync(membership);
-                deletingCiphers = ciphers.Where(c => cipherIdsSet.Contains(c.Id)).ToList();
-                await _orgCipherRepository.DeleteManyAsync(deletingCiphers.Select(c => c.Id), membership);
-            }
-            else
-            {
-                var ciphers = await _cipherRepository.GetManyAsync(_sessionUserId);
-                deletingCiphers = ciphers.Where(c => cipherIdsSet.Contains(c.Id) && c.Edit).Select(x => (Cipher)x).ToList();
-                await _cipherRepository.DeleteManyAsync(deletingCiphers.Select(c => c.Id), _sessionUserId);
-            }
+            var membership = _sessionContext.GetMembership(organizationId);
+            if (membership == null) throw new ForbidException();
+            await _orgCipherRepository.DeleteManyAsync(cipherIds, membership);
 
-            var events = deletingCiphers.Select(c =>
-                new Tuple<Models.Cipher, EventType, DateTime?>(c, EventType.Cipher_Deleted, null));
-            foreach (var eventsBatch in events.Batch(100))
-            {
-                await _eventService.LogCipherEventsAsync(eventsBatch);
-            }
-
+            /*
+                        var events = deletingCiphers.Select(c =>
+                            new Tuple<Models.Cipher, EventType, DateTime?>(c, EventType.Cipher_Deleted, null));
+                        foreach (var eventsBatch in events.Batch(100))
+                        {
+                            await _eventService.LogCipherEventsAsync(eventsBatch);
+                        }
+            */
             // push
             await _pushService.PushSyncCiphersAsync(_sessionUserId);
         }
@@ -169,28 +157,23 @@ namespace Bit.Core.Services
             {
                 throw new NotFoundException();
             }
-            await _orgCipherRepository.PurgeAsync( _sessionContext.GetMembership(organizationId));
+            await _orgCipherRepository.PurgeAsync(_sessionContext.GetMembership(organizationId));
             await _eventService.LogOrganizationEventAsync(org, Enums.EventType.Organization_PurgedVault);
         }
 
-        public async Task MoveManyAsync(IEnumerable<Guid> cipherIds, Guid? destinationFolderId)
+        public async Task MoveManyAsync(IEnumerable<Guid> cipherIds, Guid destinationFolderId)
         {
-            var movingUserId = _sessionContext.UserId;
-            if (destinationFolderId.HasValue)
+            var folder = await _folderRepository.GetByIdAsync(destinationFolderId);
+            if (folder == null || folder.UserId != _sessionUserId)
             {
-                var folder = await _folderRepository.GetByIdAsync(destinationFolderId.Value);
-                if (folder == null || folder.UserId != movingUserId)
-                {
-                    throw new BadRequestException("Invalid folder.");
-                }
+                throw new BadRequestException("Invalid folder.");
             }
 
-            await _cipherRepository.MoveAsync(cipherIds, destinationFolderId, movingUserId);
-            // push
-            await _pushService.PushSyncCiphersAsync(movingUserId);
+            await _cipherRepository.MoveAsync(cipherIds, destinationFolderId, _sessionUserId);
+            await _pushService.PushSyncCiphersAsync(_sessionUserId);
         }
-  
-          public async Task SaveFolderAsync(Folder folder)
+
+        public async Task SaveFolderAsync(Folder folder)
         {
             if (folder.Id == default(Guid))
             {
@@ -216,13 +199,13 @@ namespace Bit.Core.Services
             // push
             await _pushService.PushSyncFolderDeleteAsync(folder);
         }
-        public async Task SaveCollectionsAsync(Models.Cipher cipher, Guid collectionId)            
+        public async Task SaveCollectionsAsync(Models.OrganizationCipher cipher, Guid collectionId)
         {
-            if ( ! _sessionContext.ManageAllCollections(cipher.OrganizationId.Value))        
-                throw new BadRequestException("You do not have permissions to soft delete this.");                    
+            if (!_sessionContext.ManageAllCollections(cipher.OrganizationId))
+                throw new BadRequestException("You do not have permissions to soft delete this.");
 
             //await _orgCipherRepository.UpdateCollectionsAsync(cipher, collectionIds);
-            var cipherEntity = await _orgCipherRepository.GetEntityAsync(cipher.Id,_sessionContext.GetMembership(cipher.OrganizationId.Value));
+            var cipherEntity = await _orgCipherRepository.GetEntityAsync(cipher.Id, _sessionContext.GetMembership(cipher.OrganizationId));
             cipherEntity.CollectionId = collectionId;
             await _orgCipherRepository.SaveChangesAsync();
             /*
@@ -233,20 +216,9 @@ namespace Bit.Core.Services
 
         public async Task ImportCiphersAsync(
             List<Folder> folders,
-            List<Cipher> ciphers,
+            List<UserCipher> ciphers,
             IEnumerable<KeyValuePair<int, int>> folderRelationships)
         {
-            foreach (var cipher in ciphers)
-            {
-                cipher.SetNewId();
-            }
-
-            // Init. ids for folders
-            foreach (var folder in folders)
-            {
-                folder.SetNewId();
-            }
-
             // Create the folder associations based on the newly created folder ids
             foreach (var relationship in folderRelationships)
             {
@@ -259,7 +231,7 @@ namespace Bit.Core.Services
                 }
                 // TODO : cherry fix this.
                 throw new NotImplementedException();
-//                cipher.Folders = $"{{\"{cipher.UserId.ToString().ToUpperInvariant()}\":" +   $"\"{folder.Id.ToString().ToUpperInvariant()}\"}}";
+                //                cipher.Folders = $"{{\"{cipher.UserId.ToString().ToUpperInvariant()}\":" +   $"\"{folder.Id.ToString().ToUpperInvariant()}\"}}";
             }
 
             // Create it all
@@ -276,9 +248,9 @@ namespace Bit.Core.Services
         // TODO :test incomplete
         public async Task ImportCiphersAsync(
             List<Collection> collections,
-            List<Cipher> ciphers,
-            IEnumerable<KeyValuePair<int, int>> collectionRelationships,
-            Guid importingUserId)
+            List<OrganizationCipher> ciphers,
+            IEnumerable<KeyValuePair<int, int>> collectionRelationships
+            )
         {
             // Create associations based on the newly assigned ids
             var collectionCiphers = new List<CollectionCipher>();
@@ -287,156 +259,125 @@ namespace Bit.Core.Services
                 var cipher = ciphers.ElementAtOrDefault(relationship.Key);
                 var collection = collections.ElementAtOrDefault(relationship.Value);
 
-                if (cipher == null || collection == null)                
+                if (cipher == null || collection == null)
                     continue;
-                
+
                 cipher.CollectionId = collection.Id;
             }
             foreach (var item in collections)
             {
                 await _collectionRepository.CreateAsync(item);
             }
-            
+
             await _orgCipherRepository.CreateAsync(ciphers);
             await _orgCipherRepository.SaveChangesAsync();
 
             // push
-            await _pushService.PushSyncVaultAsync(importingUserId);
+            await _pushService.PushSyncVaultAsync(_sessionUserId);
         }
 
-        public async Task SoftDeleteAsync(Models.Cipher cipher)
+        public async Task SoftDeleteAsync(Models.UserCipher cipher)
         {
-            if (!(await CanEditAsync(cipher)))
-            {
-                throw new BadRequestException("You do not have permissions to soft delete this.");
-            }
+            if (cipher.UserId != _sessionUserId)
+                throw new BadRequestException("You do not have permissions to delete this.");
 
             if (cipher.DeletedDate.HasValue)
-            {
-                // Already soft-deleted, we can safely ignore this
                 return;
-            }
-            
 
-            if (cipher is Cipher details)
-            {
-                await _cipherRepository.UpsertAsync(details);
-            }
-            else
-            {
-                await _cipherRepository.UpsertAsync(cipher);
-            }
-            await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_SoftDeleted);
-
-            // push
-            await _pushService.PushSyncCipherUpdateAsync(cipher, null);
+            await _cipherRepository.UpsertAsync(cipher);
+            //await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_SoftDeleted);
+            //await _pushService.PushSyncCipherUpdateAsync(cipher, null);
         }
 
-        public async Task SoftDeleteManyAsync(IEnumerable<Guid> cipherIds, Guid? organizationId)
+        public async Task SoftDeleteAsync(Models.OrganizationCipher cipher)
+        {
+            if (!(await CanEditAsync(cipher)))
+                throw new BadRequestException("You do not have permissions to soft delete this.");
+
+            if (cipher.DeletedDate.HasValue)
+                return;
+
+            var cipherEntity = await _orgCipherRepository.GetEntityAsync(cipher.Id, _sessionContext.GetMembership(cipher.OrganizationId));
+            cipherEntity.DeletedDate = DateTime.UtcNow;
+
+            await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_SoftDeleted);
+            //await _pushService.PushSyncCipherUpdateAsync(cipher, null);
+        }
+        public async Task SoftDeleteManyAsync(IEnumerable<Guid> cipherIds)
+        {
+            await _cipherRepository.SoftDeleteManyAsync(cipherIds, _sessionUserId);
+        }
+        public async Task SoftDeleteManyAsync(IEnumerable<Guid> cipherIds, Guid organizationId)
         {
             var cipherIdsSet = new HashSet<Guid>(cipherIds);
             var deletingCiphers = new List<Models.Cipher>();
 
-            if (organizationId.HasValue)
-            {
-                var membership = _sessionContext.GetMembership(organizationId.Value);
-                var ciphers = await _orgCipherRepository.GetManyAsync(membership);
-                deletingCiphers = ciphers.Where(c => cipherIdsSet.Contains(c.Id)).ToList();
-                await _orgCipherRepository.SoftDeleteManyAsync(deletingCiphers.Select(c => c.Id), membership);
-            }
-            else
-            {
-                var ciphers = await _cipherRepository.GetManyAsync(_sessionUserId);
-                deletingCiphers = ciphers.Where(c => cipherIdsSet.Contains(c.Id) && c.Edit).Select(x => (Cipher)x).ToList();
-                await _cipherRepository.SoftDeleteManyAsync(deletingCiphers.Select(c =>  c.Id), _sessionUserId);
-            }
+            var membership = _sessionContext.GetMembership(organizationId);
+            await _orgCipherRepository.SoftDeleteManyAsync(cipherIds, membership);
 
-            var events = deletingCiphers.Select(c =>
-                new Tuple<Models.Cipher, EventType, DateTime?>(c, EventType.Cipher_SoftDeleted, null));
-            foreach (var eventsBatch in events.Batch(100))
-            {
-                await _eventService.LogCipherEventsAsync(eventsBatch);
-            }
-
+            /*
+                        var events = deletingCiphers.Select(c =>
+                            new Tuple<Models.OrganizationCipher, EventType, DateTime?>(c, EventType.Cipher_SoftDeleted, null));
+                        foreach (var eventsBatch in events.Batch(100))
+                        {
+                            await _eventService.LogCipherEventsAsync(eventsBatch);
+                        }
+            */
             // push
             await _pushService.PushSyncCiphersAsync(_sessionUserId);
         }
 
-        public async Task RestoreAsync(Models.Cipher cipher)
+        public async Task RestoreAsync(Models.UserCipher cipher)
         {
-            if ((await CanEditAsync(cipher)))
-            {
+            if (cipher.UserId != _sessionUserId)
                 throw new BadRequestException("You do not have permissions to delete this.");
-            }
-
             if (!cipher.DeletedDate.HasValue)
-            {
-                // Already restored, we can safely ignore this
                 return;
-            }
-
-            cipher.DeletedDate = null;            
-
-            if (cipher is Cipher details)
-            {
-                await _cipherRepository.UpsertAsync(details);
-            }
-            else
-            {
-                await _cipherRepository.UpsertAsync(cipher);
-            }
-            await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_Restored);
-
-            // push
-            await _pushService.PushSyncCipherUpdateAsync(cipher, null);
+            await _cipherRepository.SoftDeleteAsync(cipher.Id, _sessionUserId);
+            await _cipherRepository.SaveChangesAsync();
+            //await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_Restored);
+            //await _pushService.PushSyncCipherUpdateAsync(cipher, null);
         }
 
-        public async Task RestoreManyAsync(IEnumerable<Cipher> ciphers, Guid restoringUserId)
+        public async Task RestoreAsync(Models.OrganizationCipher cipher)
         {
-            var revisionDate = await _cipherRepository.RestoreManyAsync(ciphers.Select(c => c.Id), restoringUserId);
+            if ((await CanEditAsync(cipher)))
+                throw new BadRequestException("You do not have permissions to delete this.");
 
+            if (!cipher.DeletedDate.HasValue)
+                return;
+
+            var cipherEntity = await _orgCipherRepository.GetEntityAsync(cipher.Id, _sessionContext.GetMembership(cipher.OrganizationId));
+            cipherEntity.DeletedDate = null;
+            await _orgCipherRepository.SaveChangesAsync();
+            await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_Restored);
+            //await _pushService.PushSyncCipherUpdateAsync(cipher, null);
+        }
+        public async Task RestoreManyAsync(IEnumerable<UserCipher> ciphers)
+        {
+            var revisionDate = await _cipherRepository.RestoreManyAsync(ciphers.Select(c => c.Id), _sessionUserId);
             var events = ciphers.Select(c =>
-            {                
+            {
                 c.DeletedDate = null;
                 return new Tuple<Cipher, EventType, DateTime?>(c, EventType.Cipher_Restored, null);
             });
+            /*
             foreach (var eventsBatch in events.Batch(100))
             {
                 await _eventService.LogCipherEventsAsync(eventsBatch);
             }
-
-            // push
-            await _pushService.PushSyncCiphersAsync(restoringUserId);
+            */
+            await _pushService.PushSyncCiphersAsync(_sessionUserId);
         }
 
-        private async Task<bool> CanEditAsync(Models.Cipher cipher)
+        private async Task<bool> CanEditAsync(Models.OrganizationCipher cipher)
         {
-            if (!cipher.OrganizationId.HasValue && cipher.UserId.HasValue && cipher.UserId.Value == _sessionUserId)            
-                return true;
-
-            if ( cipher.OrganizationId.HasValue  && _sessionContext.ManageAllCollections(cipher.OrganizationId.Value))            
+            if (_sessionContext.ManageAllCollections(cipher.OrganizationId))
                 return true;
             // user cipher
-            var membership = _sessionContext.GetMembership(cipher.OrganizationId.Value);
-            var cipherToCompare =await _orgCipherRepository.GetByIdAsync(cipher.Id, membership);
+            var membership = _sessionContext.GetMembership(cipher.OrganizationId);
+            var cipherToCompare = await _orgCipherRepository.GetByIdAsync(cipher.Id, membership);
             return cipherToCompare.Edit;
-        }
-
-        private void ValidateCipherLastKnownRevisionDateAsync(Models.Cipher cipher, DateTime? lastKnownRevisionDate)
-        {
-            // cherry...
-            return;
-            if (cipher.Id == default || !lastKnownRevisionDate.HasValue)
-            {
-                return;
-            }
-
-            if ((cipher.RevisionDate - lastKnownRevisionDate.Value).Duration() > TimeSpan.FromSeconds(1))
-            {
-                throw new BadRequestException(
-                    "The cipher you are updating is out of date. Please save your work, sync your vault, and try again."
-                );
-            }
         }
     }
 }

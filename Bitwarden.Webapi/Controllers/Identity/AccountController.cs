@@ -68,6 +68,58 @@ namespace Bit.Identity.Controllers
             _globalSettings = globalSettings;
         }
 
+
+        [HttpGet]
+        public async Task<ActionResult> TestLogin(string name,string email,string returnUrl)
+        {
+            var user = await _userRepository.GetByEmailAsync(email);
+            if (user == null)
+            {
+                // cherry   2021/02/03
+                user = await AutoProvisionUserAsync(name,email);
+            }
+
+            // This allows us to collect any additional claims or properties
+            // for the specific protocols used and store them in the local auth cookie.
+            // this is typically used to store data needed for signout from those protocols.
+            var additionalLocalClaims = new List<Claim>();
+            var localSignInProps = new AuthenticationProperties
+            {
+                IsPersistent = true,
+                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(1)
+            };
+
+            // Issue authentication cookie for user
+            await HttpContext.SignInAsync(new IdentityServerUser(user.Id.ToString())
+            {
+                DisplayName = user.Email,
+                IdentityProvider = "test",
+                AdditionalClaims = additionalLocalClaims.ToArray()
+            }, localSignInProps);
+
+            var context = await _interaction.GetAuthorizationContextAsync(returnUrl);
+            if (context != null)
+            {
+                // We can trust model.ReturnUrl since GetAuthorizationContextAsync returned non-null
+                return Redirect(returnUrl);
+            }
+
+            // Request for a local page
+            if (Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            else if (string.IsNullOrEmpty(returnUrl))
+            {
+                return Redirect("~/");
+            }
+            else
+            {
+                // User might have clicked on a malicious link - should be logged
+                throw new Exception("invalid return URL");
+            }
+        }
+
         [HttpGet]
         public async Task<IActionResult> PreValidate(string domainHint)
         {
@@ -322,9 +374,12 @@ namespace Bit.Identity.Controllers
 
         private async Task<User> AutoProvisionUserAsync(ClaimsPrincipal claims)
         {
-            var name = claims.GetName();
-            var email = claims.GetEmailAddress();
+            var orgIdentifier = claims.GetClaim(_globalSettings.Oidc.OrganizationIdentifier);
+            return await AutoProvisionUserAsync(claims.GetName(),claims.GetEmailAddress(),orgIdentifier);
 
+        }
+        private async Task<User> AutoProvisionUserAsync(string name,string email,string orgIdentifier=null)
+        {
             // Create user record - all existing user flows are handled above
             var user = new User
             {
@@ -335,15 +390,14 @@ namespace Bit.Identity.Controllers
             };
             await _userService.RegisterUserAsync(user);
             user = await _userService.GetUserByIdAsync(user.Id);
-
-            var orgIdentifier = claims.GetClaim(_globalSettings.Oidc.OrganizationIdentifier);
+            
             if (orgIdentifier!=null)
             {
                 var organization = await _organizationRepository.GetByIdentifierAsync(orgIdentifier);
                 if (organization != null)
                 {
                     //throw new Exception($"Organization: {orgIdentifier} not found" );
-                    var orgUser = new OrganizationUser
+                    var orgUser = new OrganizationMembershipProfile
                     {
                         OrganizationId = organization.Id,
                         UserId = user.Id,

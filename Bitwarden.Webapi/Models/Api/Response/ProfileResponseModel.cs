@@ -10,7 +10,7 @@ namespace Bit.Core.Models.Api
     public class ProfileResponseModel : ResponseModel
     {
         public ProfileResponseModel(User user,
-            IEnumerable<OrganizationUserOrganizationDetails> organizationsUserDetails, bool twoFactorEnabled)
+            IEnumerable<OrganizationMembershipProfile> organizationsUsers, bool twoFactorEnabled)
             : base("profile")
         {
             if (user == null)
@@ -29,7 +29,7 @@ namespace Bit.Core.Models.Api
             Key = user.Key;
             PrivateKey = user.PrivateKey;
             SecurityStamp = user.SecurityStamp;
-            Organizations = organizationsUserDetails?.Select(o => new ProfileOrganizationResponseModel(o));
+            Organizations = organizationsUsers?.Select(o => new ProfileOrganizationResponseModel(o));
         }
 
         public string Id { get; set; }

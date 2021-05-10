@@ -22,8 +22,12 @@ namespace Bit.Core.Entities
     {
         public CollectionUserProfile()
         {
-            CreateMap<CollectionUser,DomainModels.Data.SelectionReadOnly>()                        
-            .ForMember(dst=>dst.Id, opt=>opt.MapFrom(src=>src.OrganizationUserId));
+            CreateMap<CollectionUser,DomainModels.CollectionAssigned>()                        
+            .ForMember(dst=>dst.UserId, opt=>opt.MapFrom(src=>src.OrganizationUser.UserId))
+            .ReverseMap()
+            .ForMember(dst=>dst.OrganizationUser,opt=>opt.Ignore())
+            ;
+            ;
         }
     }
 }
