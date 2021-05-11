@@ -217,3 +217,4 @@ bitwarden_license/src/Sso/wwwroot/css
 src/Identity/signingkey.rsa
 *.db
 http/temp.json
+Bitwarden.Webapi/vault.db
