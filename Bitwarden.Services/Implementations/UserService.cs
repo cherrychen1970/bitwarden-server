@@ -10,7 +10,6 @@ using Bit.Core.Repositories;
 using System.Linq;
 using Bit.Core.Enums;
 using System.Security.Claims;
-using Bit.Core.Models;
 using Bit.Core.Models.Business;
 using U2fLib = U2F.Core.Crypto.U2F;
 using U2F.Core.Models;
@@ -24,7 +23,9 @@ using U2F.Core.Exceptions;
 
 namespace Bit.Core.Services
 {
-    public class UserService : UserManager<User>, IUserService, IDisposable
+    public class UserService : //
+        UserManager<User>,
+         IUserService, IDisposable
     //public class UserService : IUserService, IDisposable
     {    
         private readonly IUserRepository _userRepository;

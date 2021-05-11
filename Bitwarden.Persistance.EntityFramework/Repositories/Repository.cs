@@ -32,10 +32,12 @@ namespace Bit.Infrastructure.EntityFramework
             if (!obj.Id.Equals(default(TId)))
                 entity.SetId(obj.Id);
             // can enttity generate id?
-            else if (  typeof(IGenerateKey).IsAssignableFrom( typeof(TEntity)) )            
+            else if (  typeof(IGenerateKey).IsAssignableFrom( typeof(TEntity)) ) {
                 ((IGenerateKey)entity).SetNewId();
+                obj.SetId(entity.Id);
+            }         
             else // let db create id
-                ;
+                ;// we can know id until savechanges
             dbContext.Add(entity);
             //TODO : this will be removed
             //await SaveChangesAsync();              
@@ -61,7 +63,7 @@ namespace Bit.Infrastructure.EntityFramework
 
         public virtual async Task DeleteAsync(T obj)
         {
-            var entity = Mapper.Map<TEntity>(obj);
+            var entity = dbSet.Find(obj.Id); 
             dbContext.Entry(entity).State = EntityState.Deleted;
             //await dbContext.SaveChangesAsync();
         }                     

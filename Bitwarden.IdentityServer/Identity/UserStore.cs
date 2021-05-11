@@ -12,19 +12,19 @@ namespace Bit.Core.Identity
     public class UserStore :
         IUserStore<User>,
         IUserPasswordStore<User>,
-        IUserEmailStore<User>,        
+        IUserEmailStore<User>,
         IUserSecurityStampStore<User>
     {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IUserRepository _userRepository;        
+        private readonly IUserRepository _userRepository;
 
         public UserStore(
             IServiceProvider serviceProvider,
-            IUserRepository userRepository            
+            IUserRepository userRepository
             )
         {
             _serviceProvider = serviceProvider;
-            _userRepository = userRepository;            
+            _userRepository = userRepository;
         }
 
         public void Dispose() { }
@@ -32,27 +32,29 @@ namespace Bit.Core.Identity
         public async Task<IdentityResult> CreateAsync(User user, CancellationToken cancellationToken = default(CancellationToken))
         {
             await _userRepository.CreateAsync(user);
+            await _userRepository.SaveChangesAsync();
             return IdentityResult.Success;
         }
 
         public async Task<IdentityResult> DeleteAsync(User user, CancellationToken cancellationToken = default(CancellationToken))
         {
             await _userRepository.DeleteAsync(user);
+            await _userRepository.SaveChangesAsync();
             return IdentityResult.Success;
         }
 
         public async Task<User> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return await _userRepository.GetByEmailAsync(normalizedEmail);            
+            return await _userRepository.GetByEmailAsync(normalizedEmail);
         }
 
         public async Task<User> FindByIdAsync(string userId, CancellationToken cancellationToken = default(CancellationToken))
         {
             Guid userIdGuid;
-            if (!Guid.TryParse(userId, out userIdGuid))            
-                return null;            
+            if (!Guid.TryParse(userId, out userIdGuid))
+                return null;
 
-            return await _userRepository.GetByIdAsync(userIdGuid);            
+            return await _userRepository.GetByIdAsync(userIdGuid);
         }
 
         public async Task<User> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken = default(CancellationToken))
@@ -137,12 +139,13 @@ namespace Bit.Core.Identity
         }
 
         public async Task<IdentityResult> UpdateAsync(User user, CancellationToken cancellationToken = default(CancellationToken))
-        {            
+        {
             await _userRepository.ReplaceAsync(user);
+            await _userRepository.SaveChangesAsync();
             return IdentityResult.Success;
         }
 
- 
+
         public Task SetSecurityStampAsync(User user, string stamp, CancellationToken cancellationToken)
         {
             user.SecurityStamp = stamp;

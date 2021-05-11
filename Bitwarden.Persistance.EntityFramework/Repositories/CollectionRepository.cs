@@ -87,7 +87,9 @@ namespace Bit.Infrastructure.EntityFramework
 
         public async Task UpdateMembersAsync(IEnumerable<CollectionMember> users)
         {
-            throw new NotImplementedException();
+            var userEntities =users.Select(x=>Mapper.Map<EFModel.CollectionUser>(x));
+            dbContext.CollectionUsers.AddRange(userEntities);
+            //throw new NotImplementedException();
             /*
             var ids = users.Select(x=>x.Id);
             var collectionUsers = dbContext.CollectionUsers.Where(x => x.CollectionId == id).ToList();

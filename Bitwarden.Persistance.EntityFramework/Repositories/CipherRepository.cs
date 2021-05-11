@@ -34,23 +34,6 @@ namespace Bit.Infrastructure.EntityFramework
             return await base.GetMany<UserCipher>(x => x.UserId == userId);
         }
 
-        public async Task ReplaceAsync(UserCipher obj)
-        {
-            await base.ReplaceAsync(obj);
-        }
-
-        public async Task UpsertAsync(UserCipher cipher)
-        {
-            if (cipher.Id.Equals(default))
-            {
-                await CreateAsync(cipher);
-            }
-            else
-            {
-                await ReplaceAsync(cipher);
-            }
-        }
-
         public async Task UpdatePartialAsync(Guid id, Guid? folderId, bool favorite)
         {
             var ciphers = await GetMany(x => x.Id == id);

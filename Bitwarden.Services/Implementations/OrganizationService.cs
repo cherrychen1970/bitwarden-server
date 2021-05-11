@@ -88,7 +88,7 @@ namespace Bit.Core.Services
                 ReferenceData = signup.Owner.ReferenceData,                
             };
             // set id now to link user
-            organization.SetNewId();
+            //organization.SetNewId();
 
             await _organizationRepository.CreateAsync(organization);
             await _applicationCacheService.UpsertOrganizationAbilityAsync(organization);
@@ -141,6 +141,7 @@ namespace Bit.Core.Services
             }
 
             await _organizationRepository.DeleteAsync(organization);
+            await _organizationRepository.SaveChangesAsync();
             await _applicationCacheService.DeleteOrganizationAbilityAsync(organization.Id);
         }
 
@@ -191,11 +192,12 @@ namespace Bit.Core.Services
                     Email = email.ToLowerInvariant(),
                     Key = null,
                     Type = invite.Type,
-                    Status = OrganizationUserStatusType.Invited,
+                    Status = OrganizationUserStatusType.Accepted,
                     AccessAll = invite.AccessAll,
                 };
 
                 await _organizationUserRepository.CreateAsync(orgUser);
+                await _organizationUserRepository.SaveChangesAsync();
                 await SendInviteAsync(orgUser, organization);
                 await _eventService.LogOrganizationUserEventAsync(orgUser, EventType.OrganizationUser_Invited);
                 orgUsers.Add(orgUser);
@@ -278,6 +280,7 @@ namespace Bit.Core.Services
             orgUser.Key = key;
             orgUser.Email = null;
             await _organizationUserRepository.ReplaceAsync(orgUser);
+            await _organizationUserRepository.SaveChangesAsync();
             await _eventService.LogOrganizationUserEventAsync(orgUser, EventType.OrganizationUser_Confirmed);
             await _mailService.SendOrganizationConfirmedEmailAsync(org.Name, user.Email);
 
@@ -300,6 +303,7 @@ namespace Bit.Core.Services
             }
 
             await _organizationUserRepository.ReplaceAsync(user);
+            await _organizationUserRepository.SaveChangesAsync();
             await _eventService.LogOrganizationUserEventAsync(user, EventType.OrganizationUser_Updated);
         }
 
@@ -325,6 +329,7 @@ namespace Bit.Core.Services
             }
 
             await _organizationUserRepository.DeleteAsync(orgUser);
+            await _organizationUserRepository.SaveChangesAsync();
             await _eventService.LogOrganizationUserEventAsync(orgUser, EventType.OrganizationUser_Removed);
 
             // push
@@ -356,6 +361,7 @@ namespace Bit.Core.Services
         private async Task ReplaceAndUpdateCache(Organization org, EventType? orgEvent = null)
         {
             await _organizationRepository.ReplaceAsync(org);
+            await _organizationRepository.SaveChangesAsync();
             await _applicationCacheService.UpsertOrganizationAbilityAsync(org);
 
             if (orgEvent.HasValue)

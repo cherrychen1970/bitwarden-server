@@ -13,16 +13,17 @@ namespace Bit.Core.Models.Api
         public bool ReadOnly { get; set; }
         public bool HidePasswords { get; set; }
 
-        public CollectionMember ToCollectionAssigned(Collection c)
+        public CollectionMember ToCollectionMember(Guid collectionId)
         {
             return new CollectionMember
             {
-                CollectionId = c.Id,
-                UserId = Id,
+                CollectionId = collectionId,
+                OrganizationUserId = Id,
                 ReadOnly = ReadOnly,
                 HidePasswords = HidePasswords,
             };
         }
+        /*
         public CollectionMember ToCollectionAssigned(OrganizationMembershipProfile user)
         {
             return new CollectionMember
@@ -33,5 +34,6 @@ namespace Bit.Core.Models.Api
                 HidePasswords = HidePasswords,
             };
         }
+        */
     }
 }

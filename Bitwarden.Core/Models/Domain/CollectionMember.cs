@@ -9,7 +9,7 @@ namespace Bit.Core.Models
     {        
         //virtual public int Id {get;set;}
         public Guid CollectionId {get;set;}
-        public Guid UserId {get;set;}
+        public Guid OrganizationUserId {get;set;}
         public virtual bool ReadOnly {get;set;}
         public virtual bool HidePasswords {get;set;}
     }

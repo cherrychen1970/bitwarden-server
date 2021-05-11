@@ -22,8 +22,8 @@ namespace Bit.Core.Entities
     {
         public CollectionUserProfile()
         {
-            CreateMap<CollectionUser,DomainModels.CollectionMember>()                        
-            .ForMember(dst=>dst.UserId, opt=>opt.MapFrom(src=>src.OrganizationUser.UserId));
+            CreateMap<CollectionUser,DomainModels.CollectionMember>();                     
+            //.ForMember(dst=>dst.OrganizationUserId, opt=>opt.MapFrom(src=>src.OrganizationUser.UserId));
 
             CreateMap<DomainModels.CollectionMember,CollectionUser>()                        
             .Ignore(x=>x.Id)                        
