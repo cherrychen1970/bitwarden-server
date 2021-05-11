@@ -23,7 +23,7 @@ namespace Bit.Core.Models.Api
                 HidePasswords = HidePasswords,
             };
         }
-        public CollectionMember ToCollectionAssigned(OrganizationMembership user)
+        public CollectionMember ToCollectionAssigned(OrganizationMembershipProfile user)
         {
             return new CollectionMember
             {

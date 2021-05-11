@@ -76,15 +76,16 @@ namespace Bit.Core.Services
                 throw new BadRequestException("You do not have permissions to edit this.");
             }
             if (cipher.Id == default(Guid))
-            {
-                cipher.SetNewId();
+            {                
                 await _orgCipherRepository.CreateAsync(cipher);
+                await _cipherRepository.SaveChangesAsync();
                 //await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Created);
                 //await _pushService.PushSyncCipherCreateAsync(cipher, null);
             }
             else
             {
                 await _orgCipherRepository.ReplaceAsync(cipher);
+                await _cipherRepository.SaveChangesAsync();
                 //await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Updated);
                 //await _pushService.PushSyncCipherUpdateAsync(cipher, null);
             }
@@ -93,18 +94,20 @@ namespace Bit.Core.Services
         {
             cipher.UserId = _sessionUserId;
             if (cipher.Id == default(Guid))
-            {
-                cipher.SetNewId();
+            {                
                 await _cipherRepository.CreateAsync(cipher);
+                await _cipherRepository.SaveChangesAsync();
                 //await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Created);
                 //await _pushService.PushSyncCipherCreateAsync(cipher, null);
             }
             else
             {
                 await _cipherRepository.ReplaceAsync(cipher);
+                await _cipherRepository.SaveChangesAsync();
                 //await _eventService.LogCipherEventAsync(cipher, Enums.EventType.Cipher_Updated);
                 //await _pushService.PushSyncCipherUpdateAsync(cipher, null);
             }
+            
         }
 
         public async Task DeleteAsync(Models.UserCipher cipher)
@@ -113,6 +116,7 @@ namespace Bit.Core.Services
                 throw new BadRequestException("You do not have permissions to delete this.");
 
             await _cipherRepository.DeleteAsync(cipher);
+            await _cipherRepository.SaveChangesAsync();
             //await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_Deleted);
             // push
             await _pushService.PushSyncCipherDeleteAsync(cipher);
@@ -124,6 +128,7 @@ namespace Bit.Core.Services
                 throw new BadRequestException("You do not have permissions to edit this.");
 
             await _orgCipherRepository.DeleteAsync(cipher);
+            await _cipherRepository.SaveChangesAsync();
             await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_Deleted);
             // push
             //await _pushService.PushSyncCipherDeleteAsync(cipher);
@@ -131,6 +136,7 @@ namespace Bit.Core.Services
         public async Task DeleteManyAsync(IEnumerable<Guid> cipherIds)
         {
             await _cipherRepository.DeleteManyAsync(cipherIds, _sessionUserId);
+            await _cipherRepository.SaveChangesAsync();
             /*
                         var events = deletingCiphers.Select(c =>
                             new Tuple<Models.Cipher, EventType, DateTime?>(c, EventType.Cipher_Deleted, null));
@@ -150,6 +156,7 @@ namespace Bit.Core.Services
             var membership = _sessionContext.GetMembership(organizationId);
             if (membership == null) throw new ForbidException();
             await _orgCipherRepository.DeleteManyAsync(cipherIds, membership);
+            await _cipherRepository.SaveChangesAsync();
 
             /*
                         var events = deletingCiphers.Select(c =>
@@ -171,6 +178,7 @@ namespace Bit.Core.Services
                 throw new NotFoundException();
             }
             await _orgCipherRepository.PurgeAsync(_sessionContext.GetMembership(organizationId));
+            await _cipherRepository.SaveChangesAsync();
             await _eventService.LogOrganizationEventAsync(org, Enums.EventType.Organization_PurgedVault);
         }
 
@@ -183,6 +191,7 @@ namespace Bit.Core.Services
             }
 
             await _cipherRepository.MoveAsync(cipherIds, destinationFolderId, _sessionUserId);
+            await _cipherRepository.SaveChangesAsync();
             await _pushService.PushSyncCiphersAsync(_sessionUserId);
         }
 
@@ -191,15 +200,14 @@ namespace Bit.Core.Services
             if (folder.Id == default(Guid))
             {
                 await _folderRepository.CreateAsync(folder);
-
+                await _folderRepository.SaveChangesAsync();
                 // push
                 await _pushService.PushSyncFolderCreateAsync(folder);
             }
             else
-            {
-                folder.RevisionDate = DateTime.UtcNow;
-                await _folderRepository.UpsertAsync(folder);
-
+            {                
+                await _folderRepository.ReplaceAsync(folder);
+                await _folderRepository.SaveChangesAsync();
                 // push
                 await _pushService.PushSyncFolderUpdateAsync(folder);
             }
@@ -208,6 +216,7 @@ namespace Bit.Core.Services
         public async Task DeleteFolderAsync(Folder folder)
         {
             await _folderRepository.DeleteAsync(folder);
+            await _folderRepository.SaveChangesAsync();
 
             // push
             await _pushService.PushSyncFolderDeleteAsync(folder);
@@ -233,6 +242,7 @@ namespace Bit.Core.Services
             IEnumerable<KeyValuePair<int, int>> folderRelationships)
         {
             // Create the folder associations based on the newly created folder ids
+            /*
             foreach (var relationship in folderRelationships)
             {
                 var cipher = ciphers.ElementAtOrDefault(relationship.Key);
@@ -242,6 +252,7 @@ namespace Bit.Core.Services
                 {
                     continue;
                 }
+                cipher.FolderId=folder.Id;
                 // TODO : cherry fix this.
                 throw new NotImplementedException();
                 //                cipher.Folders = $"{{\"{cipher.UserId.ToString().ToUpperInvariant()}\":" +   $"\"{folder.Id.ToString().ToUpperInvariant()}\"}}";
@@ -256,6 +267,8 @@ namespace Bit.Core.Services
             {
                 await _pushService.PushSyncVaultAsync(userId.Value);
             }
+            */
+            throw new NotImplementedException();
         }
 
         // TODO :test incomplete
@@ -297,7 +310,8 @@ namespace Bit.Core.Services
             if (cipher.DeletedDate.HasValue)
                 return;
 
-            await _cipherRepository.UpsertAsync(cipher);
+            await _cipherRepository.ReplaceAsync(cipher);
+            await _cipherRepository.SaveChangesAsync();
             //await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_SoftDeleted);
             //await _pushService.PushSyncCipherUpdateAsync(cipher, null);
         }
@@ -312,6 +326,7 @@ namespace Bit.Core.Services
 
             var cipherEntity = await _orgCipherRepository.GetEntityAsync(cipher.Id, _sessionContext.GetMembership(cipher.OrganizationId));
             cipherEntity.DeletedDate = DateTime.UtcNow;
+            await _cipherRepository.SaveChangesAsync();
 
             await _eventService.LogCipherEventAsync(cipher, EventType.Cipher_SoftDeleted);
             //await _pushService.PushSyncCipherUpdateAsync(cipher, null);
@@ -319,6 +334,7 @@ namespace Bit.Core.Services
         public async Task SoftDeleteManyAsync(IEnumerable<Guid> cipherIds)
         {
             await _cipherRepository.SoftDeleteManyAsync(cipherIds, _sessionUserId);
+            await _cipherRepository.SaveChangesAsync();
         }
         public async Task SoftDeleteManyAsync(IEnumerable<Guid> cipherIds, Guid organizationId)
         {
@@ -327,6 +343,7 @@ namespace Bit.Core.Services
 
             var membership = _sessionContext.GetMembership(organizationId);
             await _orgCipherRepository.SoftDeleteManyAsync(cipherIds, membership);
+            await _cipherRepository.SaveChangesAsync();
 
             /*
                         var events = deletingCiphers.Select(c =>
@@ -368,13 +385,15 @@ namespace Bit.Core.Services
         }
         public async Task RestoreManyAsync(IEnumerable<UserCipher> ciphers)
         {
-            var revisionDate = await _cipherRepository.RestoreManyAsync(ciphers.Select(c => c.Id), _sessionUserId);
+            await _cipherRepository.RestoreManyAsync(ciphers.Select(c => c.Id), _sessionUserId);
+            await _cipherRepository.SaveChangesAsync();
+            /*
             var events = ciphers.Select(c =>
             {
                 c.DeletedDate = null;
                 return new Tuple<Cipher, EventType, DateTime?>(c, EventType.Cipher_Restored, null);
             });
-            /*
+            
             foreach (var eventsBatch in events.Batch(100))
             {
                 await _eventService.LogCipherEventsAsync(eventsBatch);

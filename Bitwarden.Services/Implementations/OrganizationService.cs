@@ -33,8 +33,6 @@ namespace Bit.Core.Services
         private readonly IInstallationRepository _installationRepository;
         private readonly IApplicationCacheService _applicationCacheService;
         private readonly IPolicyRepository _policyRepository;
-        private readonly ISsoConfigRepository _ssoConfigRepository;
-        private readonly ISsoUserRepository _ssoUserRepository;
         private readonly IReferenceEventService _referenceEventService;
         private readonly GlobalSettings _globalSettings;
         private readonly IMapper _mapper;
@@ -55,8 +53,6 @@ namespace Bit.Core.Services
             IInstallationRepository installationRepository,
             IApplicationCacheService applicationCacheService,
             IPolicyRepository policyRepository,
-            ISsoConfigRepository ssoConfigRepository,
-            ISsoUserRepository ssoUserRepository,
             IReferenceEventService referenceEventService,
             GlobalSettings globalSettings,
             IMapper mapper,
@@ -77,8 +73,6 @@ namespace Bit.Core.Services
             _installationRepository = installationRepository;
             _applicationCacheService = applicationCacheService;
             _policyRepository = policyRepository;
-            _ssoConfigRepository = ssoConfigRepository;
-            _ssoUserRepository = ssoUserRepository;
             _referenceEventService = referenceEventService;
             _globalSettings = globalSettings;
             _mapper = mapper;
@@ -87,102 +81,49 @@ namespace Bit.Core.Services
         }
 
         public async Task<Tuple<Organization, OrganizationMembershipProfile>> SignUpAsync(OrganizationSignup signup)
-        {
-            var plan = StaticStore.Plans.FirstOrDefault(p => p.Type == signup.Plan && !p.Disabled);
-            if (plan == null)
-            {
-                throw new BadRequestException("Plan not found.");
-            }
-
+        {            
             var organization = new Organization
+            {                                
+                Name = signup.Name,                
+                ReferenceData = signup.Owner.ReferenceData,                
+            };
+            // set id now to link user
+            organization.SetNewId();
+
+            await _organizationRepository.CreateAsync(organization);
+            await _applicationCacheService.UpsertOrganizationAbilityAsync(organization);
+
+            var orgUser = new OrganizationMembershipProfile
             {
-                // Pre-generate the org id so that we can save it with the Stripe subscription..
-                Id = CoreHelpers.GenerateComb(),
-                Name = signup.Name,
-                BillingEmail = signup.BillingEmail,
-                BusinessName = signup.BusinessName,
-                PlanType = plan.Type,
-                Seats = (short)(plan.BaseSeats),
-                MaxCollections = plan.MaxCollections,
-                MaxStorageGb = !plan.BaseStorageGb.HasValue ?
-                    (short?)null : (short)(plan.BaseStorageGb.Value),
-                UsePolicies = plan.HasPolicies,
-                UseSso = plan.HasSso,
-                UseGroups = plan.HasGroups,
-                UseEvents = plan.HasEvents,
-                UseDirectory = plan.HasDirectory,
-                UseTotp = plan.HasTotp,
-                Use2fa = plan.Has2fa,
-                UseApi = plan.HasApi,
-                SelfHost = plan.HasSelfHost,
-                Plan = plan.Name,
-                Gateway = null,
-                ReferenceData = signup.Owner.ReferenceData,
-                Enabled = true,
-                LicenseKey = CoreHelpers.SecureRandomString(20),
-                ApiKey = CoreHelpers.SecureRandomString(30),
+                OrganizationId = organization.Id,
+                UserId = signup.Owner.Id,
+                Key = signup.OwnerKey,
+                Type = OrganizationUserType.Owner,
+                Status = OrganizationUserStatusType.Confirmed                
             };
 
-            var returnValue = await SignUpAsync(organization, signup.Owner.Id, signup.OwnerKey, signup.CollectionName, true);
-            await _referenceEventService.RaiseEventAsync(
-                new ReferenceEvent(ReferenceEventType.Signup, organization)
-                {
-                    PlanName = plan.Name,
-                    PlanType = plan.Type,
-                    Seats = returnValue.Item1.Seats,
-                    Storage = returnValue.Item1.MaxStorageGb,
-                });
-            return returnValue;
-        }
+            await _organizationUserRepository.CreateAsync(orgUser);
 
-        private async Task<Tuple<Organization, OrganizationMembershipProfile>> SignUpAsync(Organization organization,
-        Guid ownerId, string ownerKey, string collectionName, bool withPayment)
-        {
-            try
+            if (!string.IsNullOrWhiteSpace(signup.CollectionName))
             {
-                await _organizationRepository.CreateAsync(organization);
-                await _applicationCacheService.UpsertOrganizationAbilityAsync(organization);
-
-                var orgUser = new OrganizationMembershipProfile
+                var defaultCollection = new Collection
                 {
-                    OrganizationId = organization.Id,
-                    UserId = ownerId,
-                    Key = ownerKey,
-                    Type = OrganizationUserType.Owner,
-                    Status = OrganizationUserStatusType.Confirmed,
-                    AccessAll = true
+                    Name = signup.CollectionName,
+                    OrganizationId = organization.Id
                 };
-
-                await _organizationUserRepository.CreateAsync(orgUser);
-
-                if (!string.IsNullOrWhiteSpace(collectionName))
-                {
-                    var defaultCollection = new Collection
-                    {
-                        Name = collectionName,
-                        OrganizationId = organization.Id
-                    };
-                    await _collectionRepository.CreateAsync(defaultCollection);
-                }
-
-                // push
-                var deviceIds = await GetUserDeviceIdsAsync(orgUser.UserId);
-                await _pushRegistrationService.AddUserRegistrationOrganizationAsync(deviceIds,
-                    organization.Id.ToString());
-                await _pushNotificationService.PushSyncOrgKeysAsync(ownerId);
-
-                return new Tuple<Organization, OrganizationMembershipProfile>(organization, orgUser);
+                defaultCollection.SetNewId();
+                await _collectionRepository.CreateAsync(defaultCollection);
             }
-            catch
-            {
-                if (organization.Id != default(Guid))
-                {
-                    await _organizationRepository.DeleteAsync(organization);
-                    await _applicationCacheService.DeleteOrganizationAbilityAsync(organization.Id);
-                }
+          
+            await _organizationRepository.SaveChangesAsync();
 
-                throw;
-            }
+            // push
+            var deviceIds = await GetUserDeviceIdsAsync(orgUser.UserId);
+            await _pushRegistrationService.AddUserRegistrationOrganizationAsync(deviceIds,
+                organization.Id.ToString());
+            await _pushNotificationService.PushSyncOrgKeysAsync(signup.Owner.Id);
+
+            return new Tuple<Organization, OrganizationMembershipProfile>(organization, orgUser);
         }
 
         public async Task DeleteAsync(Organization organization)

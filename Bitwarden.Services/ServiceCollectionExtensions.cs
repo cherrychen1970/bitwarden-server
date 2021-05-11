@@ -43,8 +43,7 @@ namespace Bit.Core
             services.AddScoped<IApplicationCacheService, InMemoryApplicationCacheService>();
 
             // Noop Services
-            services.AddScoped<IReferenceEventService, NoopReferenceEventService>();
-            services.AddScoped<ISendFileStorageService, NoopSendFileStorageService>();
+            services.AddScoped<IReferenceEventService, NoopReferenceEventService>();            
             services.AddScoped<IPushRegistrationService, NoopPushRegistrationService>();
             services.AddScoped<IEventWriteService, NoopEventWriteService>();            
             services.AddScoped<IMailService, NoopMailService>();

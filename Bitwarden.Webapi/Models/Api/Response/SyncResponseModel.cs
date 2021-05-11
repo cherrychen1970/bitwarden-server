@@ -19,8 +19,8 @@ namespace Bit.Core.Models.Api
             IEnumerable<OrganizationCipher> orgCiphers,
             IDictionary<Guid, IGrouping<Guid, CollectionCipher>> collectionCiphersDict,
             bool excludeDomains,
-            IEnumerable<Policy> policies,
-            IEnumerable<Send> sends)
+            IEnumerable<Policy> policies
+            )
             : base("sync")
         {
             Profile = new ProfileResponseModel(user, organizationUsers, userTwoFactorEnabled);

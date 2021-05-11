@@ -85,19 +85,6 @@ namespace Bit.Api.Controllers
                 throw new UnauthorizedAccessException();
             }
 
-            var plan = StaticStore.Plans.FirstOrDefault(plan => plan.Type == model.PlanType);
-            if (plan == null || plan.LegacyYear != null)
-            {
-                throw new Exception("Invalid plan selected.");
-            }
-
-            var policies = await _policyRepository.GetManyByUserIdAsync(user.Id);
-            if (policies.Any(policy => policy.Type == PolicyType.SingleOrg))
-            {
-                throw new Exception("You may not create an organization. You belong to an organization " +
-                     "which has a policy that prohibits you from being a member of any other organization.");
-            }
-
             var organizationSignup = model.ToOrganizationSignup(user);
             var result = await _organizationService.SignUpAsync(organizationSignup);
             return new OrganizationResponseModel(result.Item1);

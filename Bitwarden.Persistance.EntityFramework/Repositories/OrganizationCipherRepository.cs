@@ -49,14 +49,6 @@ namespace Bit.Infrastructure.EntityFramework
             }
             return list;
         }
-        public async Task CreateAsync(OrganizationCipher cipher)
-        {
-            var entity = Mapper.Map<EFModel.Cipher>(cipher);
-            dbSet.Add(entity);
-            await SaveChangesAsync();
-            cipher.Id = entity.Id;
-        }
-
         public async Task DeleteAsync(Guid id, OrganizationMembership membership)
         {
             var cipher = await Filter(membership).OfKey(id).SingleOrDefaultAsync();
@@ -113,6 +105,8 @@ namespace Bit.Infrastructure.EntityFramework
                 
                 case Bit.Core.Enums.OrganizationUserType.User:                    
                 case Bit.Core.Enums.OrganizationUserType.Manager:
+                    // TODO : test only
+                    return dbSet.OfOrganization(membership.OrganizationId);
                     var allocatedCollectionIds = dbContext.CollectionUsers.OfMembership(membership).Select(x => x.CollectionId).ToList();
                     return dbSet.OfOrganization(membership.OrganizationId).OfCollections(allocatedCollectionIds);
 

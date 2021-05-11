@@ -5,6 +5,8 @@ using System.Collections;
 
 namespace Bit.Core.Entities
 {
+    public interface IEntityAuditable : IEntityCreated,IEntityUpdated
+    { }
    public interface IEntityCreated 
     {
         //byte[] Timestamp { get; }

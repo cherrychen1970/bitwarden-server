@@ -27,8 +27,7 @@ namespace Bit.Core.IdentityServer
         private readonly IDeviceRepository _deviceRepository;
         private readonly IDeviceService _deviceService;
         private readonly IUserService _userService;
-        private readonly IEventService _eventService;
-        private readonly IOrganizationDuoWebTokenProvider _organizationDuoWebTokenProvider;
+        private readonly IEventService _eventService;        
         private readonly IOrganizationRepository _organizationRepository;
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IApplicationCacheService _applicationCacheService;
@@ -45,8 +44,7 @@ namespace Bit.Core.IdentityServer
             IDeviceRepository deviceRepository,
             IDeviceService deviceService,
             IUserService userService,
-            IEventService eventService,
-            IOrganizationDuoWebTokenProvider organizationDuoWebTokenProvider,
+            IEventService eventService,            
             IOrganizationRepository organizationRepository,
             IOrganizationUserRepository organizationUserRepository,
             IApplicationCacheService applicationCacheService,
@@ -60,8 +58,7 @@ namespace Bit.Core.IdentityServer
             _deviceRepository = deviceRepository;
             _deviceService = deviceService;
             _userService = userService;
-            _eventService = eventService;
-            _organizationDuoWebTokenProvider = organizationDuoWebTokenProvider;
+            _eventService = eventService;            
             _organizationRepository = organizationRepository;
             _organizationUserRepository = organizationUserRepository;
             _applicationCacheService = applicationCacheService;
@@ -87,38 +84,9 @@ namespace Bit.Core.IdentityServer
                 return;
             }
 
-            var twoFactorRequirement = await RequiresTwoFactorAsync(user);
-            if (twoFactorRequirement.Item1)
-            {
-                // Just defaulting it
-                var twoFactorProviderType = TwoFactorProviderType.Authenticator;
-                if (!twoFactorRequest || !Enum.TryParse(twoFactorProvider, out twoFactorProviderType))
-                {
-                    await BuildTwoFactorResultAsync(user, twoFactorRequirement.Item2, context);
-                    return;
-                }
-
-                var verified = await VerifyTwoFactor(user, twoFactorRequirement.Item2,
-                    twoFactorProviderType, twoFactorToken);
-                if (!verified && twoFactorProviderType != TwoFactorProviderType.Remember)
-                {
-                    await BuildErrorResultAsync("Two-step token is invalid. Try again.", true, context, user);
-                    return;
-                }
-                else if (!verified && twoFactorProviderType == TwoFactorProviderType.Remember)
-                {
-                    // Delay for brute force.
-                    await Task.Delay(2000);
-                    await BuildTwoFactorResultAsync(user, twoFactorRequirement.Item2, context);
-                    return;
-                }
-            }
-            else
-            {
-                twoFactorRequest = false;
-                twoFactorRemember = false;
-                twoFactorToken = null;
-            }
+            twoFactorRequest = false;
+            twoFactorRemember = false;
+            twoFactorToken = null;
 
             // Returns true if can finish validation process
             if (await IsValidAuthTypeAsync(user, request.GrantType))
@@ -178,56 +146,6 @@ namespace Bit.Core.IdentityServer
             SetSuccessResult(context, user, claims, customResponse);
         }
 
-        protected async Task BuildTwoFactorResultAsync(User user, Organization organization, T context)
-        {
-            var providerKeys = new List<byte>();
-            var providers = new Dictionary<string, Dictionary<string, object>>();
-
-            var enabledProviders = new List<KeyValuePair<TwoFactorProviderType, TwoFactorProvider>>();
-            if (organization?.GetTwoFactorProviders() != null)
-            {
-                enabledProviders.AddRange(organization.GetTwoFactorProviders().Where(
-                    p => organization.TwoFactorProviderIsEnabled(p.Key)));
-            }
-
-            if (user.GetTwoFactorProviders() != null)
-            {
-                foreach (var p in user.GetTwoFactorProviders())
-                {
-                    if (await _userService.TwoFactorProviderIsEnabledAsync(p.Key, user))
-                    {
-                        enabledProviders.Add(p);
-                    }
-                }
-            }
-
-            if (!enabledProviders.Any())
-            {
-                await BuildErrorResultAsync("No two-step providers enabled.", false, context, user);
-                return;
-            }
-
-            foreach (var provider in enabledProviders)
-            {
-                providerKeys.Add((byte)provider.Key);
-                var infoDict = await BuildTwoFactorParams(organization, user, provider.Key, provider.Value);
-                providers.Add(((byte)provider.Key).ToString(), infoDict);
-            }
-
-            SetTwoFactorResult(context,
-                new Dictionary<string, object>
-                {
-                    { "TwoFactorProviders", providers.Keys },
-                    { "TwoFactorProviders2", providers }
-                });
-
-            if (enabledProviders.Count() == 1 && enabledProviders.First().Key == TwoFactorProviderType.Email)
-            {
-                // Send email now if this is their only 2FA method
-                await _userService.SendTwoFactorEmailAsync(user);
-            }
-        }
-
         protected async Task BuildErrorResultAsync(string message, bool twoFactorRequest, T context, User user)
         {
             if (user != null)
@@ -268,7 +186,7 @@ namespace Bit.Core.IdentityServer
 
             Organization firstEnabledOrg = null;
             var orgs = await _organizationUserRepository.GetMemberships(user.Id);
-                
+
             return new Tuple<bool, Organization>(individualRequired || firstEnabledOrg != null, firstEnabledOrg);
         }
 
@@ -316,101 +234,6 @@ namespace Bit.Core.IdentityServer
                 PushToken = string.IsNullOrWhiteSpace(devicePushToken) ? null : devicePushToken
             };
         }
-
-        private async Task<bool> VerifyTwoFactor(User user, Organization organization, TwoFactorProviderType type,
-            string token)
-        {
-            switch (type)
-            {
-                case TwoFactorProviderType.Authenticator:
-                case TwoFactorProviderType.Email:
-                case TwoFactorProviderType.Duo:
-                case TwoFactorProviderType.YubiKey:
-                case TwoFactorProviderType.U2f:
-                case TwoFactorProviderType.Remember:
-                    if (type != TwoFactorProviderType.Remember &&
-                        !(await _userService.TwoFactorProviderIsEnabledAsync(type, user)))
-                    {
-                        return false;
-                    }
-                    return await _userManager.VerifyTwoFactorTokenAsync(user,
-                        CoreHelpers.CustomProviderName(type), token);
-                case TwoFactorProviderType.OrganizationDuo:
-                    if (!organization?.TwoFactorProviderIsEnabled(type) ?? true)
-                    {
-                        return false;
-                    }
-
-                    return await _organizationDuoWebTokenProvider.ValidateAsync(token, organization, user);
-                default:
-                    return false;
-            }
-        }
-
-        private async Task<Dictionary<string, object>> BuildTwoFactorParams(Organization organization, User user,
-            TwoFactorProviderType type, TwoFactorProvider provider)
-        {
-            switch (type)
-            {
-                case TwoFactorProviderType.Duo:
-                case TwoFactorProviderType.U2f:
-                case TwoFactorProviderType.Email:
-                case TwoFactorProviderType.YubiKey:
-                    if (!(await _userService.TwoFactorProviderIsEnabledAsync(type, user)))
-                    {
-                        return null;
-                    }
-
-                    var token = await _userManager.GenerateTwoFactorTokenAsync(user,
-                        CoreHelpers.CustomProviderName(type));
-                    if (type == TwoFactorProviderType.Duo)
-                    {
-                        return new Dictionary<string, object>
-                        {
-                            ["Host"] = provider.MetaData["Host"],
-                            ["Signature"] = token
-                        };
-                    }
-                    else if (type == TwoFactorProviderType.U2f)
-                    {
-                        // TODO: Remove "Challenges" in a future update. Deprecated.
-                        var tokens = token?.Split('|');
-                        return new Dictionary<string, object>
-                        {
-                            ["Challenge"] = tokens != null && tokens.Length > 0 ? tokens[0] : null,
-                            ["Challenges"] = tokens != null && tokens.Length > 1 ? tokens[1] : null
-                        };
-                    }
-                    else if (type == TwoFactorProviderType.Email)
-                    {
-                        return new Dictionary<string, object>
-                        {
-                            ["Email"] = token
-                        };
-                    }
-                    else if (type == TwoFactorProviderType.YubiKey)
-                    {
-                        return new Dictionary<string, object>
-                        {
-                            ["Nfc"] = (bool)provider.MetaData["Nfc"]
-                        };
-                    }
-                    return null;
-                case TwoFactorProviderType.OrganizationDuo:
-                    if (await _organizationDuoWebTokenProvider.CanGenerateTwoFactorTokenAsync(organization))
-                    {
-                        return new Dictionary<string, object>
-                        {
-                            ["Host"] = provider.MetaData["Host"],
-                            ["Signature"] = await _organizationDuoWebTokenProvider.GenerateAsync(organization, user)
-                        };
-                    }
-                    return null;
-                default:
-                    return null;
-            }
-        }
-
         private async Task<Device> SaveDeviceAsync(User user, ValidatedTokenRequest request)
         {
             var device = GetDeviceFromRequest(request);

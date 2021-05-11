@@ -71,8 +71,7 @@ namespace Bit.Api.Controllers
             var hasEnabledOrgs = organizationUsers.Any();
             var folders = await _folderRepository.GetManyByUserIdAsync(user.Id);
             var ciphers = (await _cipherRepository.GetManyAsync(user.Id)).ToList();
-            //var sends = await _sendRepository.GetManyByUserIdAsync(user.Id);
-            var sends = new Send[] {};
+            //var sends = await _sendRepository.GetManyByUserIdAsync(user.Id);            
             ICollection<OrganizationCipher> orgCiphers = new List<OrganizationCipher>(); 
 
             IEnumerable<Collection> collections = null;
@@ -85,10 +84,9 @@ namespace Bit.Api.Controllers
                 collections = await _collectionRepository.GetManyAsync(_currentContext.OrganizationMemberships);
                 policies = await _policyRepository.GetManyByUserIdAsync(user.Id);
             }
-
-            var userTwoFactorEnabled = await _userService.TwoFactorIsEnabledAsync(user);
-            var response = new SyncResponseModel(_globalSettings, user, userTwoFactorEnabled, organizationUsers,
-                folders, collections, ciphers, orgCiphers, collectionCiphersGroupDict, excludeDomains, policies, sends);
+            
+            var response = new SyncResponseModel(_globalSettings, user, false, organizationUsers,
+                folders, collections, ciphers, orgCiphers, collectionCiphersGroupDict, excludeDomains, policies);
             return response;
         }
     }

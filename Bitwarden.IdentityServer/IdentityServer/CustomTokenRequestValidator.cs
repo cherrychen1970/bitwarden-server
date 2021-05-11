@@ -25,8 +25,7 @@ namespace Bit.Core.IdentityServer
             IDeviceRepository deviceRepository,
             IDeviceService deviceService,
             IUserService userService,
-            IEventService eventService,
-            IOrganizationDuoWebTokenProvider organizationDuoWebTokenProvider,
+            IEventService eventService,            
             IOrganizationRepository organizationRepository,
             IOrganizationUserRepository organizationUserRepository,
             IApplicationCacheService applicationCacheService,
@@ -36,7 +35,7 @@ namespace Bit.Core.IdentityServer
             GlobalSettings globalSettings,
             IPolicyRepository policyRepository)
             : base(userManager, deviceRepository, deviceService, userService, eventService,
-                  organizationDuoWebTokenProvider, organizationRepository, organizationUserRepository,
+                  organizationRepository, organizationUserRepository,
                   applicationCacheService, mailService, logger, httpContextAccessor, globalSettings, policyRepository)
         {
             _userManager = userManager;

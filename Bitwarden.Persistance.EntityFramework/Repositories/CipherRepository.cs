@@ -30,20 +30,9 @@ namespace Bit.Infrastructure.EntityFramework
         }
 
         public async Task<ICollection<UserCipher>> GetManyAsync(Guid userId)
-        {            
+        {
             return await base.GetMany<UserCipher>(x => x.UserId == userId);
         }
-
-        override public async Task CreateAsync(UserCipher cipher)
-        {                    
-            var entity = Mapper.Map<EFModel.Cipher>(cipher);            
-            dbContext.Add(entity);
-            await SaveChangesAsync();
-            cipher.Id = entity.Id;            
-            //await base.CreateAsync(cipher);                        
-            //await dbContext.SaveChangesAsync();
-        }
-
 
         public async Task ReplaceAsync(UserCipher obj)
         {
@@ -62,64 +51,71 @@ namespace Bit.Infrastructure.EntityFramework
             }
         }
 
-        public async Task UpdatePartialAsync(UserCipher cipher, Guid? folderId, bool favorite)
+        public async Task UpdatePartialAsync(Guid id, Guid? folderId, bool favorite)
         {
-            throw new NotImplementedException();
+            var ciphers = await GetMany(x => x.Id == id);
+            ciphers.ToList().ForEach(x =>
+            {
+                x.FolderId = folderId;
+                x.Favorite = favorite;
+            });
+            await SaveChangesAsync();
         }
 
         public async Task DeleteManyAsync(IEnumerable<Guid> ids, Guid userId)
         {
-            throw new NotImplementedException();
+            var ciphers = await GetMany(x => ids.Contains(x.Id) && x.UserId == userId);
+            dbSet.RemoveRange(ciphers);
+            await SaveChangesAsync();
         }
-
 
         public async Task MoveAsync(IEnumerable<Guid> ids, Guid folderId, Guid userId)
         {
-            throw new NotImplementedException();
+            var ciphers = await GetMany(x => ids.Contains(x.Id) && x.UserId == userId);
+            ciphers.ToList().ForEach(x => x.FolderId = folderId);
+            await SaveChangesAsync();
         }
 
         public async Task PurgeAsync(Guid userId)
         {
-            throw new NotImplementedException();
+            var ciphers = await GetMany(x => x.UserId == userId);
+            dbSet.RemoveRange(ciphers);
+            await SaveChangesAsync();
         }
 
-        public async Task UpdateManyAsync(IEnumerable<UserCipher> ciphers,Guid userId)
+        public async Task UpdateManyAsync(IEnumerable<UserCipher> userCiphers, Guid userId)
         {
-            if (!ciphers.Any())
-            {
+            var ids = userCiphers.Select(x=>x.Id).ToList();
+            var lookup = userCiphers.ToDictionary(x=>x.Id,y=>y);
+            var oldCiphers = await GetMany(x => ids.Contains(x.Id) && x.UserId == userId);
+            if (!oldCiphers.Any())            
                 return;
-            }
-            throw new NotImplementedException();
-        }
-
-        public async Task CreateAsync(IEnumerable<UserCipher> ciphers, IEnumerable<Folder> folders)
-        {
-            if (!ciphers.Any())
+            foreach (var oldCipher in oldCiphers)
             {
-                return;
-            }
-
-
-            throw new NotImplementedException();
+                var from = lookup[oldCipher.Id];
+                Mapper.Map(from,oldCipher);                
+            }            
+            await SaveChangesAsync();
         }
 
         public async Task SoftDeleteAsync(Guid id, Guid userId)
         {
-            var cipher = dbSet.SingleOrDefault(x=>x.Id==id && x.UserId==userId);
-            cipher.DeletedDate=null;
-            await SaveChangesAsync();            
+            var cipher = dbSet.SingleOrDefault(x => x.Id == id && x.UserId == userId);
+            cipher.DeletedDate = DateTime.UtcNow;
+            await SaveChangesAsync();
         }
 
         public async Task SoftDeleteManyAsync(IEnumerable<Guid> ids, Guid userId)
         {
-            var ciphers = await GetMany(x=> ids.Contains(x.Id) && x.UserId==userId );
-            ciphers.ToList().ForEach(x=>x.DeletedDate=null);
-            await SaveChangesAsync();            
+            var ciphers = await GetMany(x => ids.Contains(x.Id) && x.UserId == userId);
+            ciphers.ToList().ForEach(x => x.DeletedDate = DateTime.UtcNow);
+            await SaveChangesAsync();
         }
-
-        public async Task<DateTime> RestoreManyAsync(IEnumerable<Guid> ids, Guid userId)
+        public async Task RestoreManyAsync(IEnumerable<Guid> ids, Guid userId)
         {
-            throw new NotImplementedException();
+            var ciphers = await GetMany(x => ids.Contains(x.Id) && x.UserId == userId);
+            ciphers.ToList().ForEach(x => x.DeletedDate = null);
+            await SaveChangesAsync();
         }
     }
 }

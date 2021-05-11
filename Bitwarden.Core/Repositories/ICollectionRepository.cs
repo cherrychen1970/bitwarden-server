@@ -14,7 +14,7 @@ namespace Bit.Core.Repositories
         Task<ICollection<Collection>> GetManyAsync(OrganizationMembership membership);
         Task<ICollection<Collection>> GetManyAsync(IEnumerable<OrganizationMembership> memberships);
         //Task DeleteUserAsync(CollectionAssigned assigned);
-        Task DeleteMembersAsync(Guid id, OrganizationMembership user);
+        Task DeleteMembersAsync(Guid id, Guid orgUserId);
         Task UpdateMembersAsync(IEnumerable<CollectionMember> users);
     }
 }

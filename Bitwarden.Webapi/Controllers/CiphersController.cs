@@ -229,7 +229,7 @@ namespace Bit.Api.Controllers
             if (cipher.UserId != _sessionContext.UserId)
                 throw new NotFoundException();
 
-            await _cipherRepository.UpdatePartialAsync(cipher, model.FolderId, model.Favorite);
+            await _cipherRepository.UpdatePartialAsync(id, model.FolderId, model.Favorite);
         }
 
         [HttpPut("{id}/collections")]

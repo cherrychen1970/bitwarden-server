@@ -1,0 +1,54 @@
+@url=http://localhost:4000
+//@token=eyJhbGciOiJSUzI1NiIsInR5cCI6ImF0K2p3dCJ9.eyJuYmYiOjE2MjA0NDgwNDksImV4cCI6MTYyMDQ1MTY0OSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdCIsImNsaWVudF9pZCI6IndlYiIsInN1YiI6ImEyOTdkYTdjLTc2NDUtNDAyOC04MzBlLTA5NjMzNWUyZWZmMCIsImF1dGhfdGltZSI6MTYyMDQ0ODA0OSwiaWRwIjoiYml0d2FyZGVuIiwicHJlbWl1bSI6dHJ1ZSwiZW1haWwiOiJjaGVycnlAdGVzdC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwic3N0YW1wIjoiTjdFUjdDTUw0NkVYQ1lBTEJNVDRBQk9JTkpGRlJXSkYiLCJuYW1lIjoiY2hlcnJ5IiwiZGV2aWNlIjoiMzFlMmVjZGItZWNmYS00ZjViLTgxYTktYWM1NWNiZTQzYjMyIiwianRpIjoiRDM0OTA5Q0JCMDlEQkZFMEM0MDQxRjhCRDk3Qjg5Q0EiLCJpYXQiOjE2MjA0NDgwNDksInNjb3BlIjpbImFwaSIsIm9mZmxpbmVfYWNjZXNzIl0sImFtciI6WyJBcHBsaWNhdGlvbiJdfQ.B5Pmwq7QnC1zYSxUqmr4tFCqfBddI6fDKOZS6i-sLBJ9CERaL_z_0MQP3glTRnTaevXEXj1M-95FObqY3Pu31m9VHyMblfto9Me1bH83tt6lqUf_dv8rkv92T3zUJTh8QMzfipCCIbIJu-q5NVs6AvWvjxCmMJQDTSQ3MleTgG-T5hnHn6_HgFBiThCQ-njuT0SD_KvvshwZRA7bIiTkV8HH0V7xx2OVIBk0Cmfnwn1h_5y1ZDEI_gdGDEXBeQa-xtdE-oUk8vKLqiXyJ0WpK6pxrtk6MgvwPXdF-ZdeNmuLYULxxI5vXe2I1stXoxIBm92TFUdxdz5Owjb5eFOOZQ
+@ben=scope=api%20offline_access&client_id=web&grant_type=password&username=ben%40test.com&password=IUl%2BwjxWgtR2kgOyXnw9k2Um1edBULG5buJYETpnuTA%3D&deviceType=9&deviceIdentifier=31e2ecdb-ecfa-4f5b-81a9-ac55cbe43b32&deviceName=chrome
+@cherry=scope=api%20offline_access&client_id=web&grant_type=password&username=cherry%40test.com&password=FXu5H%2BN%2Fxz3aQPwugoQ2YOjOTIgszxlkZvIrYrz%2Fu28%3D&deviceType=9&deviceIdentifier=31e2ecdb-ecfa-4f5b-81a9-ac55cbe43b32&deviceName=chrome
+#################################################################################################
+# @name login
+POST {{url}}/connect/token
+content-type: application/x-www-form-urlencoded; charset=utf-8
+
+{{cherry}}
+###
+@token = {{login.response.body.$.access_token}}
+###
+# @name organizations
+GET {{url}}/api/organizations
+authorization: Bearer {{token}}
+###
+@orgId = {{organizations.response.body.$.data[0].id}}
+
+#################################################################################################
+### Collections
+#################################################################################################
+## @name collections
+GET {{url}}/api/organizations/{{orgId}}/collections
+authorization: Bearer {{token}}
+###
+@collectionId = {{collections.response.body.$.data[0].id}}
+###
+POST {{url}}/api/organizations/{{orgId}}/collections
+Content-Type: application/json
+authorization: Bearer {{token}}
+
+{
+    "groups": [],
+    "name": "2.48KiqXshMKnPdP3fOcgVqQ==|2Mt3HAXA+V3xAZiMbwp+8g==|Cvv461F3UOkMXFOQpiigwiuSlG+lLx8GQsqV9G1y394="
+}
+
+###
+GET {{url}}/api/organizations/{{orgId}}/collections/{{collectionId}}/users
+authorization: Bearer {{token}}
+
+###
+PUT  {{url}}/api/organizations/{{orgId}}/collections/{{collectionId}}/users
+authorization: Bearer {{token}}
+Content-Type: application/json
+
+[
+    {
+        "id": "2992033c-0bf3-49ef-ab7b-011e40c95f04",
+        "readOnly": false,
+        "hidePasswords": false
+    }
+]
+#################################################################################################

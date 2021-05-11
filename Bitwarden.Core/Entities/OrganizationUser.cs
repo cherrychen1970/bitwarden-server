@@ -7,9 +7,8 @@ using Bit.Core.Enums;
 
 namespace Bit.Core.Entities
 {
-    public class OrganizationUser : DomainModels.IKey<Guid>, IEntityCreated,IEntityUpdated
-    {
-        public Guid Id { get; set; }
+    public class OrganizationUser : BaseGuidEntity, IEntityCreated,IEntityUpdated
+    {        
         public Guid OrganizationId { get; set; }
         public Guid UserId { get; set; }
         public string Email { get; set; }
@@ -23,21 +22,19 @@ namespace Bit.Core.Entities
         public string Permissions { get; set; }        
         virtual public Organization Organization {get;set;}
         virtual public User User {get;set;}
-        //public ICollection<Cipher> Ciphers { get; set; }
-        
+        //public ICollection<Cipher> Ciphers { get; set; }        
     }
 
     public class OrganizationUserProfile : Profile
     {
         public OrganizationUserProfile()
         {
-            CreateMap<OrganizationUser,DomainModels.OrganizationMembershipProfile>()
-                .ReverseMap()
+            CreateMap<OrganizationUser,DomainModels.OrganizationMembershipProfile>();
+
+            CreateMap<DomainModels.OrganizationMembershipProfile,OrganizationUser>()
                 .Ignore(x=>x.Id);
                
-            CreateMap<OrganizationUser, DomainModels.OrganizationMembership>()
-                .ReverseMap()
-                .Ignore(x=>x.Id);            
+            CreateMap<OrganizationUser, DomainModels.OrganizationMembership>();                            
         }
     }
 }

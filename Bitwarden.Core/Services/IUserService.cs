@@ -24,11 +24,6 @@ namespace Bit.Core.Services
         Task<IdentityResult> RegisterUserAsync(User user, string masterPassword, string token, Guid? orgUserId);
         Task<IdentityResult> RegisterUserAsync(User user);
         Task SendMasterPasswordHintAsync(string email);
-        Task SendTwoFactorEmailAsync(User user);
-        Task<bool> VerifyTwoFactorEmailAsync(User user, string token);
-        Task<U2fRegistration> StartU2fRegistrationAsync(User user);
-        Task<bool> DeleteU2fKeyAsync(User user, int id);
-        Task<bool> CompleteU2fRegistrationAsync(User user, int id, string name, string deviceResponse);
         Task SendEmailVerificationAsync(User user);
         Task<IdentityResult> ConfirmEmailAsync(User user, string token);
         Task InitiateEmailChangeAsync(User user, string newEmail);
@@ -41,22 +36,11 @@ namespace Bit.Core.Services
         Task<IdentityResult> UpdateKeyAsync(User user, string masterPassword, string key, string privateKey,
             IEnumerable<UserCipher> ciphers, IEnumerable<Folder> folders);
         Task<IdentityResult> RefreshSecurityStampAsync(User user, string masterPasswordHash);
-        Task UpdateTwoFactorProviderAsync(User user, TwoFactorProviderType type);
-        Task DisableTwoFactorProviderAsync(User user, TwoFactorProviderType type,
-            IOrganizationService organizationService);
-        Task<bool> RecoverTwoFactorAsync(string email, string masterPassword, string recoveryCode,
-            IOrganizationService organizationService);
         Task<string> GenerateUserTokenAsync(User user, string tokenProvider, string purpose);
         Task<IdentityResult> DeleteAsync(User user);
         Task<IdentityResult> DeleteAsync(User user, string token);
-        Task SendDeleteConfirmationAsync(string email);
-        Task IapCheckAsync(User user, PaymentMethodType paymentMethodType);
-        Task<bool> CheckPasswordAsync(User user, string password);
-        Task<bool> CanAccessPremium(ITwoFactorProvidersUser user);
-        Task<bool> TwoFactorIsEnabledAsync(ITwoFactorProvidersUser user);
-        Task<bool> TwoFactorProviderIsEnabledAsync(TwoFactorProviderType provider, ITwoFactorProvidersUser user);
-        Task<string> GenerateEnterprisePortalSignInTokenAsync(User user);
-        Task<string> GenerateSignInTokenAsync(User user, string purpose);
+        Task SendDeleteConfirmationAsync(string email);        
+        Task<bool> CheckPasswordAsync(User user, string password);                                        
         Task RotateApiKeyAsync(User user);
     }
 }

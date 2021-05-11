@@ -9,9 +9,8 @@ using Bit.Core.Models.Data;
 
 namespace Bit.Core.Entities
 {
-    public class Cipher : DomainModels.IKey<Guid>, IEntityCreated, IEntityUpdated
-    {
-        public Guid Id { get; set; }
+    public class Cipher : BaseGuidEntity , IEntityCreated, IEntityUpdated
+    {        
         public Guid? UserId { get; set; }
         public Guid? OrganizationId { get; set; }
         public CipherType Type { get; set; }

@@ -41,8 +41,7 @@ namespace Bit.Api.Controllers
             ICipherRepository cipherRepository,
             IFolderRepository folderRepository,
             IOrganizationService organizationService,
-            IOrganizationUserRepository organizationUserRepository,            
-            ISsoUserRepository ssoUserRepository,
+            IOrganizationUserRepository organizationUserRepository,                        
             IUserRepository userRepository,
             ISessionContext currentContext,
             IUserService userService)
@@ -368,8 +367,7 @@ namespace Bit.Api.Controllers
             }
 
             var organizationMembershipProfiles = await _organizationUserRepository.GetManyAsync(_currentContext.OrganizationMemberships);
-            var response = new ProfileResponseModel(user, organizationMembershipProfiles,
-                await _userService.TwoFactorIsEnabledAsync(user));
+            var response = new ProfileResponseModel(user, organizationMembershipProfiles, false);
             return response;
         }
 
@@ -396,7 +394,7 @@ namespace Bit.Api.Controllers
             }
 
             await _userService.SaveUserAsync(model.ToUser(user));
-            var response = new ProfileResponseModel(user, null, await _userService.TwoFactorIsEnabledAsync(user));
+            var response = new ProfileResponseModel(user, null, false);
             return response;
         }
 
@@ -494,26 +492,6 @@ namespace Bit.Api.Controllers
 
             await Task.Delay(2000);
             throw new BadRequestException(ModelState);
-        }
-
-
-        [HttpGet("enterprise-portal-signin-token")]
-        [Authorize("Web")]
-        public async Task<string> GetEnterprisePortalSignInToken()
-        {
-            var user = await _userService.GetUserByIdAsync(_currentContext.UserId);
-            if (user == null)
-            {
-                throw new UnauthorizedAccessException();
-            }
-
-            var token = await _userService.GenerateEnterprisePortalSignInTokenAsync(user);
-            if (token == null)
-            {
-                throw new BadRequestException("Cannot generate sign in token.");
-            }
-
-            return token;
         }
 
 

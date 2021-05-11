@@ -31,7 +31,6 @@ namespace Bit.Core.Services
         private readonly ICipherRepository _cipherRepository;
         private readonly IOrganizationUserRepository _organizationUserRepository;
         private readonly IOrganizationRepository _organizationRepository;
-        private readonly IU2fRepository _u2fRepository;
         private readonly IMailService _mailService;
         private readonly IPushNotificationService _pushService;
         private readonly IdentityErrorDescriber _identityErrorDescriber;
@@ -52,8 +51,7 @@ namespace Bit.Core.Services
             IUserRepository userRepository,
             ICipherRepository cipherRepository,
             IOrganizationUserRepository organizationUserRepository,
-            IOrganizationRepository organizationRepository,
-            IU2fRepository u2fRepository,
+            IOrganizationRepository organizationRepository,            
             IMailService mailService,
             IPushNotificationService pushService,
             IUserStore<User> store,
@@ -89,8 +87,7 @@ namespace Bit.Core.Services
             _userRepository = userRepository;
             _cipherRepository = cipherRepository;
             _organizationUserRepository = organizationUserRepository;
-            _organizationRepository = organizationRepository;
-            _u2fRepository = u2fRepository;
+            _organizationRepository = organizationRepository;            
             _mailService = mailService;
             _pushService = pushService;
             _identityOptions = optionsAccessor?.Value ?? new IdentityOptions();
@@ -214,30 +211,6 @@ namespace Bit.Core.Services
             {
                 throw new BadRequestException("Open registration has been disabled by the system administrator.");
             }
-
-            if (orgUserId.HasValue)
-            {
-                var orgUser = await _organizationUserRepository.GetByIdAsync(orgUserId.Value);
-                if (orgUser != null)
-                {
-                    var twoFactorPolicy = await _policyRepository.GetByOrganizationIdTypeAsync(orgUser.OrganizationId,
-                        PolicyType.TwoFactorAuthentication);
-                    if (twoFactorPolicy != null && twoFactorPolicy.Enabled)
-                    {
-                        user.SetTwoFactorProviders(new Dictionary<TwoFactorProviderType, TwoFactorProvider>
-                        {
-
-                            [TwoFactorProviderType.Email] = new TwoFactorProvider
-                            {
-                                MetaData = new Dictionary<string, object> { ["Email"] = user.Email.ToLowerInvariant() },
-                                Enabled = true
-                            }
-                        });
-                        SetTwoFactorProvider(user, TwoFactorProviderType.Email);
-                    }
-                }
-            }
-
             user.ApiKey = CoreHelpers.SecureRandomString(30);
             var result = await base.CreateAsync(user, masterPassword);
             if (result == IdentityResult.Success)
@@ -304,132 +277,6 @@ namespace Bit.Core.Services
             var email = ((string)provider.MetaData["Email"]).ToLowerInvariant();
             return await base.VerifyUserTokenAsync(user, TokenOptions.DefaultEmailProvider,
                 "2faEmail:" + email, token);
-        }
-
-        public async Task<U2fRegistration> StartU2fRegistrationAsync(User user)
-        {
-            await _u2fRepository.DeleteManyByUserIdAsync(user.Id);
-            var reg = U2fLib.StartRegistration(CoreHelpers.U2fAppIdUrl(_globalSettings));
-            await _u2fRepository.CreateAsync(new U2f
-            {
-                AppId = reg.AppId,
-                Challenge = reg.Challenge,
-                Version = reg.Version,
-                UserId = user.Id,                
-            });
-
-            return new U2fRegistration
-            {
-                AppId = reg.AppId,
-                Challenge = reg.Challenge,
-                Version = reg.Version
-            };
-        }
-
-        public async Task<bool> CompleteU2fRegistrationAsync(User user, int id, string name, string deviceResponse)
-        {
-            if (string.IsNullOrWhiteSpace(deviceResponse))
-            {
-                return false;
-            }
-
-            var challenges = await _u2fRepository.GetManyByUserIdAsync(user.Id);
-            if (!challenges?.Any() ?? true)
-            {
-                return false;
-            }
-
-            var registerResponse = BaseModel.FromJson<RegisterResponse>(deviceResponse);
-
-            try
-            {
-                var challenge = challenges.OrderBy(i => i.Id).Last(i => i.KeyHandle == null);
-                var startedReg = new StartedRegistration(challenge.Challenge, challenge.AppId);
-                var reg = U2fLib.FinishRegistration(startedReg, registerResponse);
-
-                await _u2fRepository.DeleteManyByUserIdAsync(user.Id);
-
-                // Add device
-                var providers = user.GetTwoFactorProviders();
-                if (providers == null)
-                {
-                    providers = new Dictionary<TwoFactorProviderType, TwoFactorProvider>();
-                }
-                var provider = user.GetTwoFactorProvider(TwoFactorProviderType.U2f);
-                if (provider == null)
-                {
-                    provider = new TwoFactorProvider();
-                }
-                if (provider.MetaData == null)
-                {
-                    provider.MetaData = new Dictionary<string, object>();
-                }
-
-                if (provider.MetaData.Count >= 5)
-                {
-                    // Can only register up to 5 keys
-                    return false;
-                }
-
-                var keyId = $"Key{id}";
-                if (provider.MetaData.ContainsKey(keyId))
-                {
-                    provider.MetaData.Remove(keyId);
-                }
-
-                provider.Enabled = true;
-                provider.MetaData.Add(keyId, new TwoFactorProvider.U2fMetaData
-                {
-                    Name = name,
-                    KeyHandle = reg.KeyHandle == null ? null : Utils.ByteArrayToBase64String(reg.KeyHandle),
-                    PublicKey = reg.PublicKey == null ? null : Utils.ByteArrayToBase64String(reg.PublicKey),
-                    Certificate = reg.AttestationCert == null ? null : Utils.ByteArrayToBase64String(reg.AttestationCert),
-                    Compromised = false,
-                    Counter = reg.Counter
-                });
-
-                if (providers.ContainsKey(TwoFactorProviderType.U2f))
-                {
-                    providers.Remove(TwoFactorProviderType.U2f);
-                }
-
-                providers.Add(TwoFactorProviderType.U2f, provider);
-                user.SetTwoFactorProviders(providers);
-                await UpdateTwoFactorProviderAsync(user, TwoFactorProviderType.U2f);
-                return true;
-            }
-            catch (U2fException e)
-            {
-                Logger.LogError(e, "Complete U2F registration error.");
-                return false;
-            }
-        }
-
-        public async Task<bool> DeleteU2fKeyAsync(User user, int id)
-        {
-            var providers = user.GetTwoFactorProviders();
-            if (providers == null)
-            {
-                return false;
-            }
-
-            var keyName = $"Key{id}";
-            var provider = user.GetTwoFactorProvider(TwoFactorProviderType.U2f);
-            if (!provider?.MetaData?.ContainsKey(keyName) ?? true)
-            {
-                return false;
-            }
-
-            if (provider.MetaData.Count < 2)
-            {
-                return false;
-            }
-
-            provider.MetaData.Remove(keyName);
-            providers[TwoFactorProviderType.U2f] = provider;
-            user.SetTwoFactorProviders(providers);
-            await UpdateTwoFactorProviderAsync(user, TwoFactorProviderType.U2f);
-            return true;
         }
 
         public async Task SendEmailVerificationAsync(User user)
@@ -644,87 +491,7 @@ namespace Bit.Core.Services
             Logger.LogWarning("Refresh security stamp failed for user {userId}.", user.Id);
             return IdentityResult.Failed(_identityErrorDescriber.PasswordMismatch());
         }
-
-        public async Task UpdateTwoFactorProviderAsync(User user, TwoFactorProviderType type)
-        {
-            SetTwoFactorProvider(user, type);
-            await SaveUserAsync(user);
-            await _eventService.LogUserEventAsync(user.Id, EventType.User_Updated2fa);
-        }
-
-        public async Task DisableTwoFactorProviderAsync(User user, TwoFactorProviderType type,
-            IOrganizationService organizationService)
-        {
-            var providers = user.GetTwoFactorProviders();
-            if (!providers?.ContainsKey(type) ?? true)
-            {
-                return;
-            }
-
-            providers.Remove(type);
-            user.SetTwoFactorProviders(providers);
-            await SaveUserAsync(user);
-            await _eventService.LogUserEventAsync(user.Id, EventType.User_Disabled2fa);
-
-            if (!await TwoFactorIsEnabledAsync(user))
-            {
-                await CheckPoliciesOnTwoFactorRemovalAsync(user, organizationService);
-            }
-        }
-
-        public async Task<bool> RecoverTwoFactorAsync(string email, string masterPassword, string recoveryCode,
-            IOrganizationService organizationService)
-        {
-            var user = await _userRepository.GetByEmailAsync(email);
-            if (user == null)
-            {
-                // No user exists. Do we want to send an email telling them this in the future?
-                return false;
-            }
-
-            if (!await CheckPasswordAsync(user, masterPassword))
-            {
-                return false;
-            }
-
-            if (string.Compare(user.TwoFactorRecoveryCode, recoveryCode, true) != 0)
-            {
-                return false;
-            }
-
-            user.TwoFactorProviders = null;
-            user.TwoFactorRecoveryCode = CoreHelpers.SecureRandomString(32, upper: false, special: false);
-            await SaveUserAsync(user);
-            await _mailService.SendRecoverTwoFactorEmail(user.Email, DateTime.UtcNow, _httpContext?.IpAddress());
-            await _eventService.LogUserEventAsync(user.Id, EventType.User_Recovered2fa);
-            await CheckPoliciesOnTwoFactorRemovalAsync(user, organizationService);
-
-            return true;
-        }
-        public async Task IapCheckAsync(User user, PaymentMethodType paymentMethodType)
-        {
-            if (paymentMethodType != PaymentMethodType.AppleInApp)
-            {
-                throw new BadRequestException("Payment method not supported for in-app purchases.");
-            }
-
-            if (user.Premium)
-            {
-                throw new BadRequestException("Already a premium user.");
-            }
-
-            if (!string.IsNullOrWhiteSpace(user.GatewayCustomerId))
-            {
-                var customerService = new Stripe.CustomerService();
-                var customer = await customerService.GetAsync(user.GatewayCustomerId);
-                if (customer != null && customer.Balance != 0)
-                {
-                    throw new BadRequestException("Customer balance cannot exist when using in-app purchases.");
-                }
-            }
-        }
-
-    
+   
        public override async Task<bool> CheckPasswordAsync(User user, string password)
         {
             if (user == null)
@@ -746,77 +513,6 @@ namespace Bit.Core.Services
             }
             return success;
         }
-
-        public async Task<bool> CanAccessPremium(ITwoFactorProvidersUser user)
-        {
-            var userId = user.GetUserId();
-            if (!userId.HasValue)
-            {
-                return false;
-            }
-            if (user.GetPremium())
-            {
-                return true;
-            }
-            var orgs = await _organizationUserRepository.GetMemberships(userId.Value);            
-            if (!orgs.Any())
-            {
-                return false;
-            }
-            var orgAbilities = await _applicationCacheService.GetOrganizationAbilitiesAsync();
-            return orgs.Any(o => orgAbilities.ContainsKey(o.OrganizationId) &&
-                orgAbilities[o.OrganizationId].UsersGetPremium && orgAbilities[o.OrganizationId].Enabled);
-        }
-
-        public async Task<bool> TwoFactorIsEnabledAsync(ITwoFactorProvidersUser user)
-        {
-            var providers = user.GetTwoFactorProviders();
-            if (providers == null)
-            {
-                return false;
-            }
-
-            foreach (var p in providers)
-            {
-                if (p.Value?.Enabled ?? false)
-                {
-                    if (!TwoFactorProvider.RequiresPremium(p.Key))
-                    {
-                        return true;
-                    }
-                    if (await CanAccessPremium(user))
-                    {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-        public async Task<bool> TwoFactorProviderIsEnabledAsync(TwoFactorProviderType provider, ITwoFactorProvidersUser user)
-        {
-            var providers = user.GetTwoFactorProviders();
-            if (providers == null || !providers.ContainsKey(provider) || !providers[provider].Enabled)
-            {
-                return false;
-            }
-
-            if (!TwoFactorProvider.RequiresPremium(provider))
-            {
-                return true;
-            }
-
-            return await CanAccessPremium(user);
-        }
-
-        //TODO refactor this to use the below method and enum
-        public async Task<string> GenerateEnterprisePortalSignInTokenAsync(User user)
-        {
-            var token = await GenerateUserTokenAsync(user, Options.Tokens.PasswordResetTokenProvider,
-                "EnterprisePortalTokenSignIn");
-            return token;
-        }
-
 
         public async Task<string> GenerateSignInTokenAsync(User user, string purpose)
         {
@@ -866,28 +562,6 @@ namespace Bit.Core.Services
             }
 
             return IdentityResult.Success;
-        }
-
-        public void SetTwoFactorProvider(User user, TwoFactorProviderType type)
-        {
-            var providers = user.GetTwoFactorProviders();
-            if (!providers?.ContainsKey(type) ?? true)
-            {
-                return;
-            }
-
-            providers[type].Enabled = true;
-            user.SetTwoFactorProviders(providers);
-
-            if (string.IsNullOrWhiteSpace(user.TwoFactorRecoveryCode))
-            {
-                user.TwoFactorRecoveryCode = CoreHelpers.SecureRandomString(32, upper: false, special: false);
-            }
-        }
-
-        private async Task CheckPoliciesOnTwoFactorRemovalAsync(User user, IOrganizationService organizationService)
-        {
-            throw new NotImplementedException();
         }
 
         public override async Task<IdentityResult> ConfirmEmailAsync(User user, string token)

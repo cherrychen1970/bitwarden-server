@@ -84,8 +84,14 @@ namespace Bit.Core.Migrations.SqliteDatabase
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("TEXT");
 
+                    b.Property<byte>("ReadAccess")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("RevisionDate")
                         .HasColumnType("TEXT");
+
+                    b.Property<byte>("WriteAccess")
+                        .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
@@ -210,7 +216,7 @@ namespace Bit.Core.Migrations.SqliteDatabase
                     b.Property<byte>("Type")
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid?>("UserId")
+                    b.Property<Guid>("UserId")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -246,31 +252,10 @@ namespace Bit.Core.Migrations.SqliteDatabase
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("EquivalentDomains")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ExcludedGlobalEquivalentDomains")
-                        .HasColumnType("TEXT");
-
-                    b.Property<byte?>("Gateway")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("GatewayCustomerId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("GatewaySubscriptionId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<byte>("Kdf")
-                        .HasColumnType("INTEGER");
-
                     b.Property<int>("KdfIterations")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Key")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("LicenseKey")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("MasterPassword")
@@ -279,16 +264,7 @@ namespace Bit.Core.Migrations.SqliteDatabase
                     b.Property<string>("MasterPasswordHint")
                         .HasColumnType("TEXT");
 
-                    b.Property<short?>("MaxStorageGb")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("Premium")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("PremiumExpirationDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PrivateKey")
@@ -297,25 +273,10 @@ namespace Bit.Core.Migrations.SqliteDatabase
                     b.Property<string>("PublicKey")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ReferenceData")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("RenewalReminderDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("RevisionDate")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("TEXT");
-
-                    b.Property<long?>("Storage")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("TwoFactorProviders")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("TwoFactorRecoveryCode")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -456,7 +417,9 @@ namespace Bit.Core.Migrations.SqliteDatabase
 
                     b.HasOne("Bit.Core.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

@@ -27,8 +27,7 @@ namespace Bit.Core
     {
        public static IdentityBuilder AddCustomIdentityServices(
             this IServiceCollection services, GlobalSettings globalSettings)
-        {
-            services.AddSingleton<IOrganizationDuoWebTokenProvider, OrganizationDuoWebTokenProvider>();
+        {            
             services.Configure<PasswordHasherOptions>(options => options.IterationCount = 100000);
             services.Configure<TwoFactorRememberTokenProviderOptions>(options =>
             {
@@ -65,14 +64,6 @@ namespace Bit.Core
                 .AddTokenProvider<DataProtectorTokenProvider<User>>(TokenOptions.DefaultProvider)
                 .AddTokenProvider<AuthenticatorTokenProvider>(
                     CoreHelpers.CustomProviderName(TwoFactorProviderType.Authenticator))
-                .AddTokenProvider<EmailTokenProvider>(
-                    CoreHelpers.CustomProviderName(TwoFactorProviderType.Email))
-                .AddTokenProvider<YubicoOtpTokenProvider>(
-                    CoreHelpers.CustomProviderName(TwoFactorProviderType.YubiKey))
-                .AddTokenProvider<DuoWebTokenProvider>(
-                    CoreHelpers.CustomProviderName(TwoFactorProviderType.Duo))
-                .AddTokenProvider<U2fTokenProvider>(
-                    CoreHelpers.CustomProviderName(TwoFactorProviderType.U2f))
                 .AddTokenProvider<TwoFactorRememberTokenProvider>(
                     CoreHelpers.CustomProviderName(TwoFactorProviderType.Remember))
                 .AddTokenProvider<EmailTokenProvider<User>>(TokenOptions.DefaultEmailProvider);

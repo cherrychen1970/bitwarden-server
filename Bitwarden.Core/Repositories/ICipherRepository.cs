@@ -13,9 +13,9 @@ namespace Bit.Core.Repositories
         Task<ICollection<UserCipher>> GetManyAsync(Guid userId);
         //Task<ICollection<Cipher>> GetManyByOrganizationIdAsync(Guid organizationId);
         //Task CreateAsync(Cipher cipher, IEnumerable<Guid> collectionIds);        
-        Task CreateAsync(IEnumerable<UserCipher> ciphers, IEnumerable<Folder> folders);
+        //Task CreateAsync(IEnumerable<UserCipher> ciphers);
         //Task CreateAsync(IEnumerable<Cipher> ciphers, IEnumerable<Collection> collections, IEnumerable<CollectionCipher> collectionCiphers);
-        Task UpdatePartialAsync(UserCipher cipher, Guid? folderId, bool favorite);                
+        Task UpdatePartialAsync(Guid id, Guid? folderId, bool favorite);                
         Task MoveAsync(IEnumerable<Guid> ids, Guid folderId, Guid userId);
         Task UpdateManyAsync(IEnumerable<UserCipher> ciphers, Guid userId);
         //Task UpdateCollectionsAsync(Cipher cipher, IEnumerable<Guid> collectionIds);
@@ -26,6 +26,6 @@ namespace Bit.Core.Repositories
         Task SoftDeleteAsync(Guid id,  Guid userId);   
         Task SoftDeleteManyAsync(IEnumerable<Guid> ids, Guid userId);
         //Task SoftDeleteByIdsOrganizationIdAsync(IEnumerable<Guid> ids, Guid organizationId);
-        Task<DateTime> RestoreManyAsync(IEnumerable<Guid> ids, Guid userId);
+        Task RestoreManyAsync(IEnumerable<Guid> ids, Guid userId);
     }
 }

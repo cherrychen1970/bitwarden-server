@@ -28,13 +28,17 @@ namespace Bit.Infrastructure.EntityFramework
         public virtual async Task CreateAsync(T obj)
         {
             var entity = Mapper.Map<TEntity>(obj);
+            // model already generated id?
             if (!obj.Id.Equals(default(TId)))
-                entity.Id=obj.Id;
+                entity.SetId(obj.Id);
+            // can enttity generate id?
+            else if (  typeof(IGenerateKey).IsAssignableFrom( typeof(TEntity)) )            
+                ((IGenerateKey)entity).SetNewId();
+            else // let db create id
+                ;
             dbContext.Add(entity);
-
             //TODO : this will be removed
-            await SaveChangesAsync();  
-            obj.Id = entity.Id;       
+            //await SaveChangesAsync();              
         }
 
         public virtual async Task ReplaceAsync(T obj)
@@ -45,33 +49,21 @@ namespace Bit.Infrastructure.EntityFramework
                 Mapper.Map(obj,entity);
                 //var mappedEntity = Mapper.Map<TEntity>(obj);
                 //dbContext.Entry(entity).CurrentValues.SetValues(mappedEntity);
-                await SaveChangesAsync();
+                //await SaveChangesAsync();
             }
         }
-
-        public virtual async Task UpsertAsync(T obj)
-        {
-            if (obj.Id.Equals(default(T)))
-            {
-                await CreateAsync(obj);
-            }
-            else
-            {
-                await ReplaceAsync(obj);
-            }
-        }     
         public virtual async Task DeleteAsync(TId id)
         {
             var entity = dbSet.Find(id);            
             dbContext.Entry(entity).State = EntityState.Deleted;
-            await dbContext.SaveChangesAsync();
+            //await dbContext.SaveChangesAsync();
         }
 
         public virtual async Task DeleteAsync(T obj)
         {
             var entity = Mapper.Map<TEntity>(obj);
             dbContext.Entry(entity).State = EntityState.Deleted;
-            await dbContext.SaveChangesAsync();
+            //await dbContext.SaveChangesAsync();
         }                     
     }
 

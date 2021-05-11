@@ -46,11 +46,7 @@ namespace Bit.Core.Services
 
         public async Task<EmergencyAccess> InviteAsync(User invitingUser, string email, EmergencyAccessType type, int waitTime)
         {
-            if (! await _userService.CanAccessPremium(invitingUser))
-            {
-                throw new BadRequestException("Not a premium user.");
-            }
-            
+           
             var emergencyAccess = new EmergencyAccess
             {
                 GrantorId = invitingUser.Id,

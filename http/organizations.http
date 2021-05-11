@@ -1,0 +1,32 @@
+@url=http://localhost:4000
+@ben=scope=api%20offline_access&client_id=web&grant_type=password&username=ben%40test.com&password=IUl%2BwjxWgtR2kgOyXnw9k2Um1edBULG5buJYETpnuTA%3D&deviceType=9&deviceIdentifier=31e2ecdb-ecfa-4f5b-81a9-ac55cbe43b32&deviceName=chrome
+@cherry=scope=api%20offline_access&client_id=web&grant_type=password&username=cherry%40test.com&password=FXu5H%2BN%2Fxz3aQPwugoQ2YOjOTIgszxlkZvIrYrz%2Fu28%3D&deviceType=9&deviceIdentifier=31e2ecdb-ecfa-4f5b-81a9-ac55cbe43b32&deviceName=chrome
+############################################################################################
+# @name login
+POST {{url}}/connect/token
+content-type: application/x-www-form-urlencoded; charset=utf-8
+
+{{cherry}}
+###
+@token = {{login.response.body.$.access_token}}
+#################################################################################################
+### Organizations
+#################################################################################################
+
+# @name organizations
+GET {{url}}/api/organizations
+authorization: Bearer {{token}}
+###
+@orgId = {{organizations.response.body.$.data[0].id}}
+###
+## @name users
+GET {{url}}/api/organizations/{{orgId}}/users
+authorization: Bearer {{token}}
+###
+@userId = {{users.response.body.$.data[0].id}}
+###
+POST {{url}}/api/organizations
+authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"key":"4.Uojbih/9Rs3iYzJPzSvIvy6Lu6KGyjNH3ZNml6HPCzYKm/kMWXta2svVHvYvxbA/oG3RWxfCFSgH4fQGW4my7JmmbQsHhcPqzsXWh9qjZgXQbh3G5Cuj3uGAxKSKl1IX3LprXO9hlJC+IDCeWQfCp14siXfwCKdczVUFQXnt7AFV3UkFaKoa6T67ClsIn0qwZ5BV420nXwWfOcLmD+48/Aygiea72fnWE3yvAhQ3HSedwo+7ehWiWaVIvNCOLM7kOi+WGdhs4SLbZYiRufxEKmWaSEc/Rh+oBHT/xAekV44dksUIvQWhQTq8Ysxu+ELeec0YqmWHa2R4CQwSB04bKw==","collectionName":"2.Jlj/Q0C/0aoDMb2qLS2CSQ==|O5cfPNx4BvpRfOSpLRNzir91EH1ovejP/wSzSjwvebc=|slIeUNGx1Xxpabi+/fD+Uuslf3p5uN5LWyfSlFF7xsU=","name":"cherry","billingEmail":"cherry@test.com","planType":0}

@@ -20,13 +20,7 @@ namespace Bit.Core.Identity
 
         public async Task<bool> CanGenerateTwoFactorTokenAsync(UserManager<User> manager, User user)
         {
-            var provider = user.GetTwoFactorProvider(TwoFactorProviderType.Authenticator);
-            if (string.IsNullOrWhiteSpace((string)provider?.MetaData["Key"]))
-            {
-                return false;
-            }
-            return await _serviceProvider.GetRequiredService<IUserService>()
-                .TwoFactorProviderIsEnabledAsync(TwoFactorProviderType.Authenticator, user);
+            return false;
         }
 
         public Task<string> GenerateAsync(string purpose, UserManager<User> manager, User user)

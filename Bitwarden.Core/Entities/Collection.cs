@@ -6,12 +6,13 @@ using DomainModels = Bit.Core.Models;
 
 namespace Bit.Core.Entities
 {
-    public class Collection : DomainModels.IKey<Guid>, IEntityCreated, IEntityUpdated
-    {
-        public Guid Id { get; set; } = Guid.NewGuid();
+    public class Collection : BaseGuidEntity , IEntityCreated, IEntityUpdated
+    {        
         public Guid OrganizationId { get; set; }
         public string Name { get; set; }
         public string ExternalId { get; set; }
+        public Enums.CollectionAccessType ReadAccess {get;set;} = Enums.CollectionAccessType.All;
+        public Enums.CollectionAccessType WriteAccess {get;set;} = Enums.CollectionAccessType.All;        
         public DateTime CreationDate { get; private set; } = DateTime.UtcNow;
         public DateTime RevisionDate { get; private set; } = DateTime.UtcNow;
         virtual public Organization Organization { get; set; }

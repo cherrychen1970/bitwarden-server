@@ -12,8 +12,7 @@ namespace Bit.Core.Identity
     public class UserStore :
         IUserStore<User>,
         IUserPasswordStore<User>,
-        IUserEmailStore<User>,
-        IUserTwoFactorStore<User>,
+        IUserEmailStore<User>,        
         IUserSecurityStampStore<User>
     {
         private readonly IServiceProvider _serviceProvider;
@@ -143,17 +142,7 @@ namespace Bit.Core.Identity
             return IdentityResult.Success;
         }
 
-        public Task SetTwoFactorEnabledAsync(User user, bool enabled, CancellationToken cancellationToken)
-        {
-            // Do nothing...
-            return Task.FromResult(0);
-        }
-
-        public async Task<bool> GetTwoFactorEnabledAsync(User user, CancellationToken cancellationToken)
-        {
-            return await _serviceProvider.GetRequiredService<IUserService>().TwoFactorIsEnabledAsync(user);
-        }
-
+ 
         public Task SetSecurityStampAsync(User user, string stamp, CancellationToken cancellationToken)
         {
             user.SecurityStamp = stamp;

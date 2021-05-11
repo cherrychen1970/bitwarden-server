@@ -19,8 +19,8 @@ namespace Bit.Core.Entities
     {
         public CollectionCipherProfile()
         {
-            CreateMap<CollectionCipher, DomainModels.CollectionCipher>()
-            .ReverseMap()
+            CreateMap<CollectionCipher, DomainModels.CollectionCipher>();
+            CreateMap<DomainModels.CollectionCipher, CollectionCipher>()            
             .Ignore(x => x.Id);
         }
     }

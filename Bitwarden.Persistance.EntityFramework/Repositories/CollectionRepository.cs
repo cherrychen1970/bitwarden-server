@@ -75,12 +75,12 @@ namespace Bit.Infrastructure.EntityFramework
             await SaveChangesAsync();
         }
 
-        public async Task DeleteMembersAsync(Guid collectionId, OrganizationMembership membership)
+        public async Task DeleteMembersAsync(Guid collectionId, Guid orgUserId)
         {
             var item = dbContext.CollectionUsers
                 .Where(x => x.CollectionId == collectionId)
-                .Where(x=>x.OrganizationUser.OrganizationId==membership.OrganizationId)
-                .Where(x=> x.OrganizationUser.UserId == membership.UserId).SingleOrDefault();
+                .Where(x => x.OrganizationUserId == orgUserId)                
+                .SingleOrDefault();
             dbContext.CollectionUsers.Remove(item);
             await SaveChangesAsync();
         }

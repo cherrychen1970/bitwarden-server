@@ -16,7 +16,7 @@ namespace Bit.Core.Models.Business
             Type = type;
             if (source != null)
             {
-                Source = source.IsUser() ? ReferenceEventSource.User : ReferenceEventSource.Organization;
+                Source = source.source;
                 Id = source.Id;
                 ReferenceData = source.ReferenceData;
             }

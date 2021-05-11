@@ -15,10 +15,9 @@ namespace Bit.Api.Controllers
     [Authorize("Web")]
     public class PlansController : Controller
     {
-        private readonly ITaxRateRepository _taxRateRepository;
-        public PlansController(ITaxRateRepository taxRateRepository)
-        {
-            _taxRateRepository = taxRateRepository;
+        
+        public PlansController()
+        {            
         }
 
         [HttpGet("")]

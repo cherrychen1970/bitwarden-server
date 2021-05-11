@@ -6,10 +6,8 @@ using DomainModels=Bit.Core.Models;
 
 namespace Bit.Core.Entities
 {
-    public class Organization :  DomainModels.IKey<Guid>,IEntityCreated,IEntityUpdated
+    public class Organization : BaseGuidEntity,IEntityCreated,IEntityUpdated
     {
-
-        public Guid Id { get; set; }
         public string Identifier { get; set; }
         public string Name { get; set; }        
         
@@ -38,8 +36,8 @@ namespace Bit.Core.Entities
     {
         public OrganizationMapperProfile()
         {
-            CreateMap<Organization, DomainModels.Organization>()
-                .ReverseMap()
+            CreateMap<Organization, DomainModels.Organization>();
+            CreateMap<DomainModels.Organization, Organization>()
                 .Ignore(x=>x.Id);
         }
     }

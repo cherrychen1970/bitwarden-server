@@ -51,6 +51,7 @@ namespace Bit.Core.Services
         public async Task DeleteAsync(Collection collection)
         {
             await _collectionRepository.DeleteAsync(collection);
+            await _collectionRepository.SaveChangesAsync();
             await _eventService.LogCollectionEventAsync(collection, Enums.EventType.Collection_Deleted);
         }
 
@@ -62,7 +63,8 @@ namespace Bit.Core.Services
                 throw new NotFoundException();
             }
             
-            await _collectionRepository.DeleteMembersAsync(collection.Id, orgUser);
+            await _collectionRepository.DeleteMembersAsync(collection.Id, organizationUserId);
+            await _collectionRepository.SaveChangesAsync();
             await _eventService.LogOrganizationUserEventAsync(orgUser, Enums.EventType.OrganizationUser_Updated);
         }
     }

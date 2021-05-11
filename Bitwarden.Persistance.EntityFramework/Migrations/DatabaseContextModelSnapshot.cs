@@ -87,8 +87,14 @@ namespace Bit.Core.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<byte>("ReadAccess")
+                        .HasColumnType("tinyint");
+
                     b.Property<DateTime>("RevisionDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<byte>("WriteAccess")
+                        .HasColumnType("tinyint");
 
                     b.HasKey("Id");
 
@@ -215,7 +221,7 @@ namespace Bit.Core.Migrations
                     b.Property<byte>("Type")
                         .HasColumnType("tinyint");
 
-                    b.Property<Guid?>("UserId")
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -251,31 +257,10 @@ namespace Bit.Core.Migrations
                     b.Property<bool>("EmailVerified")
                         .HasColumnType("bit");
 
-                    b.Property<string>("EquivalentDomains")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ExcludedGlobalEquivalentDomains")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte?>("Gateway")
-                        .HasColumnType("tinyint");
-
-                    b.Property<string>("GatewayCustomerId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("GatewaySubscriptionId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte>("Kdf")
-                        .HasColumnType("tinyint");
-
                     b.Property<int>("KdfIterations")
                         .HasColumnType("int");
 
                     b.Property<string>("Key")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LicenseKey")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MasterPassword")
@@ -284,17 +269,8 @@ namespace Bit.Core.Migrations
                     b.Property<string>("MasterPasswordHint")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<short?>("MaxStorageGb")
-                        .HasColumnType("smallint");
-
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Premium")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("PremiumExpirationDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("PrivateKey")
                         .HasColumnType("nvarchar(max)");
@@ -302,25 +278,10 @@ namespace Bit.Core.Migrations
                     b.Property<string>("PublicKey")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("ReferenceData")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("RenewalReminderDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("RevisionDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long?>("Storage")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("TwoFactorProviders")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("TwoFactorRecoveryCode")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -461,7 +422,9 @@ namespace Bit.Core.Migrations
 
                     b.HasOne("Bit.Core.Entities.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
