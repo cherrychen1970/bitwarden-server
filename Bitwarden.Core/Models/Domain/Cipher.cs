@@ -6,6 +6,12 @@ using System.Collections.Generic;
 
 namespace Bit.Core.Models
 {
+    public class CipherAccessProfile
+    {
+        public Guid OrganizationId { get; set; }
+        public Guid? CollectionId { get; set; }
+    }
+
     public class UserCipher : Cipher
     {
         public Guid UserId { get; set; }

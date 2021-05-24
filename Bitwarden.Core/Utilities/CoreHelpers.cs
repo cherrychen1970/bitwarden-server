@@ -557,19 +557,14 @@ namespace Bit.Core.Utilities
             return subName;
         }
 
-        public static string GetIpAddress(this Microsoft.AspNetCore.Http.HttpContext httpContext,
-            GlobalSettings globalSettings)
+        public static string GetIpAddress(this Microsoft.AspNetCore.Http.HttpContext httpContext)            
         {
             if (httpContext == null)
             {
                 return null;
             }
 
-            if (!globalSettings.SelfHosted && httpContext.Request.Headers.ContainsKey(CloudFlareConnectingIp))
-            {
-                return httpContext.Request.Headers[CloudFlareConnectingIp].ToString();
-            }
-            if (globalSettings.SelfHosted && httpContext.Request.Headers.ContainsKey(RealIp))
+            if (httpContext.Request.Headers.ContainsKey(RealIp))
             {
                 return httpContext.Request.Headers[RealIp].ToString();
             }

@@ -3,6 +3,11 @@ using Bit.Core.Utilities;
 
 namespace Bit.Core.Models
 {
+    public class CollectionAccessProfile
+    {
+        public Guid OrganizationId { get; set; }
+        public Enums.CollectionAccessType ReadAccess {get;set;} = Enums.CollectionAccessType.All;
+    }    
     public class Collection : BaseModel
     {        
         public Guid OrganizationId { get; set; }

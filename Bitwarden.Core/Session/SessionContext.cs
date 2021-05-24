@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Claims;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
@@ -39,7 +40,7 @@ namespace Bit.Core
     // need better name.. this is the wrapper for claims.
     public class SessionContext : ISessionContext
     {
-        public SessionContext(IHttpContextAccessor httpContextAccessor, GlobalSettings settings)
+        public SessionContext(IHttpContextAccessor httpContextAccessor)
         {
             /*
             if (httpContextAccessor.HttpContext == null)
@@ -63,7 +64,30 @@ namespace Bit.Core
             if (!httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
                 return;
 
-            Build(httpContextAccessor.HttpContext, settings);
+            Build(httpContextAccessor.HttpContext);
+        }
+
+        public SessionContext(ClaimsPrincipal user)
+        {
+            /*
+            if (httpContextAccessor.HttpContext == null)
+            {
+                Serilog.Log.Warning("sessionContext creation failed");
+                return;
+            }
+
+            if (httpContextAccessor.HttpContext.User == null)
+            {
+                Serilog.Log.Warning("sessionContext user is null");
+                return;
+            }
+            if (!httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+                throw new Exception("SessionContext can't get called before authentication. clean up wrong dependency");
+            */
+            if (!user.Identity.IsAuthenticated)
+                return;
+
+            Build(user);
         }
 
         // debug : cherry
@@ -80,7 +104,7 @@ namespace Bit.Core
 
         public bool HasOrganizations() => OrganizationMemberships?.Any() ?? false;
 
-        private void Build(HttpContext httpContext, GlobalSettings globalSettings)
+        private void Build(HttpContext httpContext)
         {
             if (DeviceIdentifier == null && httpContext.Request.Headers.ContainsKey("Device-Identifier"))
             {
@@ -93,9 +117,12 @@ namespace Bit.Core
                 DeviceType = dType;
             }
 
-            IpAddress = httpContext.GetIpAddress(globalSettings);
-            var user = httpContext.User;
+            IpAddress = httpContext.GetIpAddress();
+            Build(httpContext.User);
+        }
 
+        private void Build(ClaimsPrincipal user)
+        {
             if (user == null || !user.Claims.Any())
             {
                 return;

@@ -117,7 +117,7 @@ namespace Bit.Core
             // Add version information to response headers
             app.Use(async (httpContext, next) =>
             {
-                using (LogContext.PushProperty("IPAddress", httpContext.GetIpAddress(globalSettings)))
+                using (LogContext.PushProperty("IPAddress", httpContext.GetIpAddress()))
                 using (LogContext.PushProperty("UserAgent", GetHeaderValue(httpContext, "user-agent")))
                 using (LogContext.PushProperty("DeviceType", GetHeaderValue(httpContext, "device-type")))
                 using (LogContext.PushProperty("Origin", GetHeaderValue(httpContext, "origin")))

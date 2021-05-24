@@ -158,7 +158,7 @@ namespace Bit.Core.IdentityServer
             {
                 _logger.LogWarning(Constants.BypassFiltersEventId,
                     string.Format("Failed login attempt{0}{1}", twoFactorRequest ? ", 2FA invalid." : ".",
-                        $" {_httpContext.GetIpAddress(_globalSettings)}"));
+                        $" {_httpContext.GetIpAddress()}"));
             }
 
             await Task.Delay(2000); // Delay for brute force.
@@ -253,7 +253,7 @@ namespace Bit.Core.IdentityServer
                         if (!_globalSettings.DisableEmailNewDevice)
                         {
                             await _mailService.SendNewDeviceLoggedInEmail(user.Email, deviceType, now,
-                                _httpContext.GetIpAddress(_globalSettings));
+                                _httpContext.GetIpAddress());
                         }
                     }
 
