@@ -15,11 +15,13 @@ using Bit.Core.Models;
 
 namespace Bit.Api.Controllers
 {
-    [Route("api/ciphers")]
+    [ApiController]
+    [Route("api/organizations/{orgId}/ciphers")]    
     [Authorize("Application")]
-    public class CiphersController : Controller
-    {
-        private readonly ICipherRepository _cipherRepository;
+    public class OrganizationCiphersController : ControllerBase
+    {        
+        private readonly IOrganizationCipherRepository _orgCipherRepository;
+        private readonly ICollectionCipherRepository _collectionCipherRepository;
         private readonly ICipherService _cipherService;
         private readonly IUserService _userService;
         private readonly ISessionContext _sessionContext;
@@ -27,25 +29,27 @@ namespace Bit.Api.Controllers
 
         private Guid _sessionUserId => _sessionContext.UserId;
 
-        public CiphersController(
-            ICipherRepository cipherRepository,
+        public OrganizationCiphersController(            
+            IOrganizationCipherRepository orgCipherRepository,
+            ICollectionCipherRepository collectionCipherRepository,
             ICipherService cipherService,
             IUserService userService,
             ISessionContext currentContext,
             GlobalSettings globalSettings)
         {
-            _cipherRepository = cipherRepository;
+            _orgCipherRepository = orgCipherRepository;            
+            _collectionCipherRepository = collectionCipherRepository;
             _cipherService = cipherService;
             _userService = userService;
             _sessionContext = currentContext;
             _globalSettings = globalSettings;
         }
 
-        [HttpGet("{id}")]
-        public async Task<CipherResponseModel> Get(string id)
+        [HttpGet("{id}/admin")]
+        public async Task<CipherResponseModel> GetAdmin(string id)
         {
-            var cipher = await _cipherRepository.GetByIdAsync(new Guid(id), _sessionUserId);
-            if (cipher == null)
+            var cipher = await _orgCipherRepository.GetByIdAsync(new Guid(id));
+            if (cipher == null || !_sessionContext.ManageAllCollections(cipher.OrganizationId))
             {
                 throw new NotFoundException();
             }
@@ -103,19 +107,35 @@ namespace Bit.Api.Controllers
             return response;
         }
 
-        [HttpPut("{id}")]
-        [HttpPost("{id}")]
-        public async Task<CipherResponseModel> Put(Guid id, [FromBody] CipherRequestModel model)
+        [HttpPut("{id}/admin")]
+        [HttpPost("{id}/admin")]
+        public async Task<CipherResponseModel> PutAdmin(string id, [FromBody] CipherRequestModel model)
         {
-            var cipher = await _cipherRepository.GetByIdAsync(id, _sessionUserId);
-            if (cipher == null)
+            var cipher = await _orgCipherRepository.GetByIdAsync(new Guid(id));
+            if (cipher == null || !_sessionContext.ManageAllCollections(cipher.OrganizationId))
+                throw new NotFoundException();
+
+            await _cipherService.SaveAsync(model.ToOrganizationCipher(cipher));
+            var response = new CipherResponseModel(cipher);
+            return response;
+        }
+
+        // weird name.... it's requesting organization ciphers
+        [HttpGet("organization-details")]
+        public async Task<ListResponseModel<CipherDetailsResponseModel>> GetOrganizationCollections(
+            Guid organizationId)
+        {
+            /*
+            if (!_sessionContext.ManageAllCollections(organizationId) && !_sessionContext.AccessReports(organizationId))
             {
                 throw new NotFoundException();
             }
+            */
 
-            await _cipherService.SaveAsync(model.ToCipher(cipher));
-            var response = new CipherResponseModel(cipher);
-            return response;
+            var membership = _sessionContext.OrganizationMemberships.SingleOrDefault(x => x.OrganizationId == organizationId);
+            var ciphers = await _orgCipherRepository.GetManyAsync(membership);
+            var responses = ciphers.Select(c => new CipherDetailsResponseModel(c));
+            return new ListResponseModel<CipherDetailsResponseModel>(responses);
         }
 
         [HttpPost("import")]
@@ -134,24 +154,58 @@ namespace Bit.Api.Controllers
             await _cipherService.ImportCiphersAsync(folders, ciphers, model.FolderRelationships);
         }
 
-        [HttpPut("{id}/partial")]
-        [HttpPost("{id}/partial")]
-        public async Task PutPartial(Guid id, [FromBody] CipherPartialRequestModel model)
+        [HttpPost("import-organization")]
+        public async Task PostImport([FromQuery] string organizationId,
+            [FromBody] ImportOrganizationCiphersRequestModel model)
         {
-            var cipher = await _cipherRepository.GetByIdAsync(id, _sessionContext.UserId);
-            if (cipher.UserId != _sessionContext.UserId)
-                throw new NotFoundException();
+            if (!_globalSettings.SelfHosted &&
+                (model.Ciphers.Count() > 6000 || model.CollectionRelationships.Count() > 12000 ||
+                    model.Collections.Count() > 1000))
+            {
+                throw new BadRequestException("You cannot import this much data at once.");
+            }
 
-            await _cipherRepository.UpdatePartialAsync(id, model.FolderId, model.Favorite);
+            var orgId = new Guid(organizationId);
+            if (!_sessionContext.AccessImportExport(orgId))
+            {
+                throw new NotFoundException();
+            }
+
+
+            var collections = model.Collections.Select(c => c.ToCollection(orgId)).ToList();
+            var ciphers = model.Ciphers.Select(x => x.ToOrganizationCipher()).ToList();
+            ciphers.ForEach(x => x.OrganizationId = orgId);
+            await _cipherService.ImportCiphersAsync(collections, ciphers, model.CollectionRelationships);
         }
 
 
-        [HttpDelete("{id}")]
-        [HttpPost("{id}/delete")]
-        public async Task Delete(Guid id)
+        [HttpPut("{id}/collections")]
+        [HttpPost("{id}/collections")]
+        public async Task PutCollections(Guid id, [FromBody] CipherCollectionsRequestModel model)
         {
-            var cipher = await _cipherRepository.GetByIdAsync(id, _sessionUserId);
-            if (cipher == null)
+            var cipher = await _orgCipherRepository.GetByIdAsync(id);
+            if (cipher == null || !_sessionContext.IsOrganizationMember(cipher.OrganizationId))
+                throw new NotFoundException();
+
+            await _cipherService.SaveCollectionsAsync(cipher, model.CollectionIds.First());
+        }
+
+        [HttpPut("{id}/collections-admin")]
+        [HttpPost("{id}/collections-admin")]
+        public async Task PutCollectionsAdmin(string id, [FromBody] CipherCollectionsRequestModel model)
+        {
+            var cipher = await _orgCipherRepository.GetByIdAsync(new Guid(id));
+            if (cipher == null || !_sessionContext.ManageAllCollections(cipher.OrganizationId))
+                throw new NotFoundException();
+            await _cipherService.SaveCollectionsAsync(cipher, model.CollectionIds.First());
+        }
+
+        [HttpDelete("{id}/admin")]
+        [HttpPost("{id}/delete-admin")]
+        public async Task DeleteAdmin(Guid id)
+        {
+            var cipher = await _orgCipherRepository.GetByIdAsync(id);
+            if (cipher == null || !_sessionContext.ManageAllCollections(cipher.OrganizationId))
                 throw new NotFoundException();
 
             await _cipherService.DeleteAsync(cipher);
@@ -164,15 +218,25 @@ namespace Bit.Api.Controllers
             await _cipherService.DeleteManyAsync(model.Ids);
         }
 
-        [HttpPut("{id}/delete")]
-        public async Task PutDelete(string id)
+        [HttpDelete("admin")]
+        [HttpPost("delete-admin")]
+        public async Task DeleteManyAdmin([FromBody] CipherBulkDeleteRequestModel model)
         {
+            if (model == null || !_sessionContext.ManageAllCollections(model.OrganizationId.Value))
+                throw new NotFoundException();
 
-            var cipher = await _cipherRepository.GetByIdAsync(new Guid(id), _sessionUserId);
-            if (cipher == null)
+            await _cipherService.DeleteManyAsync(model.Ids, model.OrganizationId.Value);
+        }
+
+        [HttpPut("{id}/delete-admin")]
+        public async Task PutDeleteAdmin(Guid id)
+        {
+            var cipher = await _orgCipherRepository.GetByIdAsync(id);
+            if (cipher == null || !_sessionContext.ManageAllCollections(cipher.OrganizationId))
             {
                 throw new NotFoundException();
             }
+
             await _cipherService.SoftDeleteAsync(cipher);
         }
 
@@ -193,11 +257,11 @@ namespace Bit.Api.Controllers
             await _cipherService.SoftDeleteManyAsync(model.Ids, model.OrganizationId.Value);
         }
 
-        [HttpPut("{id}/restore")]
-        public async Task<CipherResponseModel> PutRestore(string id)
+        [HttpPut("{id}/restore-admin")]
+        public async Task<CipherResponseModel> PutRestoreAdmin(Guid id)
         {
-            var cipher = await _cipherRepository.GetByIdAsync(new Guid(id), _sessionUserId);
-            if (cipher == null)
+            var cipher = await _orgCipherRepository.GetByIdAsync(id);
+            if (cipher == null || !_sessionContext.ManageAllCollections(cipher.OrganizationId))
             {
                 throw new NotFoundException();
             }
@@ -206,29 +270,8 @@ namespace Bit.Api.Controllers
             return new CipherResponseModel(cipher);
         }
 
-        [HttpPut("restore")]
-        public async Task<ListResponseModel<CipherResponseModel>> PutRestoreMany([FromBody] CipherBulkRestoreRequestModel model)
-        {
-            var cipherIdsToRestore = new HashSet<Guid>(model.Ids);
-
-            var ciphers = await _cipherRepository.GetManyAsync(_sessionUserId);
-            var restoringCiphers = ciphers.Where(c => cipherIdsToRestore.Contains(c.Id));
-
-            await _cipherService.RestoreManyAsync(restoringCiphers);
-            var responses = restoringCiphers.Select(c => new CipherResponseModel(c));
-            return new ListResponseModel<CipherResponseModel>(responses);
-        }
-
-        [HttpPut("move")]
-        [HttpPost("move")]
-        public async Task MoveMany([FromBody] CipherBulkMoveRequestModel model)
-        {
-            await _cipherService.MoveManyAsync(model.Ids, model.FolderId);
-        }
-
-
         [HttpPost("purge")]
-        public async Task PostPurge([FromBody] CipherPurgeRequestModel model, string organizationId = null)
+        public async Task PostPurge([FromBody] CipherPurgeRequestModel model, Guid orgId)
         {
             var user = await _userService.GetUserByIdAsync(_sessionContext.UserId);
             if (user == null)
@@ -243,19 +286,13 @@ namespace Bit.Api.Controllers
                 throw new BadRequestException(ModelState);
             }
 
-            if (string.IsNullOrWhiteSpace(organizationId))
-            {
-                await _cipherRepository.PurgeAsync(user.Id);
-            }
-            else
-            {
-                var orgId = new Guid(organizationId);
+
                 if (!_sessionContext.ManageAllCollections(orgId))
                 {
                     throw new NotFoundException();
                 }
                 await _cipherService.PurgeAsync(orgId);
-            }
+            
         }
     }
 }

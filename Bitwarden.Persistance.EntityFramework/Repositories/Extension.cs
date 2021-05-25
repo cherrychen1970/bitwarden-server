@@ -14,8 +14,7 @@ namespace Bit.Infrastructure.EntityFramework.Migration
             IServiceProvider sp = null;
             services.AddDbContext<SqliteDatabaseContext>(builder => builder.UseSqlite(ConnectionString));
             sp = services.BuildServiceProvider().CreateScope().ServiceProvider;
-            sp.GetService<SqliteDatabaseContext>().Database.Migrate();
-            services.AddDbContext<DatabaseContext>(builder => builder.UseSqlite(ConnectionString));
+            sp.GetService<SqliteDatabaseContext>().Database.Migrate();            
         }
 
         static public void MigrateSql(this IServiceCollection services, string ConnectionString)

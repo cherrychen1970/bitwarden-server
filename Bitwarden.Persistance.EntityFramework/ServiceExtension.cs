@@ -15,10 +15,14 @@ namespace Bit.Core
         public static void AddSqlServerRepositories(this IServiceCollection services, GlobalSettings globalSettings)
         {
             services.AddAutoMapper(typeof(Entities.Cipher));
-            if (globalSettings.Sqlite.HasConnection)
+            if (globalSettings.Sqlite.HasConnection) {
                 services.MigrateSqlite(globalSettings.Sqlite.ConnectionString);
-            else if (globalSettings.SqlServer.HasConnection)            
+                services.AddDbContext<EFRepos.DatabaseContext>(builder => builder.UseSqlite(globalSettings.Sqlite.ConnectionString));
+            }                
+            else if (globalSettings.SqlServer.HasConnection) {            
+                services.MigrateSql(globalSettings.SqlServer.ConnectionString);
                 services.AddDbContext<EFRepos.DatabaseContext>(options => options.UseSqlServer(globalSettings.SqlServer.ConnectionString));
+            }
 
             services.AddScoped<IUserRepository, EFRepos.UserRepository>();
             services.AddScoped<ICipherRepository, EFRepos.CipherRepository>();

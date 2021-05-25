@@ -47,10 +47,11 @@ namespace Bit.Api.Controllers
         [HttpGet("")]
         public async Task<ListResponseModel<CollectionResponseModel>> Get(Guid orgId)
         {
-            if (!_currentContext.ManageAllCollections(orgId) && !_currentContext.ManageUsers(orgId))
+/*            if (!_currentContext.ManageAllCollections(orgId) && !_currentContext.ManageUsers(orgId))
             {
                 throw new NotFoundException();
             }
+*/            
 
             var membership = _currentContext.GetMembership(orgId);
             var collections = await _collectionRepository.GetManyAsync(membership);
@@ -59,12 +60,12 @@ namespace Bit.Api.Controllers
         }
 
         [HttpGet("~/collections")]
-        public async Task<ListResponseModel<CollectionDetailsResponseModel>> GetUser(Guid orgId)
+        public async Task<ListResponseModel<CollectionResponseModel>> GetUser(Guid orgId)
         {
             var membership = _currentContext.GetMembership(orgId);
             var collections = await _collectionRepository.GetManyAsync(membership);                
-            var responses = collections.Select(c => new CollectionDetailsResponseModel(c));
-            return new ListResponseModel<CollectionDetailsResponseModel>(responses);
+            var responses = collections.Select(c => new CollectionResponseModel(c));
+            return new ListResponseModel<CollectionResponseModel>(responses);
         }
 
         [HttpGet("{id}/users")]

@@ -20,26 +20,18 @@ namespace Bit.Core.Models.Api
             OrganizationId = collection.OrganizationId.ToString();
             Name = collection.Name;
             ExternalId = collection.ExternalId;
+            AdminOnly = collection.AdminOnly;       
+            ReadOnly = collection.ReadOnly;       
         }
 
         public string Id { get; set; }
         public string OrganizationId { get; set; }
         public string Name { get; set; }
         public string ExternalId { get; set; }
-    }
-
-    public class CollectionDetailsResponseModel : CollectionResponseModel
-    {
-        public CollectionDetailsResponseModel(Collection collectionDetails)
-            : base(collectionDetails, "collectionDetails")
-        {
-            ReadOnly = collectionDetails.ReadOnly;
-            HidePasswords = collectionDetails.HidePasswords;
-        }
-
-        public bool ReadOnly { get; set; }
-        public bool HidePasswords { get; set; }
+        public bool AdminOnly { get; set; }        
+        public bool ReadOnly { get; set; }        
     }
 }
+
 
 

@@ -43,7 +43,11 @@ namespace Bit.Infrastructure.EntityFramework
         public async Task<ICollection<Collection>> GetManyAsync(OrganizationMembership membership)
         {
             //return await GetMany<Collection>(x=>true);
-            return await GetMany<Collection>(x => x.OrganizationId == membership.OrganizationId);
+            //return await GetMany<Collection>(x => x.OrganizationId == membership.OrganizationId);
+            return await dbContext.Collections
+                .Where(x=>x.OrganizationId==membership.OrganizationId)
+                .Where(x=>!x.AdminOnly || membership.HasAdminAccess())
+                .ProjectTo<Collection>(MapperProvider).ToListAsync();
         }
         public async Task<ICollection<Collection>> GetManyAsync(IEnumerable<OrganizationMembership> memberships)
         {
@@ -54,9 +58,8 @@ namespace Bit.Infrastructure.EntityFramework
         {
             var cu = dbContext.CollectionUsers.SingleOrDefault(x => x.CollectionId == id && x.OrganizationUser.UserId == userId);
 
-            var item = await GetByIdAsync<Collection>(id);
-            item.HidePasswords = cu.HidePasswords;
-            item.ReadOnly = cu.ReadOnly;
+            var item = await GetByIdAsync<Collection>(id);            
+            item.AdminOnly = cu.ReadOnly;
             return item;
         }
 

@@ -27,6 +27,7 @@ namespace Bit.Core.Models
         public Guid OrganizationId { get; set; }
         public Guid UserId { get; set; }
         public OrganizationUserType Type { get; set; }
+        public bool HasAdminAccess()=> Type==OrganizationUserType.Owner || Type== OrganizationUserType.Admin;
     }
     public class OrganizationMembershipProfile : BaseModel, IExternal
     {        

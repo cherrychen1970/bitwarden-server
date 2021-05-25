@@ -75,6 +75,9 @@ namespace Bit.Core.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<bool>("AdminOnly")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("datetime2");
 
@@ -87,14 +90,11 @@ namespace Bit.Core.Migrations
                     b.Property<Guid>("OrganizationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<byte>("ReadAccess")
-                        .HasColumnType("tinyint");
+                    b.Property<bool>("ReadOnly")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("RevisionDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<byte>("WriteAccess")
-                        .HasColumnType("tinyint");
 
                     b.HasKey("Id");
 

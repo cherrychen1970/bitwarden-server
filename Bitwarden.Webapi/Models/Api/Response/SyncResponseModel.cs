@@ -30,14 +30,14 @@ namespace Bit.Core.Models.Api
             list.AddRange(orgCiphers.Select(c => new CipherDetailsResponseModel(c)));
             Ciphers = list.ToArray();
             Collections = collections?.Select(
-                c => new CollectionDetailsResponseModel(c)) ?? new List<CollectionDetailsResponseModel>();
+                c => new CollectionResponseModel(c)) ?? new List<CollectionResponseModel>();
             Domains = excludeDomains ? null : new DomainsResponseModel(user, false);
             Policies = policies?.Select(p => new PolicyResponseModel(p)) ?? new List<PolicyResponseModel>();            
         }
 
         public ProfileResponseModel Profile { get; set; }
         public IEnumerable<FolderResponseModel> Folders { get; set; }
-        public IEnumerable<CollectionDetailsResponseModel> Collections { get; set; }
+        public IEnumerable<CollectionResponseModel> Collections { get; set; }
         public IEnumerable<CipherDetailsResponseModel> Ciphers { get; set; }
         public DomainsResponseModel Domains { get; set; }
         public IEnumerable<PolicyResponseModel> Policies { get; set; }        
