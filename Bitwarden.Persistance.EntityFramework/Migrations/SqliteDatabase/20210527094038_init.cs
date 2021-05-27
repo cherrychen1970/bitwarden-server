@@ -97,8 +97,8 @@ namespace Bit.Core.Migrations.SqliteDatabase
                     OrganizationId = table.Column<Guid>(nullable: false),
                     Name = table.Column<string>(nullable: true),
                     ExternalId = table.Column<string>(nullable: true),
-                    ReadAccess = table.Column<byte>(nullable: false),
-                    WriteAccess = table.Column<byte>(nullable: false),
+                    AdminOnly = table.Column<bool>(nullable: false),
+                    ReadOnly = table.Column<bool>(nullable: false),
                     CreationDate = table.Column<DateTime>(nullable: false),
                     RevisionDate = table.Column<DateTime>(nullable: false)
                 },

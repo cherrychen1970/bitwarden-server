@@ -14,7 +14,8 @@ namespace Bit.Core.Models.Api
     public class CipherRequestModel
     {
         public CipherType Type { get; set; }
-        public Guid? OrganizationId { get; set; }
+        //public Guid? OrganizationId { get; set; }
+        public Guid? CollectionId {get;set;}
         public Guid? FolderId { get; set; }
         public bool Favorite { get; set; }
         [Required]
@@ -29,12 +30,13 @@ namespace Bit.Core.Models.Api
         public CipherLoginModel Login { get; set; }
         public DateTime? LastKnownRevisionDate { get; set; } = null;
 
-        public OrganizationCipher ToOrganizationCipher()
+        public OrganizationCipher ToOrganizationCipher(Guid orgId)
         {
             var cipher = new OrganizationCipher
             {
                 Type = Type,
-                OrganizationId = OrganizationId.Value,
+                OrganizationId = orgId,
+                CollectionId = CollectionId,
                 Edit = true,
                 ViewPassword = true,
             };
@@ -80,22 +82,6 @@ namespace Bit.Core.Models.Api
     {
         [Required]
         public Guid? Id { get; set; }
-    }
-
-    public class CipherCreateRequestModel : IValidatableObject
-    {
-        public IEnumerable<Guid> CollectionIds { get; set; }
-        [Required]
-        public CipherRequestModel Cipher { get; set; }
-
-        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
-        {
-            if (Cipher.OrganizationId.HasValue && (!CollectionIds?.Any() ?? true))
-            {
-                yield return new ValidationResult("You must select at least one collection.",
-                   new string[] { nameof(CollectionIds) });
-            }
-        }
     }
 
     public class CipherCollectionsRequestModel

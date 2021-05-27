@@ -19,23 +19,18 @@ authorization: Bearer {{token}}
 ### Ciphers
 #################################################################################################
 # @name cipher
-GET {{url}}/api/ciphers/organization-details?organizationId={{orgId}}
+GET {{url}}/api/organizations/{{orgId}}/ciphers
 authorization: Bearer {{token}}
 ###
 @cipherId = {{cipher.response.body.$.data[0].id}}
 #################################################################################################
-GET {{url}}/api/ciphers/{{cipherId}}/admin
-authorization: Bearer {{token}}
-###
-POST {{url}}/api/ciphers/admin
+POST {{url}}/api/organizations/{{orgId}}/ciphers
 authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-    "cipher": {
         "type": 1,
         "folderId": null,
-        "organizationId": "{{orgId}}",
         "name": "2.9VGd8MsEafAMsddAIu95Lg==|RzeG5zp1v1BUvqk7b/Sseg==|ykC1pTHKJRzlwPq9S+yVdT/slpfIniQF5XANc31KqII=",
         "notes": null,
         "favorite": false,
@@ -47,12 +42,35 @@ Content-Type: application/json
             "password": "2.+cjdFzjViwhczsfIOY57qA==|9reglRb9LOJqyL6O0EJCXw==|6+hNHeatg+EgKgoLL3pyLN06p4//DsqjVqaOE6DRX6A=",
             "passwordRevisionDate": null,
             "totp": null
+        }  
+}
+###
+POST {{url}}/api/organizations/{{orgId}}/ciphers
+authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "cipher": {
+        "type": 1,
+        "folderId": null,
+        "organizationId": "3fb17c30-5fef-43ca-baee-9e58d983605a",
+        "name": "2.0jZQnIHTjQTxBa7kTr+Vxg==|BHtxzgrBi46zGJ/Tq7EIQQ==|1ghnEwh0aTJuDSdsOUWz3QeTDUnUh8+i1lWdxwDpO24=",
+        "notes": null,
+        "favorite": false,
+        "lastKnownRevisionDate": null,
+        "login": {
+            "response": null,
+            "uris": null,
+            "username": "2.Bw56z7Ic7ESu48/+lPptpQ==|FexqWNSDIlQMc07LVvTiSg==|sGElU3AI42c8bIZoB/UGgPiF9d9db/TBYItxu56o/uI=",
+            "password": "2./zkXD2jn1QsLw8L41OBX2w==|VVTxjal6/iUyksQqB2HSkw==|MTzU9uSR/jmuLMJirl+eaJwG24kbR4X4RvYHVZQ1YJo=",
+            "passwordRevisionDate": null,
+            "totp": null
         }
     },
     "collectionIds": []
 }
 #################################################################################################
-PUT {{url}}/api/ciphers/{{cipherId}}/admin
+PUT {{url}}/api/organizations/{{orgId}}/ciphers/{{cipherId}}
 authorization: Bearer {{token}}
 Content-Type: application/json
 

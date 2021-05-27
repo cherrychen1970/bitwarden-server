@@ -77,27 +77,7 @@ namespace Bit.Api.Controllers
         [HttpPost("")]
         public async Task<CipherResponseModel> Post([FromBody] CipherRequestModel model)
         {
-            var cipher = model.ToOrganizationCipher();
-            if (_sessionContext.IsOrganizationMember(cipher.OrganizationId))
-            {
-                throw new NotFoundException();
-            }
-
-            await _cipherService.SaveAsync(cipher);
-            var response = new CipherResponseModel(cipher);
-            return response;
-        }
-
-        [HttpPost("admin")]
-        public async Task<CipherResponseModel> PostAdmin([FromBody] CipherCreateRequestModel model)
-        {
-            var cipher = model.Cipher.ToOrganizationCipher();
-            if (!_sessionContext.ManageAllCollections(cipher.OrganizationId))
-            {
-                throw new NotFoundException();
-            }
-            if (model.CollectionIds.Any())
-                cipher.CollectionId = model.CollectionIds.First();
+            var cipher = model.ToCipher(_sessionUserId);
             await _cipherService.SaveAsync(cipher);
             var response = new CipherResponseModel(cipher);
             return response;

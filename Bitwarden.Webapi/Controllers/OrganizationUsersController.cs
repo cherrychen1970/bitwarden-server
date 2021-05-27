@@ -148,12 +148,12 @@ namespace Bit.Api.Controllers
             await _organizationService.DeleteUserAsync(ou);
         }
 
-        public void VerifyAccess(Guid orgId)
+        protected void VerifyAccess(Guid orgId)
         {
             if (!_currentContext.ManageUsers(orgId))
                 throw new ForbidException();
         }
-        public async Task<Core.Models.OrganizationMembershipProfile> ValidateFound(Guid id)
+        protected async Task<Core.Models.OrganizationMembershipProfile> ValidateFound(Guid id)
         {
             var ou = await _organizationUserRepository.GetByIdAsync(id);
             if (ou == null)

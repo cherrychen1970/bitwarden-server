@@ -23,10 +23,40 @@ authorization: Bearer {{token}}
 GET {{url}}/api/organizations/{{orgId}}/users
 authorization: Bearer {{token}}
 ###
-@userId = {{users.response.body.$.data[0].id}}
+@userId = {{users.response.body.$.data[1].id}}
+###
+DELETE {{url}}/api/organizations/{{orgId}}/users/{{userId}}
+authorization: Bearer {{token}}
 ###
 POST {{url}}/api/organizations
 authorization: Bearer {{token}}
 Content-Type: application/json
 
 {"key":"4.Uojbih/9Rs3iYzJPzSvIvy6Lu6KGyjNH3ZNml6HPCzYKm/kMWXta2svVHvYvxbA/oG3RWxfCFSgH4fQGW4my7JmmbQsHhcPqzsXWh9qjZgXQbh3G5Cuj3uGAxKSKl1IX3LprXO9hlJC+IDCeWQfCp14siXfwCKdczVUFQXnt7AFV3UkFaKoa6T67ClsIn0qwZ5BV420nXwWfOcLmD+48/Aygiea72fnWE3yvAhQ3HSedwo+7ehWiWaVIvNCOLM7kOi+WGdhs4SLbZYiRufxEKmWaSEc/Rh+oBHT/xAekV44dksUIvQWhQTq8Ysxu+ELeec0YqmWHa2R4CQwSB04bKw==","collectionName":"2.Jlj/Q0C/0aoDMb2qLS2CSQ==|O5cfPNx4BvpRfOSpLRNzir91EH1ovejP/wSzSjwvebc=|slIeUNGx1Xxpabi+/fD+Uuslf3p5uN5LWyfSlFF7xsU=","name":"cherry","billingEmail":"cherry@test.com","planType":0}
+
+###
+POST {{url}}/api/organizations/{{orgId}}/users/invite
+authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+    "emails": [
+        "ben@test.com"
+    ],
+    "collections": [],
+    "accessAll": false,
+    "type": 1,
+    "permissions": {
+        "response": null,
+        "accessBusinessPortal": false,
+        "accessEventLogs": false,
+        "accessImportExport": false,
+        "accessReports": false,
+        "manageAllCollections": false,
+        "manageAssignedCollections": false,
+        "manageGroups": false,
+        "manageSso": false,
+        "managePolicies": false,
+        "manageUsers": false
+    }
+}

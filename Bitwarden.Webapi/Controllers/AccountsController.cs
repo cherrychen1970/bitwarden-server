@@ -57,17 +57,17 @@ namespace Bit.Api.Controllers
         }
 
 
-        [HttpGet("test")]
-        public IActionResult test()
+        [HttpGet("claims")]
+        public IActionResult claims()
         {
             var claims = HttpContext.User.Claims.GroupBy(c => c.Type).ToDictionary(c => c.Key, c => c.Select(v => v.Value));
             return Ok(claims);
         }    
 
-        [HttpGet("debug")]
-        public IActionResult Debug()
+        [HttpGet("session")]
+        public IActionResult session()
         {
-            return Ok(HttpContext.User.Identities.Select(x=>x.AuthenticationType));
+            return Ok(_currentContext);
         }        
 
         [HttpPost("prelogin")]
