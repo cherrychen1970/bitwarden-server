@@ -98,7 +98,7 @@ namespace Bit.Core.Utilities
             #endregion
 
             #region Plans
-            Plans = new List<Plan>
+            var Plans_notused = new List<Plan>
             {
                 new Plan
                 {
@@ -124,7 +124,7 @@ namespace Bit.Core.Utilities
                 }
             };            
 
-            var Plans_notused = new List<Plan>
+            Plans = new List<Plan>
             {
                 new Plan
                 {

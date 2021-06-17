@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -211,10 +212,16 @@ namespace Bit.Api
             }
             //app.Map("/connect", _app => _app.RunProxy(new ProxyOptions() { Host = "localhost", Port = "33656", Scheme = "http" }));
             if (Environment.IsDevelopment())
-            
                 app.RunProxy(new ProxyOptions() { Host = "localhost", Port = "8080", Scheme = "http" });
             else
             {
+                // fix for routing clientapp : base/bitwarden => base/bitwarden/
+                app.MapWhen(context => !context.Request.Path.HasValue, _app => _app.Run(async context =>
+                {
+                    context.Response.Redirect(context.Request.PathBase + "/");
+                    await Task.CompletedTask;
+                }));
+
                 app.UseSpaStaticFiles();
                 app.UseSpa(spa =>
                 {
