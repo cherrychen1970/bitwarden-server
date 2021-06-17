@@ -629,6 +629,7 @@ namespace Bit.Core.Utilities
         {
             return
                 // Web vault
+                origin == globalSettings.BaseServiceUri.VaultOrigin ||
                 origin == globalSettings.BaseServiceUri.Vault ||
                 // Safari extension origin
                 origin == "file://" ||

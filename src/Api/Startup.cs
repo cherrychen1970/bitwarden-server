@@ -123,7 +123,7 @@ namespace Bit.Api
                     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
                 }
             });
-
+            services.AddSpaStaticFiles(opt => opt.RootPath = "clientapp");
             services.AddSwagger(globalSettings);
             //Jobs.JobsHostedService.AddJobsServices(services);
             //services.AddHostedService<Jobs.JobsHostedService>();
@@ -209,9 +209,18 @@ namespace Bit.Api
                     config.OAuthClientSecret("secretKey");
                 });
             }
-            app.Map("/connect",_app=>_app.RunProxy(new ProxyOptions(){Host="localhost",Port="33656", Scheme="http"}));
-            app.RunProxy(new ProxyOptions(){Host="localhost",Port="8080", Scheme="http"});
-
+            //app.Map("/connect", _app => _app.RunProxy(new ProxyOptions() { Host = "localhost", Port = "33656", Scheme = "http" }));
+            if (Environment.IsDevelopment())
+            
+                app.RunProxy(new ProxyOptions() { Host = "localhost", Port = "8080", Scheme = "http" });
+            else
+            {
+                app.UseSpaStaticFiles();
+                app.UseSpa(spa =>
+                {
+                    spa.Options.SourcePath = "clientapp";
+                });
+            }
             // Log startup
             logger.LogInformation(Constants.BypassFiltersEventId, globalSettings.ProjectName + " started.");
         }

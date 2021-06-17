@@ -16,12 +16,12 @@ namespace Bit.Identity.Utilities
         public static IIdentityServerBuilder AddCustomIdentityServerServices(this IServiceCollection services,
             IWebHostEnvironment env, GlobalSettings globalSettings)
         {
-            services.AddTransient<IDiscoveryResponseGenerator, DiscoveryResponseGenerator>();
+            //services.AddTransient<IDiscoveryResponseGenerator, DiscoveryResponseGenerator>();
 
             services.AddSingleton<StaticClientStore>();
             services.AddTransient<IAuthorizationCodeStore, AuthorizationCodeStore>();
 
-            var issuerUri = new Uri(globalSettings.BaseServiceUri.InternalIdentity);
+            //var issuerUri = new Uri(globalSettings.BaseServiceUri.InternalIdentity);
             var identityServerBuilder = services
                 .AddIdentityServer(options =>
                 {
@@ -30,7 +30,8 @@ namespace Bit.Identity.Utilities
                     options.Endpoints.EnableUserInfoEndpoint = false;
                     options.Endpoints.EnableCheckSessionEndpoint = false;
                     options.Endpoints.EnableTokenRevocationEndpoint = false;
-                    options.IssuerUri = $"{issuerUri.Scheme}://{issuerUri.Host}";
+                    //options.IssuerUri = $"{issuerUri.Scheme}://{issuerUri.Host}";
+                    options.IssuerUri = globalSettings.BaseServiceUri.InternalIdentity;
                     options.Caching.ClientStoreExpiration = new TimeSpan(0, 5, 0);
                     if (env.IsDevelopment())
                     {

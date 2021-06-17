@@ -114,6 +114,8 @@ CREATE TABLE [dbo].[Cipher](
 	[Type] [tinyint] NOT NULL,
 	[Data] [nvarchar](max) NOT NULL,
 	[Favorites] [nvarchar](max) NULL,
+    [Favorite] [bit] default 0,
+    [FolderId] [uniqueidentifier] NULL,
 	[Folders] [nvarchar](max) NULL,
 	[Attachments] [nvarchar](max) NULL,
 	[CreationDate] [datetime2](7) NOT NULL,
@@ -712,8 +714,8 @@ SELECT
     C.[Attachments],
     C.[CreationDate],
     C.[RevisionDate],
-    C.[Favorite],
-    C.[FolderId],
+    0 [Favorite],
+    NULL [FolderId],
     C.[DeletedDate]
 FROM
     [dbo].[Cipher] C
@@ -1945,14 +1947,14 @@ BEGIN
     FROM 
         [dbo].[Cipher]
     WHERE [Id] = @Id
-
+/* disable 
     UPDATE
         [dbo].[Cipher]
     SET
         [Attachments] = JSON_MODIFY([Attachments], @AttachmentIdPath, NULL)
     WHERE
         [Id] = @Id
-
+*/
     IF @OrganizationId IS NOT NULL
     BEGIN
         EXEC [dbo].[Organization_UpdateStorage] @OrganizationId
@@ -2150,7 +2152,7 @@ BEGIN
 
     DECLARE @UserIdKey VARCHAR(50) = CONCAT('"', @UserId, '"')
     DECLARE @UserIdPath VARCHAR(50) = CONCAT('$.', @UserIdKey)
-
+    /* disable due to json
     ;WITH [IdsToMoveCTE] AS (
         SELECT
             [Id]
@@ -2160,6 +2162,7 @@ BEGIN
             [Edit] = 1
             AND [Id] IN (SELECT * FROM @Ids)
     )
+    
     UPDATE
         [dbo].[Cipher]
     SET
@@ -2175,6 +2178,7 @@ BEGIN
     WHERE
         [Id] IN (SELECT * FROM [IdsToMoveCTE])
 
+    */
     EXEC [dbo].[User_BumpAccountRevisionDate] @UserId
 END
 GO
@@ -2511,7 +2515,7 @@ BEGIN
 
     DECLARE @AttachmentIdKey VARCHAR(50) = CONCAT('"', @AttachmentId, '"')
     DECLARE @AttachmentIdPath VARCHAR(50) = CONCAT('$.', @AttachmentIdKey)
-
+/* disable
     UPDATE
         [dbo].[Cipher]
     SET
@@ -2524,7 +2528,7 @@ BEGIN
             END
     WHERE
         [Id] = @Id
-
+*/
     IF @OrganizationId IS NOT NULL
     BEGIN
         EXEC [dbo].[Organization_UpdateStorage] @OrganizationId
@@ -2639,7 +2643,7 @@ BEGIN
     
     DECLARE @UserIdKey VARCHAR(50) = CONCAT('"', @UserId, '"')
     DECLARE @UserIdPath VARCHAR(50) = CONCAT('$.', @UserIdKey)
-
+/*
     UPDATE
         [dbo].[Cipher]
     SET
@@ -2663,6 +2667,7 @@ BEGIN
             END
     WHERE
         [Id] = @Id
+*/        
 
     IF @UserId IS NOT NULL
     BEGIN
@@ -2928,6 +2933,7 @@ BEGIN
         [OrganizationId] = @OrganizationId,
         [Type] = @Type,
         [Data] = @Data,
+        /*
         [Folders] = 
             CASE
             WHEN @FolderId IS NOT NULL AND [Folders] IS NULL THEN
@@ -2946,6 +2952,7 @@ BEGIN
             ELSE
                 JSON_MODIFY([Favorites], @UserIdPath, NULL)
             END,
+            */
         [CreationDate] = @CreationDate,
         [RevisionDate] = @RevisionDate,
         [DeletedDate] = @DeletedDate
@@ -4522,6 +4529,7 @@ BEGIN
             [UserId] = @UserId
             AND [Status] = 2 -- Confirmed
     )
+    /*
     UPDATE
         C
     SET
@@ -4560,7 +4568,7 @@ BEGIN
     WHERE
         [UserId] = @UserId
         AND JSON_VALUE([Folders], @UserIdPath) = @Id
-
+    */
     DELETE
     FROM
         [dbo].[Folder]
@@ -5864,7 +5872,7 @@ CREATE PROCEDURE [dbo].[Organization_UpdateStorage]
 AS
 BEGIN
     SET NOCOUNT ON
-
+/*
     DECLARE @AttachmentStorage BIGINT
     DECLARE @SendStorage BIGINT
 
@@ -5925,6 +5933,7 @@ BEGIN
         [RevisionDate] = GETUTCDATE()
     WHERE
         [Id] = @Id
+*/        
 END
 GO
 /****** Object:  StoredProcedure [dbo].[OrganizationUser_Create]    Script Date: 16/06/2021 10:30:53 ******/
@@ -8287,7 +8296,7 @@ CREATE PROCEDURE [dbo].[User_UpdateStorage]
 AS
 BEGIN
     SET NOCOUNT ON
-
+/*
     DECLARE @AttachmentStorage BIGINT
     DECLARE @SendStorage BIGINT
 
@@ -8346,6 +8355,7 @@ BEGIN
         [RevisionDate] = GETUTCDATE()
     WHERE
         [Id] = @Id
+*/        
 END
 GO
 USE [master]

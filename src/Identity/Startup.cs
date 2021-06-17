@@ -160,7 +160,7 @@ namespace Bit.Identity
 
             if (globalSettings.SelfHosted)
             {
-                app.UsePathBase("/identity");
+                app.UsePathBase("/bitwarden-identity");
                 app.UseForwardedHeaders(globalSettings);
             }
 

@@ -98,8 +98,33 @@ namespace Bit.Core.Utilities
             #endregion
 
             #region Plans
-
             Plans = new List<Plan>
+            {
+                new Plan
+                {
+                    Type = PlanType.Free,
+                    Product = ProductType.Free,
+                    Name = "Free",
+                    NameLocalizationKey = "planNameFree",
+                    DescriptionLocalizationKey = "planDescFree",
+                    BaseSeats = 100,
+                    MaxCollections = 200,
+                    MaxUsers = 1000,
+                    //HasPolicies = true,
+                    HasGroups = true,
+                    HasDirectory = true,
+                    //HasEvents = true,
+                    //HasTotp = true,
+                    //Has2fa = true,
+                    HasApi = true,
+                    HasSelfHost = true,
+                    HasSso = true,
+                    UpgradeSortOrder = -1, // Always the lowest plan, cannot be upgraded to
+                    DisplaySortOrder = -1
+                }
+            };            
+
+            var Plans_notused = new List<Plan>
             {
                 new Plan
                 {

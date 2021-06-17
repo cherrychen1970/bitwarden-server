@@ -30,7 +30,7 @@ namespace Bit.Core.IdentityServer
             {
                 RedirectUris = new[] { $"{globalSettings.BaseServiceUri.Vault}/sso-connector.html" };
                 PostLogoutRedirectUris = new[] { globalSettings.BaseServiceUri.Vault };
-                AllowedCorsOrigins = new[] { globalSettings.BaseServiceUri.Vault };
+                AllowedCorsOrigins = new[] { globalSettings.BaseServiceUri.VaultOrigin };
             }
             else if (id == "desktop")
             {
