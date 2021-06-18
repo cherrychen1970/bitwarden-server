@@ -6,6 +6,7 @@ namespace Bit.Core
     public class GlobalSettings
     {
         public bool SelfHosted { get; set; }
+        public virtual string PathBase {get;set;}
         public virtual string KnownProxies { get; set; }
         public virtual string SiteName { get; set; }
         public virtual string StripeApiKey { get; set; }

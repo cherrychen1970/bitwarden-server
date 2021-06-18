@@ -437,17 +437,29 @@ namespace Bit.Api.Controllers
         }
 
         [HttpPut("{id}/restore")]
-        public async Task<CipherResponseModel> PutRestore(string id)
+        public async Task<dynamic> PutRestore(string id)
         {
             var userId = _userService.GetProperUserId(User).Value;
-            var cipher = await _cipherRepository.GetByIdAsync(new Guid(id), userId);
-            if (cipher == null)
+            var cipher = await _cipherRepository.GetByIdAsync(new Guid(id));
+            if (cipher == null ||
+                (cipher.UserId.HasValue && cipher.UserId.Value != userId) ||
+                (cipher.OrganizationId.HasValue && !_currentContext.ManageAllCollections(cipher.OrganizationId.Value)))
             {
                 throw new NotFoundException();
             }
 
-            await _cipherService.RestoreAsync(cipher, userId);
-            return new CipherResponseModel(cipher, _globalSettings);
+            if (cipher.UserId.HasValue)
+            {
+                var cipherDetail = await _cipherRepository.GetByIdAsync(new Guid(id),userId);
+                await _cipherService.RestoreAsync(cipherDetail, userId);
+                return new CipherResponseModel(cipherDetail, _globalSettings);
+            }
+            else
+            {
+                var cipherDetail = await _cipherRepository.GetOrganizationDetailsByIdAsync(new Guid(id));
+                await _cipherService.RestoreAsync(cipherDetail, userId, true);
+                return new CipherMiniResponseModel(cipherDetail, _globalSettings, cipherDetail.OrganizationUseTotp);
+            }
         }
 
         [HttpPut("{id}/restore-admin")]

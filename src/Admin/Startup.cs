@@ -57,7 +57,7 @@ namespace Bit.Admin
             {
                 services.ConfigureApplicationCookie(options =>
                 {
-                    options.Cookie.Path = "/admin";
+                    options.Cookie.Path = globalSettings.PathBase;
                 });
             }
 
@@ -77,7 +77,8 @@ namespace Bit.Admin
             services.AddHostedService<Jobs.JobsHostedService>();
             if (globalSettings.SelfHosted)
             {
-                services.AddHostedService<HostedServices.DatabaseMigrationHostedService>();
+                // Stop migration for now
+                //services.AddHostedService<HostedServices.DatabaseMigrationHostedService>();
             }
             else
             {
@@ -102,7 +103,7 @@ namespace Bit.Admin
 
             if (globalSettings.SelfHosted)
             {
-                app.UsePathBase("/admin");
+                app.UsePathBase(globalSettings.PathBase);
                 app.UseForwardedHeaders(globalSettings);
             }
 

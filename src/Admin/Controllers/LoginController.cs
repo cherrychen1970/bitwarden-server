@@ -48,11 +48,6 @@ namespace Bit.Admin.Controllers
             return View(model);
         }
 
-                public async Task<IActionResult> Confirm(string email, string token, string returnUrl)
-                {
-                    
-                }
-
         public async Task<IActionResult> Confirm(string email, string token, string returnUrl)
         {
             var result = await _signInManager.PasswordlessSignInAsync(email, token, true);
